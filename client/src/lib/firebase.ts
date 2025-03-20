@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, onValue, DataSnapshot } from 'firebase/database';
+import { getDatabase, ref, onValue, DataSnapshot, set, get } from 'firebase/database';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -12,17 +12,75 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// Initialize Firebase app and database at module level
 let app: any;
 let database: any;
 
+// Generate sample data for testing
+function generateSampleData() {
+  if (!database) return;
+  
+  // Check if data already exists
+  const currentRef = ref(database, 'sensorData/current');
+  get(currentRef).then((snapshot: any) => {
+    if (!snapshot.exists()) {
+      // Create current sensor data
+      const currentData: SensorData = {
+        temperature: 23.5,
+        humidity: 48,
+        soilMoisture: 35,
+        timestamp: Date.now()
+      };
+      set(currentRef, currentData)
+        .then(() => console.log('Created sample current sensor data'))
+        .catch((err: Error) => console.error('Error creating current data:', err));
+      
+      // Create history data (last 24 hours)
+      const historyData: SensorHistory = {};
+      const now = Date.now();
+      const hourMs = 60 * 60 * 1000;
+      
+      // Generate 24 data points, one for each hour
+      for (let i = 0; i < 24; i++) {
+        const time = now - (i * hourMs);
+        historyData[time] = {
+          temperature: 20 + Math.random() * 8, // 20-28°C
+          humidity: 40 + Math.random() * 20,   // 40-60%
+          soilMoisture: 25 + Math.random() * 30 // 25-55%
+        };
+      }
+      
+      const historyRef = ref(database, 'sensorData/history');
+      set(historyRef, historyData)
+        .then(() => console.log('Created sample history data'))
+        .catch((err: Error) => console.error('Error creating history data:', err));
+    }
+  }).catch((error: Error) => {
+    console.error('Error checking/creating sample data:', error);
+  });
+}
+
 export function initializeFirebase() {
-  try {
-    app = initializeApp(firebaseConfig);
-    database = getDatabase(app);
-    console.log('Firebase initialized successfully');
-  } catch (error) {
-    console.error('Error initializing Firebase:', error);
+  if (!app) {
+    try {
+      app = initializeApp(firebaseConfig);
+      database = getDatabase(app);
+      console.log('Firebase initialized successfully');
+      
+      // If successful, try to generate sample data
+      try {
+        generateSampleData();
+      } catch (e) {
+        console.error('Error generating sample data:', e);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error initializing Firebase:', error);
+      return false;
+    }
   }
+  return !!database;
 }
 
 export interface SensorData {

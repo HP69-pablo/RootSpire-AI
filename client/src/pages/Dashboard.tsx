@@ -5,7 +5,7 @@ import { AlertBanner } from '@/components/AlertBanner';
 import { DataVisualization } from '@/components/DataVisualization';
 import { PlantConfig, PlantConfigValues } from '@/components/PlantConfig';
 import { NotificationSettings, NotificationSettingsValues } from '@/components/NotificationSettings';
-import { subscribeSensorData, getSensorHistory, SensorData, SensorHistory } from '@/lib/firebase';
+import { initializeFirebase, subscribeSensorData, getSensorHistory, SensorData, SensorHistory } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Dashboard() {
@@ -46,21 +46,30 @@ export default function Dashboard() {
   });
   
   useEffect(() => {
-    // Subscribe to real-time sensor data updates
-    const unsubscribeSensor = subscribeSensorData((data) => {
-      setSensorData(data);
-    });
+    // Make sure Firebase is initialized before subscribing to data
+    const isInitialized = initializeFirebase();
     
-    // Get sensor history data (24h by default)
-    const unsubscribeHistory = getSensorHistory(1, (data) => {
-      setHistoryData(data);
-    });
-    
-    // Cleanup subscriptions on component unmount
-    return () => {
-      unsubscribeSensor();
-      unsubscribeHistory();
-    };
+    if (isInitialized) {
+      // Subscribe to real-time sensor data updates
+      const unsubscribeSensor = subscribeSensorData((data) => {
+        console.log("Received new sensor data:", data);
+        setSensorData(data);
+      });
+      
+      // Get sensor history data (24h by default)
+      const unsubscribeHistory = getSensorHistory(1, (data) => {
+        console.log("Received history data:", Object.keys(data).length, "entries");
+        setHistoryData(data);
+      });
+      
+      // Cleanup subscriptions on component unmount
+      return () => {
+        unsubscribeSensor();
+        unsubscribeHistory();
+      };
+    } else {
+      console.error("Firebase could not be initialized");
+    }
   }, []);
   
   // Check for alerts when sensor data or config changes
