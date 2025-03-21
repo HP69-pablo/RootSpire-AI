@@ -46,23 +46,7 @@ export function StatusOverview({ sensorData, config }: StatusOverviewProps) {
     return "Optimal";
   };
   
-  const getSoilMoistureStatus = () => {
-    const { soilMoisture } = sensorData;
-    const { soilMoistureMin, soilMoistureMax } = config;
-    
-    // Handle "none" value
-    if (soilMoisture === "none") return "Optimal";
-    
-    // Convert to number for comparison if it's a string number
-    const moistureValue = typeof soilMoisture === 'string' ? 
-      parseFloat(soilMoisture) : soilMoisture;
-    
-    if (moistureValue < soilMoistureMin) {
-      return moistureValue < (soilMoistureMin * 0.8) ? "Critical" : "Low";
-    }
-    if (moistureValue > soilMoistureMax) return "High";
-    return "Optimal";
-  };
+  // This function is no longer needed since we removed the soil moisture sensor
   
   return (
     <section className="mb-8">

@@ -14,7 +14,6 @@ export default function Dashboard() {
   const [sensorData, setSensorData] = useState<SensorData>({
     temperature: 24.5,
     humidity: 38,
-    soilMoisture: 22,
     timestamp: Date.now()
   });
   const [historyData, setHistoryData] = useState<SensorHistory>({});
@@ -79,18 +78,7 @@ export default function Dashboard() {
   }, [sensorData, plantConfig]);
   
   const checkForAlerts = () => {
-    // Check soil moisture first (highest priority)
-    if (sensorData.soilMoisture < plantConfig.soilMoistureMin * 0.8) {
-      setAlert({
-        show: true,
-        title: 'Critical Soil Moisture Alert',
-        message: `Soil moisture has dropped below ${Math.round(plantConfig.soilMoistureMin * 0.8)}%. Your plant needs watering soon.`,
-        type: 'critical'
-      });
-      return;
-    }
-    
-    // Check temperature
+    // Check temperature (highest priority)
     if (sensorData.temperature < plantConfig.tempMin || sensorData.temperature > plantConfig.tempMax) {
       setAlert({
         show: true,

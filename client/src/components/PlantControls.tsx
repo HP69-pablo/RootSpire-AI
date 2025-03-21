@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from '@/hooks/use-toast';
-import { ref, set } from 'firebase/database';
-import { getDatabase } from 'firebase/database';
+import { setUvLight, setWateringActive, subscribePlantControls, PlantControls as PlantControlsData } from '@/lib/firebase';
 
 interface PlantControlsProps {
   onAction: (action: string, state: boolean) => void;
@@ -17,73 +16,91 @@ export function PlantControls({ onAction }: PlantControlsProps) {
   const [wateringActive, setWateringActive] = useState(false);
   const [wateringInProgress, setWateringInProgress] = useState(false);
 
+  // Subscribe to plant controls from Firebase
+  useEffect(() => {
+    const unsubscribe = subscribePlantControls((controls: PlantControlsData) => {
+      console.log('Received plant controls state:', controls);
+      setUvLightOn(controls.uvLight);
+      
+      // Only update watering if not in progress to avoid interrupting the timer
+      if (!wateringInProgress) {
+        setWateringActive(controls.wateringActive);
+      }
+    });
+    
+    return () => unsubscribe();
+  }, [wateringInProgress]);
+
   const handleUvLightToggle = (checked: boolean) => {
-    setUvLightOn(checked);
     onAction('uvLight', checked);
     
     // Update Firebase with the new state
-    try {
-      const db = getDatabase();
-      set(ref(db, 'plantControls/uvLight'), checked);
-      
-      toast({
-        title: checked ? "UV Light turned ON" : "UV Light turned OFF",
-        description: checked 
-          ? "The UV light is now providing supplemental light for your plant." 
-          : "The UV light has been turned off.",
+    setUvLight(checked)
+      .then(() => {
+        toast({
+          title: checked ? "UV Light turned ON" : "UV Light turned OFF",
+          description: checked 
+            ? "The UV light is now providing supplemental light for your plant." 
+            : "The UV light has been turned off.",
+        });
+      })
+      .catch((error: Error) => {
+        console.error('Error updating UV light state:', error);
+        toast({
+          title: "Error",
+          description: "Could not update UV light state.",
+          variant: "destructive",
+        });
       });
-    } catch (error) {
-      console.error('Error updating UV light state:', error);
-      toast({
-        title: "Error",
-        description: "Could not update UV light state.",
-        variant: "destructive",
-      });
-    }
   };
 
   const handleWateringButton = () => {
     if (wateringInProgress) return; // Prevent multiple clicks
     
-    setWateringActive(true);
     setWateringInProgress(true);
     onAction('watering', true);
     
     // Update Firebase with the watering command
-    try {
-      const db = getDatabase();
-      set(ref(db, 'plantControls/wateringActive'), true);
-      
-      toast({
-        title: "Watering started",
-        description: "Watering system activated for 5 seconds.",
-      });
-      
-      // Simulate watering for 5 seconds
-      setTimeout(() => {
-        setWateringActive(false);
-        setWateringInProgress(false);
-        onAction('watering', false);
+    setWateringActive(true)
+      .then(() => {
+        toast({
+          title: "Watering started",
+          description: "Watering system activated for 5 seconds.",
+        });
         
-        // Update Firebase when watering is complete
-        set(ref(db, 'plantControls/wateringActive'), false);
+        // Simulate watering for 5 seconds
+        setTimeout(() => {
+          setWateringInProgress(false);
+          onAction('watering', false);
+          
+          // Update Firebase when watering is complete
+          setWateringActive(false)
+            .then(() => {
+              toast({
+                title: "Watering complete",
+                description: "Your plant has been watered successfully.",
+              });
+            })
+            .catch((error: Error) => {
+              console.error('Error deactivating watering system:', error);
+              toast({
+                title: "Error",
+                description: "Could not complete watering cycle.",
+                variant: "destructive",
+              });
+            });
+        }, 5000);
+      })
+      .catch((error: Error) => {
+        console.error('Error activating watering system:', error);
+        setWateringInProgress(false);
         
         toast({
-          title: "Watering complete",
-          description: "Your plant has been watered successfully.",
+          title: "Error",
+          description: "Could not activate watering system.",
+          variant: "destructive",
         });
-      }, 5000);
-    } catch (error) {
-      console.error('Error activating watering system:', error);
-      setWateringActive(false);
-      setWateringInProgress(false);
-      
-      toast({
-        title: "Error",
-        description: "Could not activate watering system.",
-        variant: "destructive",
       });
-    }
   };
 
   return (
