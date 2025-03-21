@@ -5,12 +5,21 @@ import { getDatabase, ref, onValue, DataSnapshot, set, get } from 'firebase/data
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL?.replace('firebaseddatabase', 'firebasedatabase'), // Fix typo in URL if present
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
+
+// Log any missing configurations
+const missingConfigs = Object.entries(firebaseConfig)
+  .filter(([key, value]) => !value)
+  .map(([key]) => key);
+
+if (missingConfigs.length > 0) {
+  console.error('Missing Firebase configuration:', missingConfigs.join(', '));
+}
 
 // Initialize Firebase app and database at module level
 let app: any;
@@ -18,11 +27,18 @@ let database: any;
 
 // Generate sample data for testing
 function generateSampleData() {
-  if (!database) return;
+  if (!database) {
+    console.error('Cannot generate sample data: database not initialized');
+    return;
+  }
+  
+  console.log('Checking if sample data needs to be generated...');
   
   // Check if data already exists
   const currentRef = ref(database, 'sensorData/current');
   get(currentRef).then((snapshot: any) => {
+    console.log('Current sensor data check result:', snapshot.exists() ? 'Data exists' : 'No data exists');
+    
     if (!snapshot.exists()) {
       // Create current sensor data
       const currentData: SensorData = {
@@ -31,8 +47,10 @@ function generateSampleData() {
         soilMoisture: 35,
         timestamp: Date.now()
       };
+      console.log('Attempting to create sample current data:', currentData);
+      
       set(currentRef, currentData)
-        .then(() => console.log('Created sample current sensor data'))
+        .then(() => console.log('Successfully created sample current sensor data'))
         .catch((err: Error) => console.error('Error creating current data:', err));
       
       // Create history data (last 24 hours)
@@ -50,9 +68,11 @@ function generateSampleData() {
         };
       }
       
+      console.log('Attempting to create sample history data with', Object.keys(historyData).length, 'data points');
+      
       const historyRef = ref(database, 'sensorData/history');
       set(historyRef, historyData)
-        .then(() => console.log('Created sample history data'))
+        .then(() => console.log('Successfully created sample history data'))
         .catch((err: Error) => console.error('Error creating history data:', err));
     }
   }).catch((error: Error) => {
@@ -63,9 +83,20 @@ function generateSampleData() {
 export function initializeFirebase() {
   if (!app) {
     try {
+      // Log Firebase config (without sensitive values)
+      console.log('Initializing Firebase with config:', {
+        databaseURL: firebaseConfig.databaseURL,
+        projectId: firebaseConfig.projectId,
+        authDomain: firebaseConfig.authDomain,
+        storageBucket: firebaseConfig.storageBucket,
+        hasApiKey: !!firebaseConfig.apiKey,
+        hasAppId: !!firebaseConfig.appId,
+        hasMessagingSenderId: !!firebaseConfig.messagingSenderId
+      });
+      
       app = initializeApp(firebaseConfig);
       database = getDatabase(app);
-      console.log('Firebase initialized successfully');
+      console.log('Firebase initialized successfully, database reference:', !!database);
       
       // If successful, try to generate sample data
       try {
@@ -101,17 +132,26 @@ export interface SensorHistory {
 // Subscribe to real-time sensor data
 export function subscribeSensorData(callback: (data: SensorData) => void) {
   if (!database) {
-    console.error('Firebase database not initialized');
+    console.error('Firebase database not initialized when trying to subscribe to sensor data');
     return () => {};
   }
 
+  console.log('Setting up subscription to real-time sensor data at path: sensorData/current');
   const sensorRef = ref(database, 'sensorData/current');
+  
   const unsubscribe = onValue(sensorRef, (snapshot: DataSnapshot) => {
+    console.log('Got sensor data update, snapshot exists:', snapshot.exists());
+    
     const data = snapshot.val() as SensorData | null;
     if (data) {
+      console.log('Received sensor data:', data);
       callback(data);
     } else {
-      console.log('No sensor data available');
+      console.log('No sensor data available in snapshot');
+      
+      // Since we didn't get any data, let's try to create sample data
+      console.log('Attempting to create initial sample data since none exists');
+      generateSampleData();
     }
   }, (error) => {
     console.error('Error subscribing to sensor data:', error);
@@ -123,18 +163,23 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
 // Get sensor history data
 export function getSensorHistory(days: number, callback: (data: SensorHistory) => void) {
   if (!database) {
-    console.error('Firebase database not initialized');
+    console.error('Firebase database not initialized when trying to get history data');
     return () => {};
   }
 
   // Calculate time range
   const endTime = Date.now();
   const startTime = endTime - (days * 24 * 60 * 60 * 1000);
+  console.log(`Setting up subscription to history data at path: sensorData/history (for ${days} days)`);
   
   const historyRef = ref(database, 'sensorData/history');
   const unsubscribe = onValue(historyRef, (snapshot: DataSnapshot) => {
+    console.log('Got history data update, snapshot exists:', snapshot.exists());
+    
     const allData = snapshot.val() as SensorHistory | null;
     if (allData) {
+      console.log('Received history data with', Object.keys(allData).length, 'entries');
+      
       // Filter data based on the time range
       const filteredData: SensorHistory = {};
       Object.keys(allData).forEach(timestamp => {
@@ -143,9 +188,11 @@ export function getSensorHistory(days: number, callback: (data: SensorHistory) =
           filteredData[ts] = allData[ts];
         }
       });
+      
+      console.log('Filtered history data to', Object.keys(filteredData).length, 'entries within time range');
       callback(filteredData);
     } else {
-      console.log('No history data available');
+      console.log('No history data available in snapshot');
       callback({});
     }
   }, (error) => {
