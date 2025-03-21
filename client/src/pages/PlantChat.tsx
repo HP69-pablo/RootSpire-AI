@@ -13,7 +13,7 @@ export default function PlantChat() {
   const { toast } = useToast();
   const [userMessage, setUserMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [chatSession, setChatSession] = useState<any>(null);
+  const [chatSession, setChatSession] = useState<{messages: ChatMessage[]} | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'model', content: "I'm ready to help with your plant care and gardening questions. What would you like to know about today?" }
   ]);
@@ -31,7 +31,7 @@ export default function PlantChat() {
         console.error('Error initializing chat:', error);
         toast({
           title: "Connection Error",
-          description: "Couldn't connect to the plant advisor. Please try again later.",
+          description: "Couldn't connect to the plant advisor. Please check if your Gemini API key is set correctly.",
           variant: "destructive"
         });
       }
@@ -133,6 +133,7 @@ export default function PlantChat() {
                 <Button 
                   type="submit" 
                   disabled={isLoading || !userMessage.trim() || !chatSession}
+                  className="bg-green-600 hover:bg-green-700 text-white"
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -141,6 +142,13 @@ export default function PlantChat() {
                   )}
                 </Button>
               </form>
+              {!import.meta.env.VITE_GEMINI_API_KEY && (
+                <div className="mt-2 text-sm text-amber-600 dark:text-amber-400 flex items-center">
+                  <div className="bg-amber-100 dark:bg-amber-900/30 rounded-md p-2 w-full text-center">
+                    Please provide a Gemini API key to use the Plant Care Assistant.
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
