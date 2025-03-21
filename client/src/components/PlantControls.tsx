@@ -35,7 +35,9 @@ export function PlantControls({ onAction }: PlantControlsProps) {
     onAction('uvLight', checked);
     
     // Update Firebase with the new state
-    setUvLight(checked)
+    const updatePromise = setUvLight(checked);
+    
+    updatePromise
       .then(() => {
         toast({
           title: checked ? "UV Light turned ON" : "UV Light turned OFF",
@@ -61,7 +63,9 @@ export function PlantControls({ onAction }: PlantControlsProps) {
     onAction('watering', true);
     
     // Update Firebase with the watering command
-    setWateringActive(true)
+    const wateringPromise = setWateringActive(true);
+    
+    wateringPromise
       .then(() => {
         toast({
           title: "Watering started",
@@ -74,7 +78,9 @@ export function PlantControls({ onAction }: PlantControlsProps) {
           onAction('watering', false);
           
           // Update Firebase when watering is complete
-          setWateringActive(false)
+          const completionPromise = setWateringActive(false);
+          
+          completionPromise
             .then(() => {
               toast({
                 title: "Watering complete",

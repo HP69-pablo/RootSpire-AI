@@ -262,7 +262,7 @@ export function subscribePlantControls(callback: (controls: PlantControls) => vo
 }
 
 // Set UV light state
-export function setUvLight(state: boolean) {
+export function setUvLight(state: boolean): Promise<void> {
   if (!database) {
     console.error('Firebase database not initialized when trying to set UV light state');
     return Promise.reject(new Error('Database not initialized'));
@@ -274,7 +274,7 @@ export function setUvLight(state: boolean) {
 }
 
 // Set watering active state
-export function setWateringActive(state: boolean) {
+export function setWateringActive(state: boolean): Promise<void> {
   if (!database) {
     console.error('Firebase database not initialized when trying to set watering state');
     return Promise.reject(new Error('Database not initialized'));
