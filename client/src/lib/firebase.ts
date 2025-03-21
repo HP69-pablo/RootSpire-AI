@@ -44,7 +44,6 @@ function generateSampleData() {
       const currentData: SensorData = {
         temperature: 23.5,
         humidity: 48,
-        soilMoisture: 35,
         timestamp: Date.now()
       };
       console.log('Attempting to create sample current data:', currentData);
@@ -63,8 +62,7 @@ function generateSampleData() {
         const time = now - (i * hourMs);
         historyData[time] = {
           temperature: 20 + Math.random() * 8, // 20-28°C
-          humidity: 40 + Math.random() * 20,   // 40-60%
-          soilMoisture: 25 + Math.random() * 30 // 25-55%
+          humidity: 40 + Math.random() * 20    // 40-60%
         };
       }
       
@@ -77,6 +75,23 @@ function generateSampleData() {
     }
   }).catch((error: Error) => {
     console.error('Error checking/creating sample data:', error);
+  });
+  
+  // Initialize control values if they don't exist
+  const controlsRef = ref(database, 'plantControls');
+  get(controlsRef).then((snapshot: any) => {
+    if (!snapshot.exists()) {
+      const initialControls = {
+        uvLight: false,
+        wateringActive: false
+      };
+      
+      set(controlsRef, initialControls)
+        .then(() => console.log('Successfully initialized plant controls'))
+        .catch((err: Error) => console.error('Error initializing controls:', err));
+    }
+  }).catch((error: Error) => {
+    console.error('Error checking/creating control data:', error);
   });
 }
 
@@ -117,7 +132,6 @@ export function initializeFirebase() {
 export interface SensorData {
   temperature: number;
   humidity: number;
-  soilMoisture: number;
   timestamp: number;
 }
 
@@ -125,7 +139,6 @@ export interface SensorHistory {
   [timestamp: number]: {
     temperature: number;
     humidity: number;
-    soilMoisture: number;
   };
 }
 

@@ -50,10 +50,17 @@ export function StatusOverview({ sensorData, config }: StatusOverviewProps) {
     const { soilMoisture } = sensorData;
     const { soilMoistureMin, soilMoistureMax } = config;
     
-    if (soilMoisture < soilMoistureMin) {
-      return soilMoisture < (soilMoistureMin * 0.8) ? "Critical" : "Low";
+    // Handle "none" value
+    if (soilMoisture === "none") return "Optimal";
+    
+    // Convert to number for comparison if it's a string number
+    const moistureValue = typeof soilMoisture === 'string' ? 
+      parseFloat(soilMoisture) : soilMoisture;
+    
+    if (moistureValue < soilMoistureMin) {
+      return moistureValue < (soilMoistureMin * 0.8) ? "Critical" : "Low";
     }
-    if (soilMoisture > soilMoistureMax) return "High";
+    if (moistureValue > soilMoistureMax) return "High";
     return "Optimal";
   };
   
@@ -65,7 +72,7 @@ export function StatusOverview({ sensorData, config }: StatusOverviewProps) {
         <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">{lastUpdated}</span>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <SensorCard 
           type="temperature" 
           value={sensorData.temperature} 
@@ -78,13 +85,6 @@ export function StatusOverview({ sensorData, config }: StatusOverviewProps) {
           value={sensorData.humidity} 
           previousValue={prevSensorData?.humidity} 
           status={getHumidityStatus()} 
-        />
-        
-        <SensorCard 
-          type="soil" 
-          value={sensorData.soilMoisture} 
-          previousValue={prevSensorData?.soilMoisture} 
-          status={getSoilMoistureStatus()} 
         />
       </div>
     </section>

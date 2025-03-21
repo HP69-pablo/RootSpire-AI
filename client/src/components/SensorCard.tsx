@@ -126,6 +126,17 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
     }
   };
   
+  // Handle "none" display for soil moisture
+  const displayValue = () => {
+    if (value === "none") {
+      return "N/A";
+    }
+    if (typeof value === 'number') {
+      return type === "temperature" ? value.toFixed(1) : Math.round(value);
+    }
+    return value;
+  };
+
   return (
     <Card className="bg-white dark:bg-slate-800 shadow-sm p-5 border border-gray-100 dark:border-gray-700 transition-all duration-200 hover:shadow-md">
       <div className="flex justify-between items-start mb-4">
@@ -133,14 +144,14 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{getLabel()}</h3>
           <div className="flex items-baseline">
             <motion.span 
-              key={value}
+              key={String(value)}
               initial={animated ? { opacity: 0.5 } : { opacity: 1 }}
               animate={{ opacity: 1 }}
               className="text-3xl font-semibold font-mono"
             >
-              {type === "temperature" ? value.toFixed(1) : Math.round(value)}
+              {displayValue()}
             </motion.span>
-            <span className="ml-1 text-lg">{getUnit()}</span>
+            <span className="ml-1 text-lg">{value !== "none" ? getUnit() : ""}</span>
           </div>
         </div>
         
@@ -149,13 +160,20 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
       
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center">
-            {getChangeIcon()}
-            <span className={`text-xs font-medium ${getChange() > 0 ? 'text-success-500' : 'text-warning-500'}`}>
-              {getChange() > 0 ? '+' : ''}{getChange().toFixed(type === 'temperature' ? 1 : 0)}{getUnit()}
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">from last hour</span>
-          </div>
+          {value !== "none" && (
+            <div className="flex items-center">
+              {getChangeIcon()}
+              <span className={`text-xs font-medium ${getChange() > 0 ? 'text-success-500' : 'text-warning-500'}`}>
+                {getChange() > 0 ? '+' : ''}{getChange().toFixed(type === 'temperature' ? 1 : 0)}{getUnit()}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">from last hour</span>
+            </div>
+          )}
+          {value === "none" && (
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              No sensor connected
+            </div>
+          )}
         </div>
         <div className={`px-2 py-1 rounded-full ${getStatusClasses()} text-xs font-medium`}>
           {status}
