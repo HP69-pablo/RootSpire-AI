@@ -5,6 +5,7 @@ import { AlertBanner } from '@/components/AlertBanner';
 import { DataVisualization } from '@/components/DataVisualization';
 import { PlantConfig, PlantConfigValues } from '@/components/PlantConfig';
 import { NotificationSettings, NotificationSettingsValues } from '@/components/NotificationSettings';
+import { PlantControls } from '@/components/PlantControls';
 import { initializeFirebase, subscribeSensorData, getSensorHistory, SensorData, SensorHistory } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -138,6 +139,28 @@ export default function Dashboard() {
     });
   };
   
+  const handlePlantControlAction = (action: string, state: boolean) => {
+    console.log(`Plant control action: ${action} = ${state}`);
+    
+    // In a real application, you would update your device through some IoT mechanism
+    // For now we'll just show a toast notification
+    if (action === 'watering' && state) {
+      // If watering started, we could update the sensor data with increased soil moisture
+      // in a real application this would happen automatically via the sensor
+      toast({
+        title: "Watering System Activated",
+        description: "Water pump is running.",
+      });
+    } else if (action === 'uvLight') {
+      toast({
+        title: state ? "UV Light ON" : "UV Light OFF",
+        description: state 
+          ? "Providing supplemental light to your plant." 
+          : "UV light has been turned off.",
+      });
+    }
+  };
+  
   return (
     <div className="min-h-screen font-sans transition-colors duration-200 ease-in-out bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-white">
       <Header />
@@ -157,6 +180,11 @@ export default function Dashboard() {
         
         {/* Data Visualization Section */}
         <DataVisualization historyData={historyData} />
+        
+        {/* Plant Controls Section */}
+        <div className="mb-8">
+          <PlantControls onAction={handlePlantControlAction} />
+        </div>
         
         {/* Settings & Notifications Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

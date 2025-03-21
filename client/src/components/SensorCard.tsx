@@ -6,13 +6,16 @@ type SensorType = "temperature" | "humidity" | "soil";
 
 interface SensorCardProps {
   type: SensorType;
-  value: number;
-  previousValue?: number;
+  value: number | string;
+  previousValue?: number | string;
   status: "Optimal" | "High" | "Low" | "Critical";
 }
 
 export function SensorCard({ type, value, previousValue, status }: SensorCardProps) {
   const [animated, setAnimated] = useState(false);
+  
+  // Convert string values to numbers for calculations
+  const numericValue = typeof value === 'string' ? (value === 'none' ? 0 : parseFloat(value)) : value;
   
   useEffect(() => {
     setAnimated(true);
@@ -34,7 +37,7 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
                 cy="13" 
                 r="1.5" 
                 animate={{ 
-                  y: -Math.min(5, Math.max(-5, (value - 25) * 0.5)) 
+                  y: -Math.min(5, Math.max(-5, (numericValue - 25) * 0.5)) 
                 }}
                 transition={{ duration: 1.5, ease: "easeInOut" }}
               />
@@ -54,7 +57,7 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
                 r="1" 
                 animate={{ 
                   y: 2,
-                  opacity: value < 30 ? 0.5 : 1
+                  opacity: numericValue < 30 ? 0.5 : 1
                 }}
                 transition={{ 
                   y: { 
@@ -97,7 +100,8 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
   
   const getChange = () => {
     if (previousValue === undefined) return 0;
-    return value - previousValue;
+    if (value === "none" || previousValue === "none") return 0;
+    return Number(value) - Number(previousValue);
   };
   
   const getChangeIcon = () => {
