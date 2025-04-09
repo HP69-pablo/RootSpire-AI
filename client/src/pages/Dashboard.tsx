@@ -6,7 +6,7 @@ import { DataVisualization } from '@/components/DataVisualization';
 import { PlantConfig, PlantConfigValues } from '@/components/PlantConfig';
 import { NotificationSettings, NotificationSettingsValues } from '@/components/NotificationSettings';
 import { PlantControls } from '@/components/PlantControls';
-import { initializeFirebase, subscribeSensorData, getSensorHistory, SensorData, SensorHistory } from '@/lib/firebase';
+import { subscribeSensorData, getSensorHistory, SensorData, SensorHistory } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Dashboard() {
@@ -46,30 +46,23 @@ export default function Dashboard() {
   });
   
   useEffect(() => {
-    // Make sure Firebase is initialized before subscribing to data
-    const isInitialized = initializeFirebase();
+    // Subscribe to real-time sensor data updates
+    const unsubscribeSensor = subscribeSensorData((data) => {
+      console.log("Received new sensor data from Supabase:", data);
+      setSensorData(data);
+    });
     
-    if (isInitialized) {
-      // Subscribe to real-time sensor data updates
-      const unsubscribeSensor = subscribeSensorData((data) => {
-        console.log("Received new sensor data:", data);
-        setSensorData(data);
-      });
-      
-      // Get sensor history data (24h by default)
-      const unsubscribeHistory = getSensorHistory(1, (data) => {
-        console.log("Received history data:", Object.keys(data).length, "entries");
-        setHistoryData(data);
-      });
-      
-      // Cleanup subscriptions on component unmount
-      return () => {
-        unsubscribeSensor();
-        unsubscribeHistory();
-      };
-    } else {
-      console.error("Firebase could not be initialized");
-    }
+    // Get sensor history data (24h by default)
+    const unsubscribeHistory = getSensorHistory(1, (data) => {
+      console.log("Received history data from Supabase:", Object.keys(data).length, "entries");
+      setHistoryData(data);
+    });
+    
+    // Cleanup subscriptions on component unmount
+    return () => {
+      unsubscribeSensor();
+      unsubscribeHistory();
+    };
   }, []);
   
   // Check for alerts when sensor data or config changes
@@ -111,7 +104,7 @@ export default function Dashboard() {
   
   const handleSaveConfig = (config: PlantConfigValues) => {
     setPlantConfig(config);
-    // In a real application, you would save this to Firebase
+    // In a real application, you would save this to Supabase
     toast({
       title: "Configuration saved",
       description: "Your plant configuration has been saved.",
@@ -120,7 +113,7 @@ export default function Dashboard() {
   
   const handleSaveNotifications = (settings: NotificationSettingsValues) => {
     setNotificationSettings(settings);
-    // In a real application, you would save this to Firebase
+    // In a real application, you would save this to Supabase
     toast({
       title: "Notification settings saved",
       description: "Your notification preferences have been updated.",
