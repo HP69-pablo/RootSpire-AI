@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from '@/hooks/use-toast';
-import { setUvLight, setWateringActive, subscribePlantControls, PlantControls as PlantControlsData } from '@/lib/supabase';
+import { setUvLight, setWateringActive, subscribePlantControls, PlantControls as PlantControlsData } from '@/lib/firebase';
 
 interface PlantControlsProps {
   onAction: (action: string, state: boolean) => void;
@@ -16,7 +16,7 @@ export function PlantControls({ onAction }: PlantControlsProps) {
   const [wateringActive, setWateringActive] = useState(false);
   const [wateringInProgress, setWateringInProgress] = useState(false);
 
-  // Subscribe to plant controls from Supabase
+  // Subscribe to plant controls from Firebase
   useEffect(() => {
     const unsubscribe = subscribePlantControls((controls: PlantControlsData) => {
       console.log('Received plant controls state:', controls);
@@ -34,11 +34,11 @@ export function PlantControls({ onAction }: PlantControlsProps) {
   const handleUvLightToggle = (checked: boolean) => {
     onAction('uvLight', checked);
     
-    // Update Supabase with the new state
-    setUvLight(checked)
-      .then((success) => {
-        if (!success) throw new Error('Failed to update UV light');
-        
+    // Update Firebase with the new state
+    const updatePromise = setUvLight(checked);
+    
+    updatePromise
+      .then(() => {
         toast({
           title: checked ? "UV Light turned ON" : "UV Light turned OFF",
           description: checked 
@@ -62,10 +62,11 @@ export function PlantControls({ onAction }: PlantControlsProps) {
     setWateringInProgress(true);
     onAction('watering', true);
     
-    // Update Supabase with the watering command
-    setWateringActive(true)
-      .then((success) => {
-        if (!success) throw new Error('Failed to activate watering');
+    // Update Firebase with the watering command
+    const wateringPromise = setWateringActive(true);
+    
+    wateringPromise
+      .then(() => {
         toast({
           title: "Watering started",
           description: "Watering system activated for 5 seconds.",
@@ -76,10 +77,11 @@ export function PlantControls({ onAction }: PlantControlsProps) {
           setWateringInProgress(false);
           onAction('watering', false);
           
-          // Update Supabase when watering is complete
-          setWateringActive(false)
-            .then((success) => {
-              if (!success) throw new Error('Failed to deactivate watering');
+          // Update Firebase when watering is complete
+          const completionPromise = setWateringActive(false);
+          
+          completionPromise
+            .then(() => {
               toast({
                 title: "Watering complete",
                 description: "Your plant has been watered successfully.",
