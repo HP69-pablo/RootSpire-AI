@@ -1,10 +1,6 @@
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { useToast } from '@/hooks/use-toast';
-import { setUvLight, setWateringActive, subscribePlantControls, PlantControls as PlantControlsData } from '@/lib/firebase';
+import { Leaf } from 'lucide-react';
 
 interface PlantControlsProps {
   onAction: (action: string, state: boolean) => void;
@@ -12,140 +8,38 @@ interface PlantControlsProps {
 
 export function PlantControls({ onAction }: PlantControlsProps) {
   const { toast } = useToast();
-  const [uvLightOn, setUvLightOn] = useState(false);
-  const [wateringActive, setWateringActive] = useState(false);
-  const [wateringInProgress, setWateringInProgress] = useState(false);
-
-  // Subscribe to plant controls from Firebase
-  useEffect(() => {
-    const unsubscribe = subscribePlantControls((controls: PlantControlsData) => {
-      console.log('Received plant controls state:', controls);
-      setUvLightOn(controls.uvLight);
-      
-      // Only update watering if not in progress to avoid interrupting the timer
-      if (!wateringInProgress) {
-        setWateringActive(controls.wateringActive);
-      }
-    });
-    
-    return () => unsubscribe();
-  }, [wateringInProgress]);
-
-  const handleUvLightToggle = (checked: boolean) => {
-    onAction('uvLight', checked);
-    
-    // Update Firebase with the new state
-    const updatePromise = setUvLight(checked);
-    
-    updatePromise
-      .then(() => {
-        toast({
-          title: checked ? "UV Light turned ON" : "UV Light turned OFF",
-          description: checked 
-            ? "The UV light is now providing supplemental light for your plant." 
-            : "The UV light has been turned off.",
-        });
-      })
-      .catch((error: Error) => {
-        console.error('Error updating UV light state:', error);
-        toast({
-          title: "Error",
-          description: "Could not update UV light state.",
-          variant: "destructive",
-        });
-      });
-  };
-
-  const handleWateringButton = () => {
-    if (wateringInProgress) return; // Prevent multiple clicks
-    
-    setWateringInProgress(true);
-    onAction('watering', true);
-    
-    // Update Firebase with the watering command
-    const wateringPromise = setWateringActive(true);
-    
-    wateringPromise
-      .then(() => {
-        toast({
-          title: "Watering started",
-          description: "Watering system activated for 5 seconds.",
-        });
-        
-        // Simulate watering for 5 seconds
-        setTimeout(() => {
-          setWateringInProgress(false);
-          onAction('watering', false);
-          
-          // Update Firebase when watering is complete
-          const completionPromise = setWateringActive(false);
-          
-          completionPromise
-            .then(() => {
-              toast({
-                title: "Watering complete",
-                description: "Your plant has been watered successfully.",
-              });
-            })
-            .catch((error: Error) => {
-              console.error('Error deactivating watering system:', error);
-              toast({
-                title: "Error",
-                description: "Could not complete watering cycle.",
-                variant: "destructive",
-              });
-            });
-        }, 5000);
-      })
-      .catch((error: Error) => {
-        console.error('Error activating watering system:', error);
-        setWateringInProgress(false);
-        
-        toast({
-          title: "Error",
-          description: "Could not activate watering system.",
-          variant: "destructive",
-        });
-      });
-  };
 
   return (
     <Card className="bg-white dark:bg-slate-800 shadow-sm border border-gray-100 dark:border-gray-700">
       <CardHeader>
-        <CardTitle className="text-lg font-medium">Plant Controls</CardTitle>
+        <CardTitle className="text-lg font-medium flex items-center gap-2">
+          <Leaf className="h-5 w-5 text-green-600" />
+          Plant Information
+        </CardTitle>
       </CardHeader>
       
       <CardContent className="space-y-6">
-        {/* UV Light Control */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="uvLight" className="text-base">UV Light</Label>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Supplemental lighting for your plant
-            </div>
-          </div>
-          <Switch
-            id="uvLight"
-            checked={uvLightOn}
-            onCheckedChange={handleUvLightToggle}
-          />
+        <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-900/30">
+          <h3 className="text-base font-medium mb-2 text-green-800 dark:text-green-400">Monitoring Mode Active</h3>
+          <p className="text-sm text-green-700 dark:text-green-500">
+            This smart monitoring system is tracking your plant's environment conditions in real-time.
+          </p>
         </div>
         
-        {/* Watering Button */}
-        <div className="space-y-2">
-          <Label className="text-base">Watering System</Label>
-          <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-            Activate watering for 5 seconds
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-md">
+            <h4 className="text-sm font-medium mb-1">Temperature</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Monitoring ideal temperature range for optimal plant growth
+            </p>
           </div>
-          <Button 
-            className="w-full" 
-            size="lg"
-            onClick={handleWateringButton}
-            disabled={wateringInProgress}
-            variant={wateringActive ? "outline" : "default"}
-          >
-            {wateringActive ? "Watering..." : "Water Plant"}
-          </Button>
+          
+          <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-md">
+            <h4 className="text-sm font-medium mb-1">Humidity</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Tracking ambient humidity levels in your plant's environment
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>
