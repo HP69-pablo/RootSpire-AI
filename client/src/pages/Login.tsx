@@ -12,6 +12,9 @@ import {
 } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/lib/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { Leaf, Loader2 } from 'lucide-react';
@@ -277,30 +280,300 @@ export default function Login() {
             </CardHeader>
             
             <CardContent className="relative z-10 pt-2">
-              <div className="space-y-4">
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Button
-                    onClick={handleGoogleSignIn}
-                    disabled={signingIn}
-                    className="w-full bg-white text-gray-700 hover:bg-gray-100 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 border border-gray-300 dark:border-slate-600 h-12"
-                    variant="outline"
-                  >
-                    {signingIn ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <FaGoogle className="mr-2 h-4 w-4 text-red-500" />
-                    )}
-                    {signingIn ? "Signing in..." : "Sign in with Google"}
-                  </Button>
-                </motion.div>
-                
-                <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
-                  By signing in, you agree to our Terms of Service and Privacy Policy
+              {showResetPassword ? (
+                // Password Reset Form
+                <div className="space-y-4">
+                  <form onSubmit={handlePasswordReset}>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="reset-email">Email</Label>
+                        <div className="relative">
+                          <FaEnvelope className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="reset-email"
+                            type="email"
+                            placeholder="your.email@example.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="pl-10"
+                            required
+                          />
+                        </div>
+                      </div>
+                      
+                      <motion.div 
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Button
+                          type="submit"
+                          disabled={signingIn || !email}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white h-12"
+                        >
+                          {signingIn ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : null}
+                          {signingIn ? "Sending..." : "Send Reset Email"}
+                        </Button>
+                      </motion.div>
+                      
+                      <div className="text-center">
+                        <Button
+                          variant="link"
+                          onClick={() => setShowResetPassword(false)}
+                          className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                        >
+                          Back to Sign In
+                        </Button>
+                      </div>
+                    </div>
+                  </form>
                 </div>
-              </div>
+              ) : showEmailForm ? (
+                // Email Authentication Form (Login/Register)
+                <div className="space-y-4">
+                  <Tabs defaultValue="login" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 mb-4">
+                      <TabsTrigger 
+                        value="login" 
+                        onClick={() => setIsRegistering(false)}
+                        className="text-sm"
+                      >
+                        Sign In
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="register" 
+                        onClick={() => setIsRegistering(true)}
+                        className="text-sm"
+                      >
+                        Register
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="login" className="space-y-4">
+                      <form onSubmit={handleEmailLogin}>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <div className="relative">
+                              <FaEnvelope className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="email"
+                                type="email"
+                                placeholder="your.email@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="pl-10"
+                                required
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <Label htmlFor="password">Password</Label>
+                              <Button 
+                                type="button" 
+                                variant="link" 
+                                onClick={() => setShowResetPassword(true)}
+                                className="p-0 h-auto text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                              >
+                                Forgot password?
+                              </Button>
+                            </div>
+                            <div className="relative">
+                              <FaLock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="password"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="pl-10"
+                                required
+                              />
+                            </div>
+                          </div>
+                          
+                          <motion.div 
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Button
+                              type="submit"
+                              disabled={signingIn}
+                              className="w-full bg-green-600 hover:bg-green-700 text-white h-12"
+                            >
+                              {signingIn ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : null}
+                              {signingIn ? "Signing in..." : "Sign In"}
+                            </Button>
+                          </motion.div>
+                        </div>
+                      </form>
+                    </TabsContent>
+                    
+                    <TabsContent value="register" className="space-y-4">
+                      <form onSubmit={handleEmailRegister}>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="register-name">Full Name</Label>
+                            <div className="relative">
+                              <FaUser className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="register-name"
+                                type="text"
+                                placeholder="Jane Doe"
+                                value={displayName}
+                                onChange={(e) => setDisplayName(e.target.value)}
+                                className="pl-10"
+                                required
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="register-email">Email</Label>
+                            <div className="relative">
+                              <FaEnvelope className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="register-email"
+                                type="email"
+                                placeholder="your.email@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="pl-10"
+                                required
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="register-password">Password</Label>
+                            <div className="relative">
+                              <FaLock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="register-password"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="pl-10"
+                                required
+                              />
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              Must be at least 6 characters
+                            </p>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="register-confirm">Confirm Password</Label>
+                            <div className="relative">
+                              <FaLock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="register-confirm"
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="pl-10"
+                                required
+                              />
+                            </div>
+                          </div>
+                          
+                          <motion.div 
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Button
+                              type="submit"
+                              disabled={signingIn}
+                              className="w-full bg-green-600 hover:bg-green-700 text-white h-12"
+                            >
+                              {signingIn ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : null}
+                              {signingIn ? "Creating Account..." : "Create Account"}
+                            </Button>
+                          </motion.div>
+                        </div>
+                      </form>
+                    </TabsContent>
+                  </Tabs>
+
+                  <div className="relative flex items-center justify-center mt-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+                    </div>
+                    <div className="relative bg-white dark:bg-slate-800 px-4 text-sm text-gray-500 dark:text-gray-400">
+                      or
+                    </div>
+                  </div>
+                  
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      onClick={handleGoogleSignIn}
+                      disabled={signingIn}
+                      className="w-full bg-white text-gray-700 hover:bg-gray-100 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 border border-gray-300 dark:border-slate-600 h-12"
+                      variant="outline"
+                    >
+                      <FaGoogle className="mr-2 h-4 w-4 text-red-500" />
+                      Sign in with Google
+                    </Button>
+                  </motion.div>
+                  
+                  <Button
+                    variant="link"
+                    onClick={() => setShowEmailForm(false)}
+                    className="w-full text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  >
+                    Back
+                  </Button>
+                </div>
+              ) : (
+                // Main Login Options
+                <div className="space-y-4">
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      onClick={() => setShowEmailForm(true)}
+                      disabled={signingIn}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white h-12"
+                    >
+                      <FaEnvelope className="mr-2 h-4 w-4" />
+                      Sign in with Email
+                    </Button>
+                  </motion.div>
+                  
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      onClick={handleGoogleSignIn}
+                      disabled={signingIn}
+                      className="w-full bg-white text-gray-700 hover:bg-gray-100 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 border border-gray-300 dark:border-slate-600 h-12"
+                      variant="outline"
+                    >
+                      {signingIn ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <FaGoogle className="mr-2 h-4 w-4 text-red-500" />
+                      )}
+                      {signingIn ? "Signing in..." : "Sign in with Google"}
+                    </Button>
+                  </motion.div>
+                  
+                  <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+                    By signing in, you agree to our Terms of Service and Privacy Policy
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         ) : (
