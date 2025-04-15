@@ -9,10 +9,6 @@ import Login from "@/pages/Login";
 import MyPlants from "@/pages/MyPlants";
 import { ThemeProvider } from "./lib/ThemeProvider";
 import { AuthProvider } from "./lib/AuthProvider";
-import { initializeFirebase } from "./lib/firebase";
-
-// Initialize Firebase once at app startup
-initializeFirebase();
 
 function Router() {
   return (

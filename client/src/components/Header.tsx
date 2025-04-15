@@ -1,54 +1,143 @@
-import { useTheme } from "@/lib/useTheme";
+import { useTheme } from "@/lib/ThemeProvider";
 import { Link, useLocation } from "wouter";
-import { BarChart3, MessageSquare } from "lucide-react";
+import { BarChart3, MessageSquare, Leaf, Sun, Moon } from "lucide-react";
+import { useAuth } from "@/lib/AuthProvider";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { userSignOut } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  const { user, profile } = useAuth();
+  
+  const handleSignOut = async () => {
+    await userSignOut();
+    setLocation('/login');
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
   
   return (
-    <header className="border-b border-gray-200 dark:border-gray-700">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+    <header className="border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center space-x-2">
-          <span className="material-icons text-primary-500">eco</span>
+          <motion.div
+            animate={{ rotate: [0, 10, 0, -10, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Leaf className="h-6 w-6 text-green-600 dark:text-green-500" />
+          </motion.div>
           <h1 className="text-xl font-semibold">Smart Plant Monitor</h1>
         </div>
         
         <div className="flex items-center space-x-6">
           {/* Navigation Links */}
-          <nav className="flex items-center space-x-4">
+          <nav className="flex items-center space-x-1 md:space-x-2">
             <Link href="/">
-              <div className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors cursor-pointer ${location === '/' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'}`}>
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors cursor-pointer ${location === '/' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'}`}
+              >
                 <BarChart3 className="h-4 w-4" />
-                <span>Dashboard</span>
-              </div>
+                <span className="hidden sm:inline">Dashboard</span>
+              </motion.div>
             </Link>
+            
+            <Link href="/my-plants">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors cursor-pointer ${location === '/my-plants' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'}`}
+              >
+                <Leaf className="h-4 w-4" />
+                <span className="hidden sm:inline">My Plants</span>
+              </motion.div>
+            </Link>
+            
             <Link href="/chat">
-              <div className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors cursor-pointer ${location === '/chat' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'}`}>
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors cursor-pointer ${location === '/chat' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'}`}
+              >
                 <MessageSquare className="h-4 w-4" />
-                <span>Plant Chat</span>
-              </div>
+                <span className="hidden sm:inline">Plant Chat</span>
+              </motion.div>
             </Link>
           </nav>
           
           {/* Theme Toggle */}
-          <div className="flex items-center">
-            <span className="material-icons text-gray-500 dark:text-gray-400 mr-2 text-sm">light_mode</span>
-            <div className="relative inline-block w-12 mr-2 align-middle select-none">
-              <input 
-                type="checkbox" 
-                id="theme-toggle" 
-                checked={theme === 'dark'}
-                onChange={toggleTheme}
-                className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform duration-200 ease-in-out"
-              />
-              <label 
-                htmlFor="theme-toggle" 
-                className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-gray-600 cursor-pointer transition-colors duration-200 ease-in-out"
-              ></label>
-            </div>
-            <span className="material-icons text-gray-500 dark:text-gray-400 text-sm">dark_mode</span>
-          </div>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={toggleTheme}
+            className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </motion.button>
+          
+          {/* User Menu */}
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <motion.div whileHover={{ scale: 1.05 }} className="cursor-pointer">
+                  <Avatar className="h-8 w-8 border border-gray-200 dark:border-gray-700">
+                    {profile?.photoURL && <AvatarImage src={profile.photoURL} alt={profile.displayName} />}
+                    <AvatarFallback className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                      {profile?.displayName ? getInitials(profile.displayName) : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </motion.div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium">{profile?.displayName}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{profile?.email}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/my-plants">My Plants</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/chat">Plant Chat</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="text-red-600 dark:text-red-400">
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button 
+              onClick={() => setLocation('/login')}
+              size="sm" 
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              Sign In
+            </Button>
+          )}
         </div>
       </div>
     </header>

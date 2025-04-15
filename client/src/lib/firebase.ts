@@ -96,37 +96,65 @@ function generateSampleData() {
 }
 
 export function initializeFirebase() {
-  if (!app) {
-    try {
-      // Log Firebase config (without sensitive values)
-      console.log('Initializing Firebase with config:', {
-        databaseURL: firebaseConfig.databaseURL,
-        projectId: firebaseConfig.projectId,
-        authDomain: firebaseConfig.authDomain,
-        storageBucket: firebaseConfig.storageBucket,
-        hasApiKey: !!firebaseConfig.apiKey,
-        hasAppId: !!firebaseConfig.appId,
-        hasMessagingSenderId: !!firebaseConfig.messagingSenderId
-      });
-      
-      app = initializeApp(firebaseConfig);
-      database = getDatabase(app);
-      console.log('Firebase initialized successfully, database reference:', !!database);
-      
-      // If successful, try to generate sample data
-      try {
-        generateSampleData();
-      } catch (e) {
-        console.error('Error generating sample data:', e);
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error initializing Firebase:', error);
-      return false;
-    }
+  if (database) {
+    return true; // Already initialized
   }
-  return !!database;
+  
+  try {
+    // Log Firebase config (without sensitive values)
+    console.log('Initializing Firebase with config:', {
+      databaseURL: firebaseConfig.databaseURL,
+      projectId: firebaseConfig.projectId,
+      authDomain: firebaseConfig.authDomain,
+      storageBucket: firebaseConfig.storageBucket,
+      hasApiKey: !!firebaseConfig.apiKey,
+      hasAppId: !!firebaseConfig.appId,
+      hasMessagingSenderId: !!firebaseConfig.messagingSenderId
+    });
+    
+    // Get existing app instance or create new one
+    try {
+      const existingApps = (window as any).firebase?.apps;
+      if (existingApps && existingApps.length > 0) {
+        app = existingApps[0];
+      } else {
+        app = initializeApp(firebaseConfig);
+      }
+    } catch (e) {
+      // If we get an error about duplicate app, try to handle it gracefully
+      if (e instanceof Error && e.message.includes('duplicate app')) {
+        try {
+          // Using any since Firebase v9 doesn't expose a getApp() method easily in modular API
+          const firebaseInstance = (window as any).firebase;
+          if (firebaseInstance && typeof firebaseInstance.app === 'function') {
+            app = firebaseInstance.app();
+          } else {
+            throw new Error('Could not access existing Firebase app instance');
+          }
+        } catch (innerError) {
+          console.error('Error accessing existing Firebase app:', innerError);
+          return false;
+        }
+      } else {
+        throw e; // Re-throw if it's not a duplicate app error
+      }
+    }
+    
+    database = getDatabase(app);
+    console.log('Firebase initialized successfully, database reference:', !!database);
+    
+    // If successful, try to generate sample data
+    try {
+      generateSampleData();
+    } catch (e) {
+      console.error('Error generating sample data:', e);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error initializing Firebase:', error);
+    return false;
+  }
 }
 
 export interface SensorData {
