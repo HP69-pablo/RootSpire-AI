@@ -5,13 +5,22 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import PlantChat from "@/pages/PlantChat";
+import Login from "@/pages/Login";
+import MyPlants from "@/pages/MyPlants";
 import { ThemeProvider } from "./lib/ThemeProvider";
+import { AuthProvider } from "./lib/AuthProvider";
+import { initializeFirebase } from "./lib/firebase";
+
+// Initialize Firebase once at app startup
+initializeFirebase();
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/chat" component={PlantChat} />
+      <Route path="/login" component={Login} />
+      <Route path="/my-plants" component={MyPlants} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -21,8 +30,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <Router />
-        <Toaster />
+        <AuthProvider>
+          <Router />
+          <Toaster />
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
