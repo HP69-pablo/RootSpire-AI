@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
-import { FaGoogle } from 'react-icons/fa';
+import { FaGoogle, FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
 import { 
   signInWithGoogle, 
+  loginWithEmail,
+  registerWithEmail,
+  resetPassword,
   updateExpertiseLevel, 
   EXPERTISE_LEVELS 
 } from '@/lib/auth';
@@ -20,6 +23,15 @@ export default function Login() {
   const [signingIn, setSigningIn] = useState(false);
   const [selectedExpertise, setSelectedExpertise] = useState('');
   const [showExpertiseSelection, setShowExpertiseSelection] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  
+  // Email form fields
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Handle Google sign in
   const handleGoogleSignIn = async () => {
@@ -85,6 +97,143 @@ export default function Login() {
       toast({
         title: "Update failed",
         description: "An error occurred while saving your expertise level",
+        variant: "destructive"
+      });
+    } finally {
+      setSigningIn(false);
+    }
+  };
+  
+  // Handle email login
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Missing information",
+        description: "Please enter your email and password",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setSigningIn(true);
+    try {
+      const profile = await loginWithEmail(email, password);
+      
+      if (profile) {
+        // If the user is new or doesn't have an expertise level set
+        if (!profile.expertiseLevel) {
+          setShowExpertiseSelection(true);
+        } else {
+          // User already has expertise level, redirect to dashboard
+          toast({
+            title: "Welcome back!",
+            description: "Successfully signed in",
+          });
+          setLocation('/');
+        }
+      } else {
+        toast({
+          title: "Sign in failed",
+          description: "Could not sign in with email/password",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error signing in with email:', error);
+      toast({
+        title: "Sign in failed",
+        description: "Invalid email or password",
+        variant: "destructive"
+      });
+    } finally {
+      setSigningIn(false);
+    }
+  };
+  
+  // Handle email registration
+  const handleEmailRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password || !displayName) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all fields",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please make sure your passwords match",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setSigningIn(true);
+    try {
+      const profile = await registerWithEmail(email, password, displayName);
+      
+      if (profile) {
+        setShowExpertiseSelection(true);
+      } else {
+        toast({
+          title: "Registration failed",
+          description: "Could not create your account",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error registering with email:', error);
+      toast({
+        title: "Registration failed",
+        description: "This email may already be registered",
+        variant: "destructive"
+      });
+    } finally {
+      setSigningIn(false);
+    }
+  };
+  
+  // Handle password reset
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email) {
+      toast({
+        title: "Missing email",
+        description: "Please enter your email address",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setSigningIn(true);
+    try {
+      await resetPassword(email);
+      toast({
+        title: "Password reset email sent",
+        description: "Please check your email to reset your password",
+      });
+      setShowResetPassword(false);
+    } catch (error) {
+      console.error('Error sending password reset:', error);
+      toast({
+        title: "Failed to send reset email",
+        description: "Please check if the email is correct",
         variant: "destructive"
       });
     } finally {

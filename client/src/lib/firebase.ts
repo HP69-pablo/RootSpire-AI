@@ -160,6 +160,7 @@ export function initializeFirebase() {
 export interface SensorData {
   temperature: number;
   humidity: number;
+  light?: number;
   timestamp: number;
 }
 
@@ -167,6 +168,7 @@ export interface SensorHistory {
   [timestamp: number]: {
     temperature: number;
     humidity: number;
+    light?: number;
   };
 }
 
@@ -183,9 +185,30 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
   const unsubscribe = onValue(sensorRef, (snapshot: DataSnapshot) => {
     console.log('Got sensor data update, snapshot exists:', snapshot.exists());
     
-    const data = snapshot.val() as SensorData | null;
-    if (data) {
-      console.log('Received sensor data:', data);
+    // In your database structure, temperature and humidity are direct children of sensorData/current
+    if (snapshot.exists()) {
+      const sensorValues = snapshot.val();
+      console.log('Raw sensor data:', sensorValues);
+      
+      // Extract values according to your database structure
+      // If they're direct fields, they'll be in the snapshot value
+      const temperature = sensorValues.temperature;
+      const humidity = sensorValues.humidity;
+      const light = sensorValues.light;
+      
+      // Construct a SensorData object with the current time as timestamp
+      const data: SensorData = {
+        temperature: typeof temperature === 'number' ? temperature : 0,
+        humidity: typeof humidity === 'number' ? humidity : 0,
+        timestamp: Date.now()
+      };
+      
+      // Add light if it exists
+      if (typeof light === 'number') {
+        data.light = light;
+      }
+      
+      console.log('Processed sensor data:', data);
       callback(data);
     } else {
       console.log('No sensor data available in snapshot');
@@ -217,21 +240,60 @@ export function getSensorHistory(days: number, callback: (data: SensorHistory) =
   const unsubscribe = onValue(historyRef, (snapshot: DataSnapshot) => {
     console.log('Got history data update, snapshot exists:', snapshot.exists());
     
-    const allData = snapshot.val() as SensorHistory | null;
-    if (allData) {
-      console.log('Received history data with', Object.keys(allData).length, 'entries');
+    if (snapshot.exists()) {
+      const historyData = snapshot.val();
+      console.log('Raw history data:', typeof historyData);
       
-      // Filter data based on the time range
-      const filteredData: SensorHistory = {};
-      Object.keys(allData).forEach(timestamp => {
-        const ts = parseInt(timestamp);
-        if (ts >= startTime && ts <= endTime) {
-          filteredData[ts] = allData[ts];
+      // Process the data according to the database structure
+      const processedData: SensorHistory = {};
+      
+      // If historyData is an object with timestamp keys
+      if (typeof historyData === 'object' && historyData !== null) {
+        const entries = Object.entries(historyData);
+        console.log(`Found ${entries.length} history entries to process`);
+        
+        for (const [key, value] of entries) {
+          // Try to parse the key as a timestamp
+          const timestamp = parseInt(key);
+          
+          // Skip invalid timestamps and entries outside the time range
+          if (isNaN(timestamp) || timestamp < startTime || timestamp > endTime) {
+            continue;
+          }
+          
+          // Extract data based on structure (might be nested or flat)
+          const entry = value as any;
+          let temperature, humidity, light;
+          
+          if (entry.temperature !== undefined) {
+            // Direct properties on the entry
+            temperature = entry.temperature;
+            humidity = entry.humidity;
+            light = entry.light;
+          } else if (entry.data && typeof entry.data === 'object') {
+            // Nested under a 'data' property
+            temperature = entry.data.temperature;
+            humidity = entry.data.humidity;
+            light = entry.data.light;
+          }
+          
+          // Only add valid entries
+          if (typeof temperature === 'number' || typeof humidity === 'number') {
+            processedData[timestamp] = {
+              temperature: typeof temperature === 'number' ? temperature : 0,
+              humidity: typeof humidity === 'number' ? humidity : 0,
+            };
+            
+            // Add light if available
+            if (typeof light === 'number') {
+              processedData[timestamp].light = light;
+            }
+          }
         }
-      });
+      }
       
-      console.log('Filtered history data to', Object.keys(filteredData).length, 'entries within time range');
-      callback(filteredData);
+      console.log('Processed history data with', Object.keys(processedData).length, 'valid entries');
+      callback(processedData);
     } else {
       console.log('No history data available in snapshot');
       callback({});

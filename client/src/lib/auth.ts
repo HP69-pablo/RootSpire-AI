@@ -2,10 +2,14 @@ import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { 
   getAuth,
   signInWithPopup, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
-  User
+  User,
+  updateProfile,
+  sendPasswordResetEmail
 } from "firebase/auth";
 import { getDatabase, ref, set, get } from "firebase/database";
 
@@ -185,4 +189,79 @@ export const subscribeToAuthChanges = (
 // Get current user
 export const getCurrentUser = (): User | null => {
   return auth.currentUser;
+};
+
+// Email registration
+export const registerWithEmail = async (
+  email: string, 
+  password: string, 
+  displayName: string
+): Promise<UserProfile | null> => {
+  try {
+    // Create user with email and password
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    
+    // Update the user's display name
+    await updateProfile(user, { displayName });
+    
+    // Create and save user profile
+    const newProfile: UserProfile = {
+      uid: user.uid,
+      email: user.email || '',
+      displayName: displayName,
+      photoURL: user.photoURL || '',
+      createdAt: Date.now(),
+    };
+    
+    await saveUserProfile(newProfile);
+    return newProfile;
+  } catch (error) {
+    console.error("Error registering with email:", error);
+    throw error;
+  }
+};
+
+// Email login
+export const loginWithEmail = async (
+  email: string, 
+  password: string
+): Promise<UserProfile | null> => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    
+    // Get user profile or create if it doesn't exist
+    let userProfile = await getUserProfile(user.uid);
+    
+    if (!userProfile) {
+      // Create profile if it doesn't exist (rare case)
+      const newProfile: UserProfile = {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName || '',
+        photoURL: user.photoURL || '',
+        createdAt: Date.now(),
+      };
+      
+      await saveUserProfile(newProfile);
+      return newProfile;
+    }
+    
+    return userProfile;
+  } catch (error) {
+    console.error("Error logging in with email:", error);
+    throw error;
+  }
+};
+
+// Password reset
+export const resetPassword = async (email: string): Promise<boolean> => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return true;
+  } catch (error) {
+    console.error("Error sending password reset email:", error);
+    throw error;
+  }
 };
