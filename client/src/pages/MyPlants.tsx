@@ -22,6 +22,14 @@ export default function MyPlants() {
   const [location, setLocation] = useLocation();
   const [showAddPlant, setShowAddPlant] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
+  const [selectedPlant, setSelectedPlant] = useState<UserPlant | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [analyzingPhoto, setAnalyzingPhoto] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<PlantAnalysisResult | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Add plant form state
   const [newPlant, setNewPlant] = useState({
@@ -85,6 +93,117 @@ export default function MyPlants() {
       });
     } finally {
       setSaving(false);
+    }
+  };
+  
+  // Open the photo upload dialog for a specific plant
+  const openPhotoDialog = (plant: UserPlant) => {
+    setSelectedPlant(plant);
+    setPhotoPreview(null);
+    setPhotoFile(null);
+    setAnalysisResult(null);
+    setPhotoDialogOpen(true);
+  };
+  
+  // Handle photo file selection
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    setPhotoFile(file);
+    
+    // Create a preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setPhotoPreview(previewUrl);
+  };
+  
+  // Handle photo upload and analysis
+  const handlePhotoUpload = async () => {
+    if (!user || !selectedPlant || !photoFile) return;
+    
+    try {
+      setUploadingPhoto(true);
+      
+      // Upload the photo to Firebase Storage
+      const downloadUrl = await uploadPlantPhoto(user.uid, selectedPlant.id, photoFile);
+      
+      // Update the plant data with the image URL
+      await updatePlantData(user.uid, selectedPlant.id, {
+        imageUrl: downloadUrl
+      });
+      
+      toast({
+        title: "Photo uploaded",
+        description: "Your plant photo has been successfully uploaded.",
+      });
+      
+      // Now analyze the photo with Gemini
+      setAnalyzingPhoto(true);
+      
+      // Convert the file to a base64 data URL for Gemini API
+      const reader = new FileReader();
+      reader.readAsDataURL(photoFile);
+      reader.onload = async () => {
+        try {
+          if (typeof reader.result === 'string') {
+            const analysis = await analyzePlantPhoto(reader.result);
+            setAnalysisResult(analysis);
+            
+            // If the confidence is medium or high, update the plant species
+            if (analysis.confidence !== 'low') {
+              await updatePlantData(user.uid, selectedPlant.id, {
+                species: analysis.species,
+                notes: selectedPlant.notes 
+                  ? `${selectedPlant.notes}\n\nAI Analysis: ${analysis.careInstructions}`
+                  : `AI Analysis: ${analysis.careInstructions}`,
+                health: analysis.healthAssessment.toLowerCase().includes('good') 
+                  ? 'good' 
+                  : analysis.healthAssessment.toLowerCase().includes('excellent') 
+                    ? 'excellent'
+                    : analysis.healthAssessment.toLowerCase().includes('poor')
+                      ? 'poor'
+                      : 'fair'
+              });
+              
+              toast({
+                title: "Plant identified",
+                description: `Your plant was identified as ${analysis.commonName} (${analysis.species})`,
+              });
+              
+              // Refresh the profile to show updated data
+              await refreshProfile();
+            }
+          }
+        } catch (error) {
+          console.error('Error analyzing plant photo:', error);
+          toast({
+            title: "Analysis failed",
+            description: "We couldn't analyze your plant photo. Please try again.",
+            variant: "destructive"
+          });
+        } finally {
+          setAnalyzingPhoto(false);
+        }
+      };
+      
+      reader.onerror = () => {
+        toast({
+          title: "Error",
+          description: "Failed to process the image for analysis",
+          variant: "destructive"
+        });
+        setAnalyzingPhoto(false);
+      };
+      
+    } catch (error) {
+      console.error('Error uploading plant photo:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload your plant photo. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -240,6 +359,16 @@ export default function MyPlants() {
                 >
                   <Card className="overflow-hidden border-0 shadow-md bg-white dark:bg-slate-800">
                     <div className="h-3 bg-gradient-to-r from-green-400 to-green-600 dark:from-green-600 dark:to-green-800" />
+                    {plant.imageUrl && (
+                      <div className="h-40 w-full overflow-hidden">
+                        <img 
+                          src={plant.imageUrl} 
+                          alt={plant.name} 
+                          className="w-full h-full object-cover transition-transform hover:scale-105 cursor-pointer" 
+                          onClick={() => openPhotoDialog(plant)}
+                        />
+                      </div>
+                    )}
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
                         <CardTitle className="text-xl">{plant.name}</CardTitle>
@@ -272,6 +401,20 @@ export default function MyPlants() {
                             variant="outline" 
                             size="sm"
                             className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900 dark:hover:bg-blue-900/20"
+                            onClick={() => {
+                              // Mark as watered
+                              if (user && plant) {
+                                updatePlantData(user.uid, plant.id, {
+                                  lastWatered: Date.now()
+                                }).then(() => {
+                                  refreshProfile();
+                                  toast({
+                                    title: "Plant watered",
+                                    description: `${plant.name} has been marked as watered.`
+                                  });
+                                });
+                              }
+                            }}
                           >
                             <Droplet className="h-3.5 w-3.5 mr-1" />
                             Water
@@ -280,8 +423,10 @@ export default function MyPlants() {
                             variant="outline" 
                             size="sm"
                             className="flex-1 dark:text-gray-300"
+                            onClick={() => openPhotoDialog(plant)}
                           >
-                            Check Health
+                            <Camera className="h-3.5 w-3.5 mr-1" />
+                            Photo
                           </Button>
                         </div>
                       </div>
@@ -293,6 +438,181 @@ export default function MyPlants() {
           )}
         </motion.div>
       </main>
+      
+      {/* Plant Photo Upload Dialog */}
+      <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Upload Plant Photo</DialogTitle>
+            <DialogDescription>
+              Upload a photo of your plant for identification and care advice
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Tabs defaultValue="upload" className="mt-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="upload">Upload Photo</TabsTrigger>
+              <TabsTrigger value="result" disabled={!analysisResult}>Analysis Result</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="upload" className="mt-4 space-y-4">
+              {photoPreview ? (
+                <div className="relative w-full h-64 rounded-md overflow-hidden">
+                  <img 
+                    src={photoPreview} 
+                    alt="Plant preview" 
+                    className="w-full h-full object-cover"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute top-2 right-2 bg-white dark:bg-black bg-opacity-70 dark:bg-opacity-70"
+                    onClick={() => {
+                      setPhotoPreview(null);
+                      setPhotoFile(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                      }
+                    }}
+                  >
+                    Change
+                  </Button>
+                </div>
+              ) : (
+                <div 
+                  className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md p-8 text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="flex flex-col items-center justify-center space-y-3">
+                    <Upload className="h-10 w-10 text-gray-400" />
+                    <div className="text-lg font-medium">Upload a photo</div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Click to select or drag and drop a photo of your plant
+                    </p>
+                    <Button variant="outline" size="sm">
+                      Select Photo
+                    </Button>
+                  </div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handlePhotoSelect}
+                  />
+                </div>
+              )}
+              
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setPhotoDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handlePhotoUpload}
+                  disabled={!photoFile || uploadingPhoto || analyzingPhoto}
+                  className="bg-green-600 hover:bg-green-700 relative"
+                >
+                  {(uploadingPhoto || analyzingPhoto) && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {uploadingPhoto 
+                    ? "Uploading..." 
+                    : analyzingPhoto 
+                      ? "Analyzing..." 
+                      : "Upload & Analyze"
+                  }
+                </Button>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="result" className="mt-4 space-y-4">
+              {analysisResult && (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge className={
+                        analysisResult.confidence === 'high' 
+                          ? 'bg-green-500' 
+                          : analysisResult.confidence === 'medium' 
+                            ? 'bg-yellow-500' 
+                            : 'bg-red-500'
+                      }>
+                        {analysisResult.confidence.charAt(0).toUpperCase() + analysisResult.confidence.slice(1)} confidence
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid gap-3">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Species</h4>
+                        <p className="text-lg font-medium">{analysisResult.species}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Common Name</h4>
+                        <p className="text-lg font-medium">{analysisResult.commonName}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Health Assessment</h4>
+                        <p className="text-lg font-medium">{analysisResult.healthAssessment}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Care Instructions</h4>
+                        <p className="text-md">{analysisResult.careInstructions}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setPhotoDialogOpen(false)}
+                    >
+                      Close
+                    </Button>
+                    {analysisResult.confidence !== 'low' && selectedPlant && (
+                      <Button
+                        className="bg-green-600 hover:bg-green-700"
+                        onClick={async () => {
+                          if (!user || !selectedPlant) return;
+                          
+                          try {
+                            await updatePlantData(user.uid, selectedPlant.id, {
+                              species: analysisResult.species,
+                              notes: selectedPlant.notes 
+                                ? `${selectedPlant.notes}\n\nAI Analysis: ${analysisResult.careInstructions}` 
+                                : `AI Analysis: ${analysisResult.careInstructions}`
+                            });
+                            
+                            toast({
+                              title: "Plant updated",
+                              description: "Your plant information has been updated with the analysis results."
+                            });
+                            
+                            await refreshProfile();
+                            setPhotoDialogOpen(false);
+                          } catch (error) {
+                            console.error('Error updating plant:', error);
+                            toast({
+                              title: "Update failed",
+                              description: "Failed to update plant information.",
+                              variant: "destructive"
+                            });
+                          }
+                        }}
+                      >
+                        <Check className="mr-2 h-4 w-4" />
+                        Apply Changes
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

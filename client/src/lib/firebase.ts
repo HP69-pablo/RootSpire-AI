@@ -484,7 +484,7 @@ export async function uploadPlantPhoto(
 export async function updatePlantData(
   userId: string, 
   plantId: string, 
-  data: { imageUrl?: string; species?: string; notes?: string; health?: string }
+  data: { imageUrl?: string; species?: string; notes?: string; health?: string; lastWatered?: number }
 ): Promise<void> {
   if (!database) {
     throw new Error('Database not initialized');
