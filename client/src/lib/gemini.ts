@@ -184,3 +184,111 @@ export async function sendMessage(chatHistory: ChatHistory, message: string): Pr
     return "Sorry, I had trouble connecting to the plant intelligence. Please check your connection and try again.";
   }
 }
+
+// Analyze a plant photo using Gemini's vision capabilities
+export interface PlantAnalysisResult {
+  species: string;
+  commonName: string;
+  careInstructions: string;
+  healthAssessment: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+export async function analyzePlantPhoto(imageUrl: string): Promise<PlantAnalysisResult> {
+  try {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('Gemini API key is missing');
+    }
+    
+    // Construct the API payload with the image
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    
+    // Create the prompt for plant identification and analysis
+    const prompt = `
+    Please analyze this plant image and provide:
+    1. Most likely species (scientific name)
+    2. Common name
+    3. Brief care instructions (light, water, temperature, humidity)
+    4. An assessment of the plant's health based on visual cues
+    5. Your confidence level in this identification (high, medium, or low)
+    
+    Format your answer as a JSON object with these fields:
+    {
+      "species": "Scientific name",
+      "commonName": "Common name",
+      "careInstructions": "Brief care instructions",
+      "healthAssessment": "Health assessment",
+      "confidence": "high/medium/low"
+    }
+    `;
+    
+    // Prepare the payload with both text and image
+    const payload = {
+      contents: [{
+        parts: [
+          { text: prompt },
+          { inlineData: { mimeType: "image/jpeg", data: imageUrl.split(',')[1] } }
+        ]
+      }]
+    };
+    
+    // Make the API request
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API request failed with status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Extract the response text
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!responseText) {
+      throw new Error('No response received from Gemini API');
+    }
+    
+    // Extract JSON from the response
+    // Find JSON object in the response text using regex
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Could not extract JSON response from Gemini API');
+    }
+    
+    try {
+      // Parse the JSON response
+      const jsonResponse = JSON.parse(jsonMatch[0]);
+      
+      // Ensure all expected fields are present
+      const result: PlantAnalysisResult = {
+        species: jsonResponse.species || 'Unknown species',
+        commonName: jsonResponse.commonName || 'Unknown',
+        careInstructions: jsonResponse.careInstructions || 'No care instructions available',
+        healthAssessment: jsonResponse.healthAssessment || 'Health assessment not available',
+        confidence: (jsonResponse.confidence?.toLowerCase() as 'high' | 'medium' | 'low') || 'low'
+      };
+      
+      return result;
+    } catch (jsonError) {
+      console.error('Error parsing JSON from Gemini response:', jsonError);
+      throw new Error('Invalid response format from plant analysis');
+    }
+  } catch (error) {
+    console.error('Error analyzing plant photo:', error);
+    // Return a default response when the analysis fails
+    return {
+      species: 'Analysis failed',
+      commonName: 'Unable to identify',
+      careInstructions: 'Please try uploading a clearer photo of the plant.',
+      healthAssessment: 'Assessment not available due to analysis failure.',
+      confidence: 'low'
+    };
+  }
+}

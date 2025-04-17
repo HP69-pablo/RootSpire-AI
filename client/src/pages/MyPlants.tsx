@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { useAuth } from '@/lib/AuthProvider';
@@ -11,7 +11,10 @@ import { Label } from '@/components/ui/label';
 import { addUserPlant, UserPlant } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
-import { Leaf, Plus, Droplet, Calendar, AlertCircle, Check, Loader2 } from 'lucide-react';
+import { Leaf, Plus, Droplet, Calendar, AlertCircle, Check, Loader2, Camera, Upload, Image as ImageIcon } from 'lucide-react';
+import { uploadPlantPhoto, updatePlantData } from '@/lib/firebase';
+import { analyzePlantPhoto, PlantAnalysisResult } from '@/lib/gemini';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function MyPlants() {
   const { user, profile, loading, refreshProfile } = useAuth();
