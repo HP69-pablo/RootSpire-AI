@@ -479,19 +479,32 @@ export default function MyPlants() {
                   </Button>
                 </div>
               ) : (
-                <div 
-                  className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md p-8 text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
-                >
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md p-8 text-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                   <div className="flex flex-col items-center justify-center space-y-3">
-                    <Upload className="h-10 w-10 text-gray-400" />
-                    <div className="text-lg font-medium">Upload a photo</div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Click to select or drag and drop a photo of your plant
+                    <div className="flex space-x-4">
+                      <div className="flex flex-col items-center cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-2">
+                          <Upload className="h-8 w-8 text-green-500" />
+                        </div>
+                        <span className="text-sm font-medium">Upload</span>
+                      </div>
+                      
+                      <div className="flex flex-col items-center cursor-pointer" onClick={() => {
+                        if (fileInputRef.current) {
+                          fileInputRef.current.capture = "environment";
+                          fileInputRef.current.click();
+                        }
+                      }}>
+                        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-2">
+                          <Camera className="h-8 w-8 text-blue-500" />
+                        </div>
+                        <span className="text-sm font-medium">Camera</span>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                      Upload or take a photo of your plant for AI analysis
                     </p>
-                    <Button variant="outline" size="sm">
-                      Select Photo
-                    </Button>
                   </div>
                   <input
                     type="file"
