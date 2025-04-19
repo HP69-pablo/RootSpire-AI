@@ -16,7 +16,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
+      <Route path="/chat" component={PlantChat} />
       <Route path="/login" component={Login} />
+      <Route path="/my-plants" component={MyPlants} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>

@@ -59,6 +59,39 @@ export function Header() {
                 <span className="hidden sm:inline">Dashboard</span>
               </motion.div>
             </Link>
+            
+            <Link href="/my-plants">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors cursor-pointer ${location === '/my-plants' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'}`}
+              >
+                <Leaf className="h-4 w-4" />
+                <span className="hidden sm:inline">My Plants</span>
+              </motion.div>
+            </Link>
+            
+            <Link href="/chat">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors cursor-pointer ${location === '/chat' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'}`}
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span className="hidden sm:inline">Plant Chat</span>
+              </motion.div>
+            </Link>
+            
+            <Link href="/settings">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors cursor-pointer ${location === '/settings' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'}`}
+              >
+                <SettingsIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Settings</span>
+              </motion.div>
+            </Link>
           </nav>
           
           {/* User Menu */}
@@ -80,25 +113,14 @@ export function Header() {
                   <p className="text-xs text-gray-500 dark:text-gray-400">{profile?.email}</p>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={() => setLocation('/settings')} 
-                  className="flex items-center"
-                >
-                  <SettingsIcon className="h-4 w-4 mr-2" />
-                  Settings
+                <DropdownMenuItem asChild>
+                  <Link href="/my-plants">My Plants</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center">
-                  {theme === 'dark' ? (
-                    <div className="flex items-center" onClick={toggleTheme}>
-                      <Sun className="h-4 w-4 mr-2" />
-                      Light Mode
-                    </div>
-                  ) : (
-                    <div className="flex items-center" onClick={toggleTheme}>
-                      <Moon className="h-4 w-4 mr-2" />
-                      Dark Mode
-                    </div>
-                  )}
+                <DropdownMenuItem asChild>
+                  <Link href="/chat">Plant Chat</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings">Settings</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-red-600 dark:text-red-400">
