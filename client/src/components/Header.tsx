@@ -1,6 +1,6 @@
 import { useTheme } from "@/lib/ThemeProvider";
 import { Link, useLocation } from "wouter";
-import { BarChart3, MessageSquare, Leaf, Settings as SettingsIcon, Sun, Moon } from "lucide-react";
+import { BarChart3, MessageSquare, Leaf, Settings as SettingsIcon, Sun, Moon, Menu } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
@@ -13,11 +13,15 @@ import {
 import { userSignOut } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { useDevice } from "@/hooks/use-device";
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
   const [location, setLocation] = useLocation();
   const { user, profile } = useAuth();
+  const { isMobile, isMobileDevice } = useDevice();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const handleSignOut = async () => {
     await userSignOut();
