@@ -7,6 +7,7 @@ import Dashboard from "@/pages/Dashboard";
 import PlantChat from "@/pages/PlantChat";
 import Login from "@/pages/Login";
 import MyPlants from "@/pages/MyPlants";
+import Settings from "@/pages/Settings";
 import { ThemeProvider } from "./lib/ThemeProvider";
 import { AuthProvider } from "./lib/AuthProvider";
 
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/chat" component={PlantChat} />
       <Route path="/login" component={Login} />
       <Route path="/my-plants" component={MyPlants} />
+      <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );

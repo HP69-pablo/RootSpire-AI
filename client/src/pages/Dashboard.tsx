@@ -248,15 +248,45 @@ export default function Dashboard() {
           />
         </motion.div>
         
-        {/* Settings & Notifications Section */}
+        {/* Plant Emergency SOS Button */}
         <motion.div 
-          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+          className="my-8"
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <PlantConfig onSave={handleSaveConfig} />
-          <NotificationSettings onSave={handleSaveNotifications} />
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                <span className="text-red-500 mr-2">●</span> 
+                Plant Emergency SOS
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Is your plant showing signs of distress? Get instant AI-powered advice to help diagnose and treat common plant issues.
+              </p>
+              
+              <div className="flex justify-center">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-8 rounded-full shadow-md flex items-center justify-center"
+                  onClick={() => {
+                    toast({
+                      title: "Plant SOS Activated",
+                      description: "Taking you to the Plant Chat for emergency assistance.",
+                    });
+                    // In a real implementation, this would take the user to the chat with a pre-filled emergency message
+                    window.location.href = '/chat';
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                  SOS: Get Help Now
+                </motion.button>
+              </div>
+            </div>
+          </div>
         </motion.div>
       </main>
       

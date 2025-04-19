@@ -1,6 +1,6 @@
 import { useTheme } from "@/lib/ThemeProvider";
 import { Link, useLocation } from "wouter";
-import { BarChart3, MessageSquare, Leaf, Sun, Moon } from "lucide-react";
+import { BarChart3, MessageSquare, Leaf, Settings as SettingsIcon, Sun, Moon } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
@@ -81,22 +81,18 @@ export function Header() {
                 <span className="hidden sm:inline">Plant Chat</span>
               </motion.div>
             </Link>
+            
+            <Link href="/settings">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors cursor-pointer ${location === '/settings' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'text-gray-600 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'}`}
+              >
+                <SettingsIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Settings</span>
+              </motion.div>
+            </Link>
           </nav>
-          
-          {/* Theme Toggle */}
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={toggleTheme}
-            className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
-            aria-label="Toggle theme"
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </motion.button>
           
           {/* User Menu */}
           {user ? (
@@ -122,6 +118,9 @@ export function Header() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/chat">Plant Chat</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings">Settings</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-red-600 dark:text-red-400">
