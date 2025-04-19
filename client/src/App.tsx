@@ -10,6 +10,7 @@ import MyPlants from "@/pages/MyPlants";
 import Settings from "@/pages/Settings";
 import { ThemeProvider } from "./lib/ThemeProvider";
 import { AuthProvider } from "./lib/AuthProvider";
+import { ChatBubble } from "@/components/ChatBubble";
 
 function Router() {
   return (
@@ -30,6 +31,7 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <Router />
+          <ChatBubble />
           <Toaster />
         </AuthProvider>
       </ThemeProvider>
