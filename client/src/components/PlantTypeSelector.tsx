@@ -3,7 +3,6 @@ import { PlantTypeInfo, plantCategories, getAllPlants, getPlantsByCategory, sear
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, Leaf, X, ImageIcon, Loader2 } from 'lucide-react';
@@ -27,6 +26,33 @@ export function PlantTypeSelector({ onSelect, onClose }: PlantTypeSelectorProps)
   const [plantImages, setPlantImages] = useState<Record<string, string>>({});
   const { isMobileDevice } = useDevice();
 
+  // Function to load plant image using Gemini
+  const loadPlantImage = useCallback(async (plant: PlantTypeInfo) => {
+    // Skip if plant already has an image or if we're already loading it
+    if (plant.imageUrl || loadingImages[plant.id] || plantImages[plant.id]) {
+      return;
+    }
+    
+    // Mark this plant as loading an image
+    setLoadingImages(prev => ({ ...prev, [plant.id]: true }));
+    
+    try {
+      // Use plant name and scientific name for better search results
+      const searchTerm = `${plant.name} (${plant.scientificName}) plant`;
+      const imageUrl = await fetchPlantImage(searchTerm);
+      
+      if (imageUrl) {
+        // Store the image URL in state
+        setPlantImages(prev => ({ ...prev, [plant.id]: imageUrl }));
+      }
+    } catch (error) {
+      console.error(`Error loading image for ${plant.name}:`, error);
+    } finally {
+      // Mark loading as complete regardless of result
+      setLoadingImages(prev => ({ ...prev, [plant.id]: false }));
+    }
+  }, [loadingImages, plantImages]);
+  
   // Initialize with default category plants
   useEffect(() => {
     if (isSearchActive && searchQuery) {
@@ -35,6 +61,19 @@ export function PlantTypeSelector({ onSelect, onClose }: PlantTypeSelectorProps)
       setDisplayedPlants(getPlantsByCategory(selectedCategory));
     }
   }, [selectedCategory, searchResults, isSearchActive, searchQuery]);
+  
+  // Effect to load images for displayed plants
+  useEffect(() => {
+    // Only load first 9 plant images to avoid overwhelming the API
+    const plantsWithoutImages = displayedPlants
+      .filter(plant => !plant.imageUrl && !plantImages[plant.id] && !loadingImages[plant.id])
+      .slice(0, 9);
+      
+    // For each plant without an image, trigger image loading
+    plantsWithoutImages.forEach(plant => {
+      loadPlantImage(plant);
+    });
+  }, [displayedPlants, loadPlantImage, plantImages, loadingImages]);
 
   // Handle search
   const handleSearch = (query: string) => {
@@ -60,7 +99,13 @@ export function PlantTypeSelector({ onSelect, onClose }: PlantTypeSelectorProps)
 
   // Handle plant selection
   const handlePlantSelect = (plant: PlantTypeInfo) => {
-    onSelect(plant);
+    // If we've generated an image for this plant, include it in the selection
+    const selectedPlant = { 
+      ...plant,
+      // If we found an image via Gemini but the plant doesn't have one, use ours
+      imageUrl: plant.imageUrl || plantImages[plant.id] || undefined
+    };
+    onSelect(selectedPlant);
     onClose();
   };
 
@@ -177,15 +222,29 @@ export function PlantTypeSelector({ onSelect, onClose }: PlantTypeSelectorProps)
                   <CardContent className="p-3">
                     <div className="flex gap-3 items-start">
                       <div className="h-16 w-16 rounded-full flex items-center justify-center overflow-hidden">
-                        {plant.imageUrl ? (
+                        {plant.imageUrl || plantImages[plant.id] ? (
                           <img 
-                            src={plant.imageUrl} 
+                            src={plant.imageUrl || plantImages[plant.id]} 
                             alt={plant.name} 
                             className="h-full w-full object-cover"
+                            onError={(e) => {
+                              // If image fails to load, show the leaf icon instead
+                              e.currentTarget.style.display = 'none';
+                              // Mark this plant as not having an image
+                              setPlantImages(prev => {
+                                const newState = {...prev};
+                                delete newState[plant.id];
+                                return newState;
+                              });
+                            }}
                           />
+                        ) : loadingImages[plant.id] ? (
+                          <div className="h-full w-full bg-green-50 dark:bg-green-950 flex items-center justify-center">
+                            <Loader2 className="h-8 w-8 text-green-600 dark:text-green-400 animate-spin" />
+                          </div>
                         ) : (
                           <div className="h-full w-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                            <Leaf className="h-10 w-10 text-green-600 dark:text-green-400" />
+                            <ImageIcon className="h-8 w-8 text-green-600 dark:text-green-400" />
                           </div>
                         )}
                       </div>
