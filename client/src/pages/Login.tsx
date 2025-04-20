@@ -231,11 +231,29 @@ export default function Login() {
     try {
       const generatedPassword = await resetPassword(email);
       setNewPassword(generatedPassword);
-      toast({
-        title: "Password reset successful",
-        description: "Your password has been reset. Please use the new password displayed below to log in.",
-        duration: 10000, // Make sure it stays visible longer
-      });
+      
+      // Auto-login with the new password
+      try {
+        // First show the password so the user can see it
+        toast({
+          title: "Password reset successful",
+          description: "Logging you in automatically...",
+          duration: 5000,
+        });
+        
+        // Then perform automatic login
+        await loginWithEmail(email, generatedPassword);
+        
+        // If we get here, login was successful, the redirect will happen automatically
+        // via the useEffect that checks for user && !loading
+      } catch (loginError: any) {
+        console.error('Auto-login failed after password reset:', loginError);
+        toast({
+          title: "Auto-login failed",
+          description: "Your password was reset successfully, but we couldn't log you in automatically. Please use the new password to log in manually.",
+          duration: 8000,
+        });
+      }
     } catch (error: any) {
       console.error('Error resetting password:', error);
       toast({
@@ -319,16 +337,44 @@ export default function Login() {
                       <div className="text-center">
                         <Button
                           variant="default"
-                          onClick={() => {
-                            // Auto-fill the email and password fields
-                            setPassword(newPassword || '');
-                            // Go back to login screen
-                            setShowResetPassword(false);
-                            setShowEmailForm(true);
+                          onClick={async () => {
+                            if (newPassword) {
+                              // Attempt to login automatically
+                              try {
+                                setSigningIn(true);
+                                await loginWithEmail(email, newPassword);
+                                // The useEffect will handle redirect on successful login
+                              } catch (loginError) {
+                                console.error('Error during auto-login from password reset:', loginError);
+                                // If auto-login fails, fall back to manual login
+                                toast({
+                                  title: "Please log in manually",
+                                  description: "We'll fill in your password for you.",
+                                });
+                                // Auto-fill the email and password fields
+                                setPassword(newPassword);
+                                // Go back to login screen
+                                setShowResetPassword(false);
+                                setShowEmailForm(true);
+                              } finally {
+                                setSigningIn(false);
+                              }
+                            } else {
+                              // Just go back to login without attempting auto-login
+                              setShowResetPassword(false);
+                              setShowEmailForm(true);
+                            }
                           }}
+                          disabled={signingIn}
                           className="w-full bg-green-600 hover:bg-green-700 text-white h-12"
                         >
-                          Back to Login
+                          {signingIn ? 
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Logging in...
+                            </> : 
+                            "Sign In Now"
+                          }
                         </Button>
                       </div>
                     </div>
