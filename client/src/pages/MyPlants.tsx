@@ -563,6 +563,7 @@ export default function MyPlants() {
         ref={fileInputRef}
         className="hidden"
         accept="image/*"
+        capture="environment"
         onChange={handlePhotoSelect}
       />
       
@@ -698,6 +699,7 @@ export default function MyPlants() {
                           ref={newPlantPhotoRef}
                           className="hidden"
                           accept="image/*"
+                          capture="environment"
                           onChange={handleNewPlantPhotoSelect}
                         />
                       </div>
