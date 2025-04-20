@@ -295,8 +295,15 @@ export default function MyPlants() {
     try {
       // Create an updated plants object without the deleted plant
       if (profile && profile.plants) {
-        const updatedPlants = { ...profile.plants } as Record<string, UserPlant>;
-        delete updatedPlants[plantId];
+        // Create a new object without the deleted plant
+        const updatedPlants: Record<string, UserPlant> = {};
+        
+        // Copy all plants except the one to delete
+        Object.entries(profile.plants).forEach(([id, plant]) => {
+          if (id !== plantId) {
+            updatedPlants[id] = plant;
+          }
+        });
         
         // Update Firebase with the new plants object
         const userRef = ref(getDatabase(), `users/${user.uid}/plants`);

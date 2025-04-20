@@ -28,12 +28,17 @@ import { getApp, getApps } from 'firebase/app';
 // Use these variables to store our Firebase instances
 let app: any;
 let database: any;
+let storage: any;
+let firebaseInitialized = false;
 
 // Initialize Firebase immediately to prevent multiple initialization attempts
 try {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
   database = getDatabase(app);
+  storage = getStorage(app);
+  firebaseInitialized = true;
   console.log('Firebase initialized on module load');
+  console.log('Firebase Storage initialized successfully');
 } catch (error) {
   console.error('Error initializing Firebase on module load:', error);
 }
@@ -154,6 +159,12 @@ export function initializeFirebase() {
     }
     
     database = getDatabase(app);
+    
+    // Initialize Firebase Storage if not already initialized
+    if (!storage) {
+      storage = getStorage(app);
+    }
+    
     console.log('Firebase initialized successfully, database reference:', !!database);
     
     // If successful, try to generate sample data
@@ -161,6 +172,16 @@ export function initializeFirebase() {
       generateSampleData();
     } catch (e) {
       console.error('Error generating sample data:', e);
+    }
+    
+    // Try to cache plant images in Firebase Storage (will run in background)
+    try {
+      downloadPlantTypesImages().catch(error => {
+        console.warn('Plant image caching completed with some errors:', error);
+      });
+    } catch (cacheError) {
+      console.warn('Error starting plant image cache process:', cacheError);
+      // Non-critical error, don't let it prevent app initialization
     }
     
     return true;
@@ -437,10 +458,11 @@ export function setWateringActive(state: boolean): Promise<void> {
   return set(wateringRef, state);
 }
 
-// Initialize storage
-let storage: any;
+// Initialize storage if not already done
 try {
-  storage = getStorage(app);
+  if (!storage) {
+    storage = getStorage(app);
+  }
   console.log('Firebase Storage initialized successfully');
 } catch (error) {
   console.error('Error initializing Firebase Storage:', error);
@@ -540,7 +562,8 @@ export async function downloadPlantTypesImages(): Promise<void> {
           }
         } catch (error) {
           console.error(`Failed to process image for ${plant.name}:`, error);
-          results.push({ id: plant.id, success: false, error: error.message });
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          results.push({ id: plant.id, success: false, error: errorMessage });
         }
       }
     }
@@ -549,7 +572,11 @@ export async function downloadPlantTypesImages(): Promise<void> {
     return;
   } catch (error) {
     console.error('Error in bulk plant image download:', error);
-    throw error;
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(String(error));
+    }
   }
 }
 
