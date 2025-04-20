@@ -12,7 +12,7 @@ import { addUserPlant, UserPlant } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { Leaf, Plus, Droplet, Calendar, AlertCircle, Check, Loader2, Camera, Upload, Image as ImageIcon, X, Trash2 } from 'lucide-react';
-import { uploadPlantPhoto, updatePlantData } from '@/lib/firebase';
+import { uploadPlantPhoto, updatePlantData, subscribeSensorData, SensorData } from '@/lib/firebase';
 import { getDatabase, ref, set } from 'firebase/database';
 import { analyzePlantPhoto, PlantAnalysisResult, fetchPlantImage } from '@/lib/gemini';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,6 +27,7 @@ export default function MyPlants() {
   const [showPlantTypeSelector, setShowPlantTypeSelector] = useState(false);
   const [saving, setSaving] = useState(false);
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
+  const [plantDetailsOpen, setPlantDetailsOpen] = useState(false);
   const [selectedPlant, setSelectedPlant] = useState<UserPlant | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -53,6 +54,9 @@ export default function MyPlants() {
   
   // Selected plant type from selector
   const [selectedPlantType, setSelectedPlantType] = useState<PlantTypeInfo | null>(null);
+  
+  // Sensor data from Firebase
+  const [sensorData, setSensorData] = useState<SensorData | null>(null);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -60,6 +64,23 @@ export default function MyPlants() {
       setLocation('/login');
     }
   }, [user, loading, setLocation]);
+  
+  // Subscribe to sensor data from Firebase
+  useEffect(() => {
+    const unsubscribe = subscribeSensorData((data) => {
+      setSensorData(data);
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+  
+  // Open plant details dialog
+  const openPlantDetails = (plant: UserPlant) => {
+    setSelectedPlant(plant);
+    setPlantDetailsOpen(true);
+  };
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -638,16 +659,21 @@ export default function MyPlants() {
                   whileHover={{ y: -5 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Card className="overflow-hidden border-0 shadow-md bg-white dark:bg-slate-800">
+                  <Card 
+                    className="overflow-hidden border-0 shadow-md bg-white dark:bg-slate-800 cursor-pointer group"
+                    onClick={() => openPlantDetails(plant)}
+                  >
                     <div className="h-3 bg-gradient-to-r from-green-400 to-green-600 dark:from-green-600 dark:to-green-800" />
                     {plant.imageUrl && (
-                      <div className="h-40 w-full overflow-hidden">
+                      <div className="h-40 w-full overflow-hidden relative">
                         <img 
                           src={plant.imageUrl} 
                           alt={plant.name} 
-                          className="w-full h-full object-cover transition-transform hover:scale-105 cursor-pointer" 
-                          onClick={() => openPhotoDialog(plant)}
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105" 
                         />
+                        <div className="absolute top-2 right-2 bg-white dark:bg-slate-800 bg-opacity-70 dark:bg-opacity-70 px-2 py-1 rounded text-xs font-medium">
+                          View Metrics
+                        </div>
                       </div>
                     )}
                     <CardHeader className="pb-2">
@@ -672,8 +698,25 @@ export default function MyPlants() {
                         </div>
                         
                         {plant.notes && (
-                          <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md text-sm mt-3">
-                            {plant.notes}
+                          <div 
+                            className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md text-sm mt-3 cursor-pointer relative overflow-hidden" 
+                            style={{ maxHeight: '60px' }}
+                            onClick={(e) => {
+                              const target = e.currentTarget;
+                              if (target.style.maxHeight === '60px') {
+                                target.style.maxHeight = '1000px';
+                              } else {
+                                target.style.maxHeight = '60px';
+                              }
+                            }}
+                          >
+                            <div className="relative">
+                              {plant.notes}
+                              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-50 to-transparent dark:from-gray-700/50"></div>
+                            </div>
+                            <div className="flex justify-center mt-1">
+                              <span className="text-xs text-gray-500 dark:text-gray-400">Click to expand</span>
+                            </div>
                           </div>
                         )}
                         
@@ -682,7 +725,8 @@ export default function MyPlants() {
                             variant="outline" 
                             size="sm"
                             className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900 dark:hover:bg-blue-900/20"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening details modal
                               // Mark as watered
                               if (user && plant) {
                                 updatePlantData(user.uid, plant.id, {
