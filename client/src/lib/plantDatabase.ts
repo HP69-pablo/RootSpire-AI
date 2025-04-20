@@ -45,6 +45,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 20,
     soilMoistureMax: 40,
     description: 'A popular trailing houseplant with heart-shaped leaves, known for being very easy to care for and propagate.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/Epipremnum_aureum_31082012.jpg',
   },
   {
     id: 'snake-plant',
@@ -61,6 +62,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 15,
     soilMoistureMax: 30,
     description: 'An extremely hardy plant with tall, rigid, sword-like leaves. Perfect for beginners and purifies air efficiently.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Snake_Plant_%28Sansevieria_trifasciata_%27Laurentii%27%29.jpg',
   },
   {
     id: 'peace-lily',
@@ -77,6 +79,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 30,
     soilMoistureMax: 50,
     description: 'Elegant plant with glossy leaves and white flowers (actually modified leaves). Good air purifier and humidity indicator.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/bd/Spathiphyllum_cochlearispathum_RTBG.jpg',
   },
   {
     id: 'spider-plant',
@@ -93,6 +96,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 30,
     soilMoistureMax: 50,
     description: 'Fast-growing plant with arching leaves and baby plantlets that dangle from stems like spiders on a web.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/8f/Chlorophytum_comosum_17-08-2009_16-55-49.JPG',
   },
   {
     id: 'monstera',
