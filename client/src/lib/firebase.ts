@@ -480,6 +480,79 @@ export async function uploadPlantPhoto(
   }
 }
 
+// Download an image from a URL and upload it to Firebase Storage
+export async function downloadAndUploadImage(
+  imageUrl: string,
+  storagePath: string
+): Promise<string> {
+  if (!storage) {
+    throw new Error('Firebase Storage not initialized');
+  }
+
+  try {
+    console.log(`Downloading image from URL: ${imageUrl}`);
+    
+    // Fetch the image
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
+    }
+    
+    // Convert to blob
+    const blob = await response.blob();
+    
+    // Create a reference to store the file in Firebase
+    const fileRef = storageRef(storage, storagePath);
+    
+    // Upload to Firebase Storage
+    const snapshot = await uploadBytes(fileRef, blob);
+    console.log('Image uploaded successfully:', snapshot.metadata.fullPath);
+    
+    // Get the download URL
+    const downloadURL = await getDownloadURL(fileRef);
+    console.log('Image download URL:', downloadURL);
+    
+    return downloadURL;
+  } catch (error) {
+    console.error('Error downloading and uploading image:', error);
+    throw error;
+  }
+}
+
+// Utility function to download plant images from the database and store them in Firebase
+export async function downloadPlantTypesImages(): Promise<void> {
+  try {
+    // Import the plant database dynamically to avoid circular dependencies
+    const { plantTypes } = await import('./plantDatabase');
+    const results = [];
+    
+    console.log(`Processing ${plantTypes.length} plants for image caching`);
+    
+    for (const plant of plantTypes) {
+      if (plant.imageUrl && plant.imageUrl.startsWith('http')) {
+        try {
+          // Only process external URLs (not Firebase URLs)
+          if (!plant.imageUrl.includes('firebasestorage')) {
+            const path = `plant-types/${plant.id}.jpg`;
+            const newUrl = await downloadAndUploadImage(plant.imageUrl, path);
+            results.push({ id: plant.id, success: true, url: newUrl });
+            console.log(`Successfully cached image for ${plant.name}`);
+          }
+        } catch (error) {
+          console.error(`Failed to process image for ${plant.name}:`, error);
+          results.push({ id: plant.id, success: false, error: error.message });
+        }
+      }
+    }
+    
+    console.log('Plant image caching completed:', results);
+    return;
+  } catch (error) {
+    console.error('Error in bulk plant image download:', error);
+    throw error;
+  }
+}
+
 // Update plant data in Firebase including image URL and AI analysis results
 export async function updatePlantData(
   userId: string, 

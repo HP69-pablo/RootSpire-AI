@@ -535,6 +535,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 15,
     soilMoistureMax: 30,
     description: 'Rosette-forming succulent in many colors and variations. Perfect for dish gardens.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Echeveria_hybrid.JPG',
   },
   {
     id: 'jade-plant',

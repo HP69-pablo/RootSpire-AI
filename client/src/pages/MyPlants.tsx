@@ -96,6 +96,12 @@ export default function MyPlants() {
       species: `${plantType.name} (${plantType.scientificName})`,
       notes: prev.notes ? prev.notes : `Care instructions:\n- Light: ${plantType.light} light\n- Water: ${plantType.water} water needs\n- Temperature: ${plantType.tempMin}°C to ${plantType.tempMax}°C\n- Humidity: ${plantType.humidityMin}% to ${plantType.humidityMax}%\n\n${plantType.description}`
     }));
+    
+    // Set auto plant image URL if available from plant type
+    if (plantType.imageUrl) {
+      setAutoPlantImageUrl(plantType.imageUrl);
+    }
+    
     setShowPlantTypeSelector(false);
   };
 
@@ -289,7 +295,7 @@ export default function MyPlants() {
     try {
       // Create an updated plants object without the deleted plant
       if (profile && profile.plants) {
-        const updatedPlants = { ...profile.plants };
+        const updatedPlants = { ...profile.plants } as Record<string, UserPlant>;
         delete updatedPlants[plantId];
         
         // Update Firebase with the new plants object
