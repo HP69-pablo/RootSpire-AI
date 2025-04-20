@@ -70,7 +70,7 @@ export interface UserProfile {
   displayName: string;
   photoURL?: string;
   expertiseLevel?: string;
-  plants?: UserPlant[];
+  plants?: { [plantId: string]: UserPlant };
   createdAt: number;
 }
 

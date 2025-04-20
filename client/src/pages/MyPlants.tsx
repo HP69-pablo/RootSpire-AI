@@ -79,15 +79,16 @@ export default function MyPlants() {
   
   // Load reference images for plants when profile is loaded
   useEffect(() => {
-    if (profile?.plants && Array.isArray(profile.plants) && profile.plants.length > 0) {
+    if (profile?.plants && typeof profile.plants === 'object') {
       const loadSpeciesImages = async () => {
-        // Create array of unique species names from profile.plants (which is an array)
+        // Create array of unique species names from profile.plants (which is an object of plants)
         const uniqueSpecies: string[] = [];
         
         // Safe access to plants with a separate if check to satisfy TypeScript
-        const plants = profile.plants;
-        if (plants) {
-          plants.forEach(plant => {
+        const plantsObj = profile.plants;
+        if (plantsObj) {
+          const plantsList = Object.values(plantsObj);
+          plantsList.forEach((plant: UserPlant) => {
             if (plant.species && !uniqueSpecies.includes(plant.species)) {
               uniqueSpecies.push(plant.species);
             }
@@ -598,7 +599,7 @@ export default function MyPlants() {
     );
   }
 
-  const userPlants = profile?.plants && Array.isArray(profile.plants) ? profile.plants : [];
+  const userPlants = profile?.plants ? Object.values(profile.plants) : [];
 
   return (
     <div className="min-h-screen font-sans transition-colors duration-300 ease-out bg-gradient-to-br from-slate-50 to-white text-slate-900 dark:from-slate-900 dark:to-slate-800 dark:text-white">
