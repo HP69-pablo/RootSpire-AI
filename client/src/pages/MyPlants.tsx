@@ -15,6 +15,8 @@ import { Leaf, Plus, Droplet, Calendar, AlertCircle, Check, Loader2, Camera, Upl
 import { uploadPlantPhoto, updatePlantData } from '@/lib/firebase';
 import { analyzePlantPhoto, PlantAnalysisResult } from '@/lib/gemini';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlantTypeSelector } from '@/components/PlantTypeSelector';
+import { PlantTypeInfo } from '@/lib/plantDatabase';
 
 export default function MyPlants() {
   const { user, profile, loading, refreshProfile } = useAuth();
