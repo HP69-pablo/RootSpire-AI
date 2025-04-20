@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { Leaf, Plus, Droplet, Calendar, AlertCircle, Check, Loader2, Camera, Upload, Image as ImageIcon, X, Trash2 } from 'lucide-react';
 import { uploadPlantPhoto, updatePlantData } from '@/lib/firebase';
+import { getDatabase, ref, set } from 'firebase/database';
 import { analyzePlantPhoto, PlantAnalysisResult, fetchPlantImage } from '@/lib/gemini';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlantTypeSelector } from '@/components/PlantTypeSelector';
@@ -93,15 +94,55 @@ export default function MyPlants() {
         health: 'good'
       };
       
+      // First add the plant to the database
       const success = await addUserPlant(user.uid, plant);
       
       if (success) {
+        // If we have a user-provided photo, upload it
+        if (newPlantPhoto) {
+          try {
+            const downloadUrl = await uploadPlantPhoto(user.uid, plantId, newPlantPhoto);
+            
+            // Update the plant with the image URL
+            await updatePlantData(user.uid, plantId, {
+              imageUrl: downloadUrl
+            });
+          } catch (uploadError) {
+            console.error('Error uploading plant photo:', uploadError);
+            // We don't fail the whole operation if just the photo upload fails
+            toast({
+              title: "Photo upload failed",
+              description: "Your plant was added, but we couldn't upload the photo.",
+              variant: "destructive"
+            });
+          }
+        } 
+        // If we have an auto-generated image from the API, use that
+        else if (autoPlantImageUrl) {
+          try {
+            // Update the plant with the auto-fetched image URL
+            await updatePlantData(user.uid, plantId, {
+              imageUrl: autoPlantImageUrl
+            });
+          } catch (updateError) {
+            console.error('Error setting auto image URL:', updateError);
+            // We don't fail the operation if just the image setting fails
+          }
+        }
+        
         await refreshProfile();
         toast({
           title: "Plant added",
           description: `${newPlant.name} has been added to your collection`,
         });
+        
+        // Reset everything
         setNewPlant({ name: '', species: '', notes: '' });
+        setNewPlantPhoto(null);
+        setNewPlantPhotoPreview(null);
+        setNewPlantAnalysisResult(null);
+        setAutoPlantImageUrl(null);
+        setSelectedPlantType(null);
         setShowAddPlant(false);
       } else {
         toast({
@@ -141,6 +182,115 @@ export default function MyPlants() {
     // Create a preview URL
     const previewUrl = URL.createObjectURL(file);
     setPhotoPreview(previewUrl);
+  };
+  
+  // Handle new plant photo selection during add plant flow
+  const handleNewPlantPhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    setNewPlantPhoto(file);
+    
+    // Create a preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setNewPlantPhotoPreview(previewUrl);
+    
+    // Analyze the photo to identify the plant
+    setAnalyzingNewPlantPhoto(true);
+    
+    try {
+      // Convert the file to a base64 data URL for Gemini API
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        try {
+          if (typeof reader.result === 'string') {
+            const analysis = await analyzePlantPhoto(reader.result);
+            setNewPlantAnalysisResult(analysis);
+            
+            // If confidence is medium or high, suggest the species
+            if (analysis.confidence !== 'low') {
+              setNewPlant(prev => ({
+                ...prev,
+                species: analysis.species,
+                notes: prev.notes ? 
+                  `${prev.notes}\n\nAI Analysis: ${analysis.careInstructions}` 
+                  : `AI Analysis: ${analysis.careInstructions}`
+              }));
+              
+              // Try to fetch a real image of the identified plant
+              setFetchingPlantImage(true);
+              const imageUrl = await fetchPlantImage(analysis.commonName);
+              setFetchingPlantImage(false);
+              
+              if (imageUrl) {
+                setAutoPlantImageUrl(imageUrl);
+              }
+              
+              toast({
+                title: "Plant identified",
+                description: `Plant identified as ${analysis.commonName}`,
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error analyzing new plant photo:', error);
+          toast({
+            title: "Analysis failed",
+            description: "We couldn't analyze your plant photo. Please try again.",
+            variant: "destructive"
+          });
+        } finally {
+          setAnalyzingNewPlantPhoto(false);
+        }
+      };
+      
+      reader.onerror = () => {
+        setAnalyzingNewPlantPhoto(false);
+        toast({
+          title: "Error",
+          description: "Failed to process the image for analysis",
+          variant: "destructive"
+        });
+      };
+    } catch (error) {
+      console.error('Error processing plant photo:', error);
+      setAnalyzingNewPlantPhoto(false);
+    }
+  };
+  
+  // Handle plant deletion
+  const handleDeletePlant = async (plantId: string) => {
+    if (!user) return;
+    
+    if (!confirm("Are you sure you want to delete this plant?")) return;
+    
+    try {
+      // Create an updated plants object without the deleted plant
+      if (profile && profile.plants) {
+        const updatedPlants = { ...profile.plants };
+        delete updatedPlants[plantId];
+        
+        // Update Firebase with the new plants object
+        const userRef = ref(getDatabase(), `users/${user.uid}/plants`);
+        await set(userRef, updatedPlants);
+        
+        // Refresh the profile
+        await refreshProfile();
+        
+        toast({
+          title: "Plant deleted",
+          description: "The plant has been removed from your collection",
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting plant:', error);
+      toast({
+        title: "Delete failed",
+        description: "Failed to delete the plant. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   // Handle photo upload and analysis
@@ -558,6 +708,14 @@ export default function MyPlants() {
                           >
                             <Camera className="h-3.5 w-3.5 mr-1" />
                             Photo
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/30 dark:hover:bg-red-900/20 px-1"
+                            onClick={() => handleDeletePlant(plant.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       </div>
