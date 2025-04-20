@@ -173,8 +173,18 @@ export function PlantTypeSelector({ onSelect, onClose }: PlantTypeSelectorProps)
                 >
                   <CardContent className="p-3">
                     <div className="flex gap-3 items-start">
-                      <div className="h-16 w-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                        <Leaf className="h-10 w-10 text-green-600 dark:text-green-400" />
+                      <div className="h-16 w-16 rounded-full flex items-center justify-center overflow-hidden">
+                        {plant.imageUrl ? (
+                          <img 
+                            src={plant.imageUrl} 
+                            alt={plant.name} 
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-full w-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                            <Leaf className="h-10 w-10 text-green-600 dark:text-green-400" />
+                          </div>
+                        )}
                       </div>
                       <div className="flex-1">
                         <h3 className="font-medium">{plant.name}</h3>

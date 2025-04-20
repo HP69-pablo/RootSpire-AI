@@ -113,6 +113,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 30,
     soilMoistureMax: 50,
     description: 'Tropical plant famous for its large, glossy leaves with distinctive splits and holes.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/04/Monstera_deliciosa_R1.jpg',
   },
   {
     id: 'fiddle-leaf-fig',
@@ -129,6 +130,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 30,
     soilMoistureMax: 50,
     description: 'Popular houseplant with large, violin-shaped leaves. Beautiful but can be temperamental.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/58/Ficus_lyrata.jpg',
   },
   
   // Vegetables
