@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { addUserPlant, UserPlant } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -748,7 +748,10 @@ export default function MyPlants() {
                             variant="outline" 
                             size="sm"
                             className="flex-1 dark:text-gray-300"
-                            onClick={() => openPhotoDialog(plant)}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening details modal
+                              openPhotoDialog(plant);
+                            }}
                           >
                             <Camera className="h-3.5 w-3.5 mr-1" />
                             Photo
@@ -757,7 +760,10 @@ export default function MyPlants() {
                             variant="outline" 
                             size="sm"
                             className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/30 dark:hover:bg-red-900/20 px-1"
-                            onClick={() => handleDeletePlant(plant.id)}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening details modal
+                              handleDeletePlant(plant.id);
+                            }}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -967,6 +973,278 @@ export default function MyPlants() {
               )}
             </TabsContent>
           </Tabs>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Plant Details Dialog with Metrics */}
+      <Dialog open={plantDetailsOpen} onOpenChange={setPlantDetailsOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+          {selectedPlant && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <DialogTitle className="text-2xl font-bold">{selectedPlant.name}</DialogTitle>
+                  <Badge className={getHealthColor(selectedPlant.health)}>
+                    {selectedPlant.health || 'Unknown'}
+                  </Badge>
+                </div>
+                <DialogDescription className="text-lg">{selectedPlant.species}</DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="aspect-square overflow-hidden rounded-lg">
+                  {selectedPlant.imageUrl ? (
+                    <img 
+                      src={selectedPlant.imageUrl} 
+                      alt={selectedPlant.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                      <Leaf className="h-20 w-20 text-gray-300 dark:text-gray-600" />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <h3 className="text-lg font-medium mb-3">Current Metrics</h3>
+                    
+                    {sensorData ? (
+                      <div className="space-y-3">
+                        {/* Temperature */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mr-3">
+                              <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">Temperature</div>
+                              <div className="font-medium">{sensorData.temperature}°C</div>
+                            </div>
+                          </div>
+                          <Badge 
+                            className={
+                              sensorData.temperature > 30 ? "bg-red-500" : 
+                              sensorData.temperature < 10 ? "bg-blue-500" : 
+                              "bg-green-500"
+                            }
+                          >
+                            {sensorData.temperature > 30 ? "High" : 
+                             sensorData.temperature < 10 ? "Low" : 
+                             "Optimal"}
+                          </Badge>
+                        </div>
+                        
+                        {/* Humidity */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-3">
+                              <svg className="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">Humidity</div>
+                              <div className="font-medium">{sensorData.humidity}%</div>
+                            </div>
+                          </div>
+                          <Badge 
+                            className={
+                              sensorData.humidity > 70 ? "bg-blue-500" : 
+                              sensorData.humidity < 30 ? "bg-yellow-500" : 
+                              "bg-green-500"
+                            }
+                          >
+                            {sensorData.humidity > 70 ? "High" : 
+                             sensorData.humidity < 30 ? "Low" : 
+                             "Optimal"}
+                          </Badge>
+                        </div>
+                        
+                        {/* Light */}
+                        {sensorData.light !== undefined && (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mr-3">
+                                <svg className="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="5" />
+                                  <line x1="12" y1="1" x2="12" y2="3" />
+                                  <line x1="12" y1="21" x2="12" y2="23" />
+                                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                                  <line x1="1" y1="12" x2="3" y2="12" />
+                                  <line x1="21" y1="12" x2="23" y2="12" />
+                                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                                </svg>
+                              </div>
+                              <div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">Light</div>
+                                <div className="font-medium">{sensorData.light} lux</div>
+                              </div>
+                            </div>
+                            <Badge 
+                              className={
+                                sensorData.light > 3000 ? "bg-orange-500" : 
+                                sensorData.light < 800 ? "bg-indigo-500" : 
+                                "bg-green-500"
+                              }
+                            >
+                              {sensorData.light > 3000 ? "Bright" : 
+                               sensorData.light < 800 ? "Low" : 
+                               "Good"}
+                            </Badge>
+                          </div>
+                        )}
+                        
+                        {/* Water Status */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-3">
+                              <Droplet className="h-5 w-5 text-blue-500" />
+                            </div>
+                            <div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">Last Watered</div>
+                              <div className="font-medium">{getDaysSinceWatered(selectedPlant.lastWatered)}</div>
+                            </div>
+                          </div>
+                          <Badge 
+                            className={
+                              !selectedPlant.lastWatered ? "bg-red-500" :
+                              (Date.now() - selectedPlant.lastWatered) > (1000 * 60 * 60 * 24 * 5) ? "bg-yellow-500" : 
+                              "bg-green-500"
+                            }
+                          >
+                            {!selectedPlant.lastWatered ? "Never Watered" :
+                             (Date.now() - selectedPlant.lastWatered) > (1000 * 60 * 60 * 24 * 5) ? "Needs Water" : 
+                             "Good"}
+                          </Badge>
+                        </div>
+                        
+                        {/* NPK Levels (simulated for demo) */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-3">
+                              <Leaf className="h-5 w-5 text-green-500" />
+                            </div>
+                            <div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">Nutrient Levels</div>
+                              <div className="font-medium">N: Medium, P: High, K: Low</div>
+                            </div>
+                          </div>
+                          <Badge className="bg-yellow-500">
+                            Needs Potassium
+                          </Badge>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-center items-center h-40">
+                        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Health Assessment */}
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <h3 className="text-lg font-medium mb-1">AI Health Assessment</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      Based on current environmental conditions
+                    </p>
+                    
+                    <div className="text-sm mt-2">
+                      {sensorData ? (
+                        <div>
+                          {sensorData.temperature > 30 && (
+                            <div className="flex items-start mb-2">
+                              <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>Temperature is too high, consider moving to a cooler location.</p>
+                            </div>
+                          )}
+                          {sensorData.temperature < 10 && (
+                            <div className="flex items-start mb-2">
+                              <AlertCircle className="h-4 w-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>Temperature is too low, consider moving to a warmer location.</p>
+                            </div>
+                          )}
+                          {sensorData.humidity < 30 && (
+                            <div className="flex items-start mb-2">
+                              <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>Humidity is too low, consider misting the plant or using a humidifier.</p>
+                            </div>
+                          )}
+                          {sensorData.humidity > 70 && (
+                            <div className="flex items-start mb-2">
+                              <AlertCircle className="h-4 w-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>Humidity is high, ensure good air circulation to prevent fungal issues.</p>
+                            </div>
+                          )}
+                          {sensorData.light !== undefined && sensorData.light < 800 && (
+                            <div className="flex items-start mb-2">
+                              <AlertCircle className="h-4 w-4 text-indigo-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>Light levels are low, consider moving to a brighter location.</p>
+                            </div>
+                          )}
+                          {selectedPlant.lastWatered && (Date.now() - selectedPlant.lastWatered) > (1000 * 60 * 60 * 24 * 5) && (
+                            <div className="flex items-start mb-2">
+                              <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>Plant hasn't been watered in over 5 days, consider watering soon.</p>
+                            </div>
+                          )}
+                          
+                          {/* If everything is optimal */}
+                          {sensorData.temperature >= 10 && sensorData.temperature <= 30 &&
+                           sensorData.humidity >= 30 && sensorData.humidity <= 70 &&
+                           (sensorData.light === undefined || sensorData.light >= 800) &&
+                           (selectedPlant.lastWatered && (Date.now() - selectedPlant.lastWatered) <= (1000 * 60 * 60 * 24 * 5)) && (
+                            <div className="flex items-start mb-2">
+                              <Check className="h-4 w-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>All metrics are within optimal ranges. Your plant is healthy!</p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex justify-center items-center h-20">
+                          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <DialogFooter className="mt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setPlantDetailsOpen(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={() => {
+                    // Mark as watered
+                    if (user && selectedPlant) {
+                      updatePlantData(user.uid, selectedPlant.id, {
+                        lastWatered: Date.now()
+                      }).then(() => {
+                        refreshProfile();
+                        toast({
+                          title: "Plant watered",
+                          description: `${selectedPlant.name} has been marked as watered.`
+                        });
+                      });
+                    }
+                  }}
+                >
+                  <Droplet className="mr-2 h-4 w-4" />
+                  Mark as Watered
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
