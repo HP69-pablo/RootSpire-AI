@@ -557,6 +557,15 @@ export default function MyPlants() {
 
   return (
     <div className="min-h-screen font-sans transition-colors duration-300 ease-out bg-gradient-to-br from-slate-50 to-white text-slate-900 dark:from-slate-900 dark:to-slate-800 dark:text-white">
+      {/* Hidden file input for direct photo upload from plant cards */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
+        onChange={handlePhotoSelect}
+      />
+      
       <Header />
       
       <main className="container mx-auto px-4 py-6 md:py-10">
@@ -1042,13 +1051,7 @@ export default function MyPlants() {
                       Upload or take a photo of your plant for AI analysis
                     </p>
                   </div>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handlePhotoSelect}
-                  />
+                  {/* File input is now located in the main component */}
                 </div>
               )}
               
