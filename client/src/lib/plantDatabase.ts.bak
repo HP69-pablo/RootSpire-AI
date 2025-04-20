@@ -76,7 +76,7 @@ export const plantTypes: PlantTypeInfo[] = [
     humidityMax: 70,
     soilMoistureMin: 30,
     soilMoistureMax: 50,
-    description: 'Elegant plant with glossy leaves and white flowers (actually modified leaves). Good air purifier and humidity indicator.',
+    description: 'Elegant plant with glossy leaves and white "flowers" (actually modified leaves). Good air purifier and humidity indicator.',
   },
   {
     id: 'spider-plant',

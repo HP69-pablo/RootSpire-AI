@@ -23,6 +23,7 @@ export default function MyPlants() {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
   const [showAddPlant, setShowAddPlant] = useState(false);
+  const [showPlantTypeSelector, setShowPlantTypeSelector] = useState(false);
   const [saving, setSaving] = useState(false);
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
   const [selectedPlant, setSelectedPlant] = useState<UserPlant | null>(null);
@@ -39,6 +40,9 @@ export default function MyPlants() {
     species: '',
     notes: ''
   });
+  
+  // Selected plant type from selector
+  const [selectedPlantType, setSelectedPlantType] = useState<PlantTypeInfo | null>(null);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -51,6 +55,17 @@ export default function MyPlants() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewPlant(prev => ({ ...prev, [name]: value }));
+  };
+  
+  // Handle plant type selection
+  const handlePlantTypeSelect = (plantType: PlantTypeInfo) => {
+    setSelectedPlantType(plantType);
+    setNewPlant(prev => ({
+      ...prev,
+      species: `${plantType.name} (${plantType.scientificName})`,
+      notes: prev.notes ? prev.notes : `Care instructions:\n- Light: ${plantType.light} light\n- Water: ${plantType.water} water needs\n- Temperature: ${plantType.tempMin}°C to ${plantType.tempMax}°C\n- Humidity: ${plantType.humidityMin}% to ${plantType.humidityMax}%\n\n${plantType.description}`
+    }));
+    setShowPlantTypeSelector(false);
   };
 
   // Handle add plant
@@ -294,13 +309,30 @@ export default function MyPlants() {
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="species">Plant Species</Label>
-                    <Input
-                      id="species"
-                      name="species"
-                      placeholder="E.g., Boston Fern"
-                      value={newPlant.species}
-                      onChange={handleInputChange}
-                    />
+                    <div className="flex space-x-2">
+                      <Input
+                        id="species"
+                        name="species"
+                        placeholder="E.g., Boston Fern"
+                        value={newPlant.species}
+                        onChange={handleInputChange}
+                        className="flex-1"
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setShowPlantTypeSelector(true)}
+                        className="whitespace-nowrap"
+                      >
+                        Choose Type
+                      </Button>
+                    </div>
+                    {selectedPlantType && (
+                      <div className="text-sm text-gray-500 mt-1 flex items-center">
+                        <Leaf className="h-3 w-3 mr-1 text-green-500" />
+                        Selected: {selectedPlantType.name} ({selectedPlantType.scientificName})
+                      </div>
+                    )}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="notes">Notes (Optional)</Label>
@@ -440,6 +472,16 @@ export default function MyPlants() {
           )}
         </motion.div>
       </main>
+      
+      {/* Plant Type Selector Dialog */}
+      <Dialog open={showPlantTypeSelector} onOpenChange={setShowPlantTypeSelector}>
+        <DialogContent className="sm:max-w-[80vw] md:max-w-[700px] p-0">
+          <PlantTypeSelector 
+            onSelect={handlePlantTypeSelect}
+            onClose={() => setShowPlantTypeSelector(false)}
+          />
+        </DialogContent>
+      </Dialog>
       
       {/* Plant Photo Upload Dialog */}
       <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
