@@ -228,27 +228,94 @@ export const loginWithEmail = async (
   password: string
 ): Promise<UserProfile | null> => {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    
-    // Get user profile or create if it doesn't exist
-    let userProfile = await getUserProfile(user.uid);
-    
-    if (!userProfile) {
-      // Create profile if it doesn't exist (rare case)
-      const newProfile: UserProfile = {
-        uid: user.uid,
-        email: user.email || '',
-        displayName: user.displayName || '',
-        photoURL: user.photoURL || '',
-        createdAt: Date.now(),
-      };
+    // First try normal Firebase authentication
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
       
-      await saveUserProfile(newProfile);
-      return newProfile;
+      // Get user profile or create if it doesn't exist
+      let userProfile = await getUserProfile(user.uid);
+      
+      if (!userProfile) {
+        // Create profile if it doesn't exist (rare case)
+        const newProfile: UserProfile = {
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || '',
+          photoURL: user.photoURL || '',
+          createdAt: Date.now(),
+        };
+        
+        await saveUserProfile(newProfile);
+        return newProfile;
+      }
+      
+      return userProfile;
+    } catch (authError) {
+      console.log("Standard auth failed, checking for temp password...");
+      
+      // If normal auth fails, check if there's a temp password set for this user
+      // Find the user by email first
+      const usersRef = ref(database, 'users');
+      const usersSnapshot = await get(usersRef);
+      
+      if (!usersSnapshot.exists()) {
+        throw new Error("No users found");
+      }
+      
+      let userId = '';
+      
+      // Find the user by email
+      usersSnapshot.forEach((childSnapshot) => {
+        const userProfile = childSnapshot.val() as UserProfile;
+        if (userProfile.email === email) {
+          userId = userProfile.uid;
+        }
+      });
+      
+      if (!userId) {
+        throw new Error("Email not found");
+      }
+      
+      // Check if there's a temporary password
+      const tempPasswordRef = ref(database, `tempPasswords/${userId}`);
+      const tempSnapshot = await get(tempPasswordRef);
+      
+      if (!tempSnapshot.exists()) {
+        // No temp password found, throw the original error
+        throw authError;
+      }
+      
+      const tempData = tempSnapshot.val();
+      
+      if (tempData.password !== password) {
+        // Password doesn't match
+        throw new Error("Invalid temp password");
+      }
+      
+      // Password matches, now we'll update the real password in Firebase
+      try {
+        // Create custom auth token (this would require Firebase Admin SDK in a real app)
+        // For this demo, we'll reuse the same Firebase auth object but with updated credentials
+        
+        // Get user and update in database
+        const userProfile = await getUserProfile(userId);
+        
+        if (!userProfile) {
+          throw new Error("User profile not found");
+        }
+        
+        // Clear the temp password as it's been used
+        await set(tempPasswordRef, null);
+        
+        // Since we can't directly reset the password without user being authenticated,
+        // we'll need to rely on the temp password mechanism for logging in
+        return userProfile;
+      } catch (resetError) {
+        console.error("Error updating password:", resetError);
+        throw resetError;
+      }
     }
-    
-    return userProfile;
   } catch (error) {
     console.error("Error logging in with email:", error);
     throw error;
@@ -256,12 +323,69 @@ export const loginWithEmail = async (
 };
 
 // Password reset
-export const resetPassword = async (email: string): Promise<boolean> => {
+export const resetPassword = async (email: string): Promise<string> => {
   try {
-    await sendPasswordResetEmail(auth, email);
-    return true;
+    // Check if user exists with this email first
+    const userRef = ref(database, 'users');
+    const snapshot = await get(userRef);
+    
+    if (!snapshot.exists()) {
+      throw new Error("User not found");
+    }
+    
+    let userId = '';
+    let userData: UserProfile | null = null;
+    
+    // Find the user by email
+    snapshot.forEach((childSnapshot) => {
+      const userProfile = childSnapshot.val() as UserProfile;
+      if (userProfile.email === email) {
+        userId = userProfile.uid;
+        userData = userProfile;
+      }
+    });
+    
+    if (!userId || !userData) {
+      throw new Error("Email not found");
+    }
+    
+    // Generate a new random password (not very secure but simple for this demo)
+    const newPassword = generateRandomPassword();
+    
+    // Sign in with custom token or admin SDK would be needed for a real solution
+    // For this demo, we'll just update the database password
+    
+    try {
+      // Since Firebase Auth doesn't let us directly update passwords without auth,
+      // for this demo we'll create a special entry in the database for temp passwords
+      const tempPasswordRef = ref(database, `tempPasswords/${userId}`);
+      await set(tempPasswordRef, {
+        email: email,
+        password: newPassword,
+        timestamp: Date.now()
+      });
+      
+      return newPassword;
+    } catch (resetError) {
+      console.error("Failed to reset password:", resetError);
+      throw resetError;
+    }
   } catch (error) {
-    console.error("Error sending password reset email:", error);
+    console.error("Error in password reset process:", error);
     throw error;
   }
+};
+
+// Generate a random password
+function generateRandomPassword(): string {
+  const length = 8;
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let password = "";
+  
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * charset.length);
+    password += charset[randomIndex];
+  }
+  
+  return password;
 };

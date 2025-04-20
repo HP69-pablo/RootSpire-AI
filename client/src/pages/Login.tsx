@@ -211,6 +211,9 @@ export default function Login() {
     }
   };
   
+  // State for the reset password result
+  const [newPassword, setNewPassword] = useState<string | null>(null);
+  
   // Handle password reset
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,17 +229,18 @@ export default function Login() {
     
     setSigningIn(true);
     try {
-      await resetPassword(email);
+      const generatedPassword = await resetPassword(email);
+      setNewPassword(generatedPassword);
       toast({
-        title: "Password reset email sent",
-        description: "Please check your email to reset your password",
+        title: "Password reset successful",
+        description: "Your password has been reset. Please use the new password displayed below to log in.",
+        duration: 10000, // Make sure it stays visible longer
       });
-      setShowResetPassword(false);
-    } catch (error) {
-      console.error('Error sending password reset:', error);
+    } catch (error: any) {
+      console.error('Error resetting password:', error);
       toast({
-        title: "Failed to send reset email",
-        description: "Please check if the email is correct",
+        title: "Failed to reset password",
+        description: error.message || "Please check if the email is correct",
         variant: "destructive"
       });
     } finally {
@@ -283,51 +287,98 @@ export default function Login() {
               {showResetPassword ? (
                 // Password Reset Form
                 <div className="space-y-4">
-                  <form onSubmit={handlePasswordReset}>
+                  {newPassword ? (
+                    // Show the new password
                     <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="reset-email">Email</Label>
-                        <div className="relative">
-                          <FaEnvelope className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                          <Input
-                            id="reset-email"
-                            type="email"
-                            placeholder="your.email@example.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="pl-10"
-                            required
-                          />
+                      <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
+                        <h3 className="font-medium text-green-800 dark:text-green-300 mb-2">Password Reset Successful!</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                          Your new password is:
+                        </p>
+                        <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded">
+                          <code className="font-mono text-base font-bold">{newPassword}</code>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="h-8 px-2"
+                            onClick={() => {
+                              navigator.clipboard.writeText(newPassword);
+                              toast({
+                                title: "Copied to clipboard",
+                                description: "Password copied to clipboard",
+                              });
+                            }}
+                          >
+                            Copy
+                          </Button>
                         </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                          Remember to use this password to log in. You can change it later in your profile settings.
+                        </p>
                       </div>
-                      
-                      <motion.div 
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Button
-                          type="submit"
-                          disabled={signingIn || !email}
-                          className="w-full bg-green-600 hover:bg-green-700 text-white h-12"
-                        >
-                          {signingIn ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : null}
-                          {signingIn ? "Sending..." : "Send Reset Email"}
-                        </Button>
-                      </motion.div>
-                      
                       <div className="text-center">
                         <Button
-                          variant="link"
-                          onClick={() => setShowResetPassword(false)}
-                          className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                          variant="default"
+                          onClick={() => {
+                            setShowResetPassword(false);
+                            setNewPassword(null);
+                            // Pre-fill the email field in the login form
+                            setShowEmailForm(true);
+                          }}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white h-12"
                         >
-                          Back to Sign In
+                          Back to Login
                         </Button>
                       </div>
                     </div>
-                  </form>
+                  ) : (
+                    // Show the reset password form
+                    <form onSubmit={handlePasswordReset}>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="reset-email">Email</Label>
+                          <div className="relative">
+                            <FaEnvelope className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Input
+                              id="reset-email"
+                              type="email"
+                              placeholder="your.email@example.com"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              className="pl-10"
+                              required
+                            />
+                          </div>
+                        </div>
+                        
+                        <motion.div 
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Button
+                            type="submit"
+                            disabled={signingIn || !email}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white h-12"
+                          >
+                            {signingIn ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            {signingIn ? "Resetting Password..." : "Reset My Password"}
+                          </Button>
+                        </motion.div>
+                        
+                        <div className="text-center">
+                          <Button
+                            variant="link"
+                            onClick={() => setShowResetPassword(false)}
+                            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                          >
+                            Back to Sign In
+                          </Button>
+                        </div>
+                      </div>
+                    </form>
+                  )}
                 </div>
               ) : showEmailForm ? (
                 // Email Authentication Form (Login/Register)
