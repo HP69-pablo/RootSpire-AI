@@ -200,7 +200,7 @@ export default function MyPlants() {
   };
   
   // Handle photo file selection
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
@@ -209,6 +209,105 @@ export default function MyPlants() {
     // Create a preview URL
     const previewUrl = URL.createObjectURL(file);
     setPhotoPreview(previewUrl);
+    
+    // Check if this was a direct capture/upload from the plant card
+    // If we have a selectedPlant, we should automatically process the photo
+    if (selectedPlant && !photoDialogOpen) {
+      try {
+        setUploadingPhoto(true);
+        
+        // Show a toast to indicate the upload is in progress
+        toast({
+          title: "Uploading photo",
+          description: "Please wait while we upload and analyze your plant photo...",
+        });
+        
+        // Upload the photo to Firebase Storage
+        const downloadUrl = await uploadPlantPhoto(user?.uid as string, selectedPlant.id, file);
+        
+        // Update the plant data with the image URL
+        await updatePlantData(user?.uid as string, selectedPlant.id, {
+          imageUrl: downloadUrl
+        });
+        
+        // Now analyze the photo with Gemini
+        setAnalyzingPhoto(true);
+        
+        // Convert the file to a base64 data URL for Gemini API
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+          try {
+            if (typeof reader.result === 'string') {
+              const analysis = await analyzePlantPhoto(reader.result);
+              
+              // If the confidence is medium or high, update the plant species
+              if (analysis.confidence !== 'low') {
+                await updatePlantData(user?.uid as string, selectedPlant.id, {
+                  species: analysis.species,
+                  notes: selectedPlant.notes 
+                    ? `${selectedPlant.notes}\n\nAI Analysis: ${analysis.careInstructions}`
+                    : `AI Analysis: ${analysis.careInstructions}`,
+                  health: analysis.healthAssessment.toLowerCase().includes('good') 
+                    ? 'good' 
+                    : analysis.healthAssessment.toLowerCase().includes('excellent') 
+                      ? 'excellent'
+                      : analysis.healthAssessment.toLowerCase().includes('poor')
+                        ? 'poor'
+                        : 'fair'
+                });
+                
+                toast({
+                  title: "Plant identified",
+                  description: `Your plant was identified as ${analysis.commonName} (${analysis.species})`,
+                });
+              } else {
+                toast({
+                  title: "Plant analyzed",
+                  description: "We uploaded your photo but couldn't identify the plant with high confidence.",
+                });
+              }
+              
+              // Refresh the profile to show updated data
+              await refreshProfile();
+            }
+          } catch (error) {
+            console.error('Error analyzing plant photo:', error);
+            toast({
+              title: "Analysis failed",
+              description: "We uploaded your photo but couldn't analyze it. You can try again later.",
+              variant: "destructive"
+            });
+          } finally {
+            setAnalyzingPhoto(false);
+            
+            // Reset file input so user can select the same file again if needed
+            if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+            }
+          }
+        };
+        
+        reader.onerror = () => {
+          toast({
+            title: "Error",
+            description: "Failed to process the image for analysis",
+            variant: "destructive"
+          });
+          setAnalyzingPhoto(false);
+        };
+        
+      } catch (error) {
+        console.error('Error uploading plant photo:', error);
+        toast({
+          title: "Upload failed",
+          description: "Failed to upload your plant photo. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setUploadingPhoto(false);
+      }
+    }
   };
   
   // Handle new plant photo selection during add plant flow
@@ -677,7 +776,7 @@ export default function MyPlants() {
                     onClick={() => openPlantDetails(plant)}
                   >
                     <div className="h-3 bg-gradient-to-r from-green-400 to-green-600 dark:from-green-600 dark:to-green-800" />
-                    {plant.imageUrl && (
+                    {plant.imageUrl ? (
                       <div className="h-40 w-full overflow-hidden relative">
                         <img 
                           src={plant.imageUrl} 
@@ -686,6 +785,81 @@ export default function MyPlants() {
                         />
                         <div className="absolute top-2 right-2 bg-white dark:bg-slate-800 bg-opacity-70 dark:bg-opacity-70 px-2 py-1 rounded text-xs font-medium">
                           View Metrics
+                        </div>
+                        {/* Quick camera/upload buttons - shown on hover */}
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm"
+                              variant="secondary"
+                              className="bg-white text-black dark:bg-slate-800 dark:text-white h-10 w-10 rounded-full p-0 shadow-lg"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent opening details modal
+                                if (fileInputRef.current) {
+                                  setSelectedPlant(plant);
+                                  fileInputRef.current.removeAttribute('capture');
+                                  fileInputRef.current.click();
+                                }
+                              }}
+                            >
+                              <Upload className="h-5 w-5" />
+                            </Button>
+                            <Button 
+                              size="sm"
+                              variant="secondary" 
+                              className="bg-white text-black dark:bg-slate-800 dark:text-white h-10 w-10 rounded-full p-0 shadow-lg"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent opening details modal
+                                if (fileInputRef.current) {
+                                  setSelectedPlant(plant);
+                                  fileInputRef.current.setAttribute('capture', 'environment');
+                                  fileInputRef.current.click();
+                                }
+                              }}
+                            >
+                              <Camera className="h-5 w-5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-40 w-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center relative">
+                        <Camera className="h-8 w-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500 dark:text-gray-400">No image yet</p>
+                        
+                        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-3">
+                          <Button 
+                            size="sm"
+                            variant="outline" 
+                            className="bg-white/90 dark:bg-slate-800/90"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening details
+                              if (fileInputRef.current) {
+                                setSelectedPlant(plant);
+                                fileInputRef.current.removeAttribute('capture');
+                                fileInputRef.current.click();
+                              }
+                            }}
+                          >
+                            <Upload className="h-3.5 w-3.5 mr-1" />
+                            Gallery
+                          </Button>
+                          <Button 
+                            size="sm"
+                            variant="outline" 
+                            className="bg-white/90 dark:bg-slate-800/90"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening details
+                              if (fileInputRef.current) {
+                                setSelectedPlant(plant);
+                                fileInputRef.current.setAttribute('capture', 'environment');
+                                fileInputRef.current.click();
+                              }
+                            }}
+                          >
+                            <Camera className="h-3.5 w-3.5 mr-1" />
+                            Camera
+                          </Button>
                         </div>
                       </div>
                     )}
