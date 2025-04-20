@@ -293,35 +293,47 @@ export async function analyzePlantPhoto(imageUrl: string): Promise<PlantAnalysis
   }
 }
 
-// Function to fetch a plant image from online sources
+// Function to fetch a plant image from online sources with improved reliability
 export async function fetchPlantImage(plantName: string): Promise<string | null> {
+  if (!plantName) {
+    console.error('No plant name provided for image search');
+    return null;
+  }
+  
+  console.log(`Searching for image of plant: ${plantName}`);
+  
   try {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
-      throw new Error('Gemini API key is missing');
+      console.warn('Gemini API key is missing, using fallback image sources');
+      return getPlantImageFallback(plantName);
     }
     
-    // Construct the API payload with the plant name
+    // More specific prompt to get high-quality, reliable images
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
     
-    // Create the prompt for finding a plant image
     const prompt = `
-    You are a search assistant that helps find plant images. 
-    I need you to provide a direct image URL for a high-quality, representative image of the plant: "${plantName}".
-    Rules:
-    1. Only return a direct URL to an image (jpg, png, webp)
-    2. Find images from open-access sources or stock photos that are free to use
-    3. Only return the URL, nothing else
-    4. The image should show the plant clearly, preferably in its natural habitat or as a houseplant
-    5. Do not include any text, explanation or quotes before or after the URL
-    
-    Just return the complete, direct image URL.
+    You are a specialized plant image search assistant. I need a direct image URL for a high-quality, clear image of "${plantName}".
+
+    Image requirements:
+    1. Must be from Wikimedia Commons, Pixabay, Unsplash, or other free-to-use repositories
+    2. Must show the plant clearly with good lighting and focus
+    3. Should show the whole plant, not just a flower or leaf close-up
+    4. Must be a direct image URL ending with .jpg, .jpeg, .png, or .webp
+    5. Must be available under a free license or public domain
+    6. Prefer images with neutral backgrounds when possible
+
+    Respond ONLY with the direct image URL. No text before or after.
     `;
     
     const payload = {
       contents: [{
         parts: [{ text: prompt }]
-      }]
+      }],
+      generationConfig: {
+        maxOutputTokens: 100, // Limit response size since we only need a URL
+        temperature: 0.1 // Lower temperature for more consistent results
+      }
     };
     
     // Make the API request
@@ -334,7 +346,8 @@ export async function fetchPlantImage(plantName: string): Promise<string | null>
     });
     
     if (!response.ok) {
-      throw new Error(`API request failed with status: ${response.status}`);
+      console.warn(`Gemini API request failed with status: ${response.status}`);
+      return getPlantImageFallback(plantName);
     }
     
     const data = await response.json();
@@ -343,19 +356,67 @@ export async function fetchPlantImage(plantName: string): Promise<string | null>
     const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text.trim();
     
     if (!responseText) {
-      throw new Error('No response received from Gemini API');
+      console.warn('No response received from Gemini API');
+      return getPlantImageFallback(plantName);
     }
     
     // Check if response is a valid URL to an image
     if (/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i.test(responseText)) {
+      console.log(`Found image URL for ${plantName}: ${responseText}`);
       return responseText;
     } else {
       // Try to extract a URL from the response
       const urlMatch = responseText.match(/(https?:\/\/[^\s"']+\.(jpg|jpeg|png|webp|gif)(\?[^\s"']*)?)/i);
-      return urlMatch ? urlMatch[0] : null;
+      if (urlMatch && urlMatch[0]) {
+        console.log(`Extracted image URL for ${plantName}: ${urlMatch[0]}`);
+        return urlMatch[0];
+      } else {
+        console.warn('Could not extract valid image URL from Gemini response');
+        return getPlantImageFallback(plantName);
+      }
     }
   } catch (error) {
-    console.error('Error fetching plant image:', error);
-    return null;
+    console.error('Error fetching plant image with Gemini:', error);
+    return getPlantImageFallback(plantName);
   }
+}
+
+// Fallback function for when Gemini API fails or isn't available
+function getPlantImageFallback(plantName: string): string | null {
+  console.log(`Using fallback image search for ${plantName}`);
+  
+  // Define reliable plant image mappings from Wikimedia Commons
+  const plantImageMap: Record<string, string> = {
+    'sunflower': 'https://upload.wikimedia.org/wikipedia/commons/a/a9/A_sunflower.jpg',
+    'rose': 'https://upload.wikimedia.org/wikipedia/commons/5/51/Small_Red_Rose.JPG',
+    'aloe vera': 'https://upload.wikimedia.org/wikipedia/commons/4/4b/Aloe_vera_flower_inset.png',
+    'snake plant': 'https://upload.wikimedia.org/wikipedia/commons/7/73/Snake_Plant_%28Sansevieria_trifasciata_%27Laurentii%27%29.jpg',
+    'pothos': 'https://upload.wikimedia.org/wikipedia/commons/e/ec/Epipremnum_aureum_31082012.jpg',
+    'monstera': 'https://upload.wikimedia.org/wikipedia/commons/0/04/Monstera_deliciosa_at_l%27Auberge_Saint-Gabriel.jpg',
+    'peace lily': 'https://upload.wikimedia.org/wikipedia/commons/b/bd/Spathiphyllum_cochlearispathum_RTBG.jpg',
+    'spider plant': 'https://upload.wikimedia.org/wikipedia/commons/8/8f/Chlorophytum_comosum_17-08-2009_16-55-49.JPG',
+    'fiddle leaf fig': 'https://upload.wikimedia.org/wikipedia/commons/6/6a/Ficus_lyrata_1.jpg',
+    'tomato': 'https://upload.wikimedia.org/wikipedia/commons/8/89/Tomato_je.jpg',
+    'strawberry': 'https://upload.wikimedia.org/wikipedia/commons/6/64/Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single.jpg',
+    'basil': 'https://upload.wikimedia.org/wikipedia/commons/9/90/Basil-Basilico-Ocimum_basilicum-albahaca.jpg',
+    'succulent': 'https://upload.wikimedia.org/wikipedia/commons/7/77/Succulent_garden.jpg',
+    'cactus': 'https://upload.wikimedia.org/wikipedia/commons/6/6c/Ferocactus_peninsulae_9.jpg',
+    'echeveria': 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Echeveria_hybrid.JPG'
+  };
+  
+  // Search for exact match
+  if (plantImageMap[plantName.toLowerCase()]) {
+    return plantImageMap[plantName.toLowerCase()];
+  }
+  
+  // Search for partial match
+  const normalizedName = plantName.toLowerCase();
+  for (const [key, url] of Object.entries(plantImageMap)) {
+    if (normalizedName.includes(key) || key.includes(normalizedName)) {
+      return url;
+    }
+  }
+  
+  // If no match, return a generic plant image
+  return 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Houseplant_overview.jpg';
 }

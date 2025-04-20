@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PlantTypeInfo, plantCategories, getAllPlants, getPlantsByCategory, searchPlants } from '@/lib/plantDatabase';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -6,10 +6,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Leaf, X } from 'lucide-react';
+import { Search, Leaf, X, ImageIcon, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { useDevice } from '@/hooks/use-device';
+import { fetchPlantImage } from '@/lib/gemini';
 
 interface PlantTypeSelectorProps {
   onSelect: (plant: PlantTypeInfo) => void;
@@ -22,6 +23,8 @@ export function PlantTypeSelector({ onSelect, onClose }: PlantTypeSelectorProps)
   const [searchResults, setSearchResults] = useState<PlantTypeInfo[]>([]);
   const [displayedPlants, setDisplayedPlants] = useState<PlantTypeInfo[]>([]);
   const [isSearchActive, setIsSearchActive] = useState<boolean>(false);
+  const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
+  const [plantImages, setPlantImages] = useState<Record<string, string>>({});
   const { isMobileDevice } = useDevice();
 
   // Initialize with default category plants
