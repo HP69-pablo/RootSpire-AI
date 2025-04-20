@@ -54,6 +54,7 @@ export default function MyPlants() {
   
   // Selected plant type from selector
   const [selectedPlantType, setSelectedPlantType] = useState<PlantTypeInfo | null>(null);
+  const [speciesReferenceImages, setSpeciesReferenceImages] = useState<Record<string, string>>({});
   
   // Sensor data from Firebase
   const [sensorData, setSensorData] = useState<SensorData | null>(null);
@@ -75,6 +76,50 @@ export default function MyPlants() {
       unsubscribe();
     };
   }, []);
+  
+  // Load reference images for plants when profile is loaded
+  useEffect(() => {
+    if (profile?.plants && Array.isArray(profile.plants) && profile.plants.length > 0) {
+      const loadSpeciesImages = async () => {
+        // Create array of unique species names from profile.plants (which is an array)
+        const uniqueSpecies: string[] = [];
+        
+        // Safe access to plants with a separate if check to satisfy TypeScript
+        const plants = profile.plants;
+        if (plants) {
+          plants.forEach(plant => {
+            if (plant.species && !uniqueSpecies.includes(plant.species)) {
+              uniqueSpecies.push(plant.species);
+            }
+          });
+        }
+        
+        const newReferenceImages: Record<string, string> = {};
+        
+        for (const species of uniqueSpecies) {
+          if (!speciesReferenceImages[species]) {
+            try {
+              const imageUrl = await fetchPlantImage(species);
+              if (imageUrl) {
+                newReferenceImages[species] = imageUrl;
+              }
+            } catch (error) {
+              console.warn(`Could not fetch image for ${species}:`, error);
+            }
+          }
+        }
+        
+        if (Object.keys(newReferenceImages).length > 0) {
+          setSpeciesReferenceImages(prev => ({
+            ...prev,
+            ...newReferenceImages
+          }));
+        }
+      };
+      
+      loadSpeciesImages();
+    }
+  }, [profile?.plants]);
   
   // Open plant details dialog
   const openPlantDetails = (plant: UserPlant) => {
@@ -553,7 +598,7 @@ export default function MyPlants() {
     );
   }
 
-  const userPlants = profile?.plants ? Object.values(profile.plants) : [];
+  const userPlants = profile?.plants && Array.isArray(profile.plants) ? profile.plants : [];
 
   return (
     <div className="min-h-screen font-sans transition-colors duration-300 ease-out bg-gradient-to-br from-slate-50 to-white text-slate-900 dark:from-slate-900 dark:to-slate-800 dark:text-white">
@@ -835,8 +880,24 @@ export default function MyPlants() {
                       </div>
                     ) : (
                       <div className="h-40 w-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center relative">
-                        <Camera className="h-8 w-8 text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500 dark:text-gray-400">No image yet</p>
+                        {speciesReferenceImages[plant.species] ? (
+                          <div className="relative w-full h-full">
+                            <img 
+                              src={speciesReferenceImages[plant.species]} 
+                              alt={plant.species} 
+                              className="w-full h-full object-cover opacity-60"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-30 flex flex-col items-center justify-center">
+                              <p className="text-white text-sm font-medium mb-1 bg-black/50 px-2 py-1 rounded-md">Reference Image</p>
+                              <p className="text-white text-xs bg-black/50 px-2 py-1 rounded-md">Upload your own photo</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <Camera className="h-8 w-8 text-gray-400 mb-2" />
+                            <p className="text-sm text-gray-500 dark:text-gray-400">No image yet</p>
+                          </>
+                        )}
                         
                         <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-3">
                           <Button 
