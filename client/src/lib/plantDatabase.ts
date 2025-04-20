@@ -149,6 +149,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 40,
     soilMoistureMax: 60,
     description: 'Popular garden vegetable with juicy red fruits. Comes in many varieties from cherry to beefsteak.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/89/Tomato_je.jpg',
   },
   {
     id: 'lettuce',
@@ -165,6 +166,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 40,
     soilMoistureMax: 60,
     description: 'Quick-growing leafy green that is perfect for beginners. Harvest outer leaves for continuous growth.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/13/Iceberg_lettuce_8253.jpg',
   },
   {
     id: 'bell-pepper',
@@ -181,6 +183,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 40,
     soilMoistureMax: 60,
     description: 'Sweet, crunchy peppers that come in various colors as they ripen, from green to red, yellow, or orange.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c4/Bell_pepper_overview.jpg',
   },
   {
     id: 'cucumber',
@@ -231,6 +234,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 40,
     soilMoistureMax: 60,
     description: 'Sweet, red berries that grow on compact plants. Perfect for containers or hanging baskets.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/64/Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single.jpg',
   },
   {
     id: 'lemon',
@@ -313,6 +317,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 40,
     soilMoistureMax: 60,
     description: 'Aromatic herb with bright green leaves, essential for Italian cooking. Pinch flower buds to encourage leafy growth.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/90/Basil-Basilico-Ocimum_basilicum-albahaca.jpg',
   },
   {
     id: 'mint',
@@ -395,6 +400,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 40,
     soilMoistureMax: 60,
     description: 'Iconic summer flower with large yellow blooms. Varieties range from dwarf to giant.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a9/A_sunflower.jpg',
   },
   {
     id: 'lavender',
@@ -427,6 +433,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 40,
     soilMoistureMax: 60,
     description: 'Classic garden flower known for beautiful blooms and fragrance. Many varieties for different conditions.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/51/Small_Red_Rose.JPG',
   },
   {
     id: 'marigold',
@@ -511,6 +518,7 @@ export const plantTypes: PlantTypeInfo[] = [
     soilMoistureMin: 15,
     soilMoistureMax: 30,
     description: 'Medicinal succulent with thick, gel-filled leaves. Great for beginners.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4b/Aloe_vera_flower_inset.png',
   },
   {
     id: 'echeveria',
