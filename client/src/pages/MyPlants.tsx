@@ -11,9 +11,9 @@ import { Label } from '@/components/ui/label';
 import { addUserPlant, UserPlant } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
-import { Leaf, Plus, Droplet, Calendar, AlertCircle, Check, Loader2, Camera, Upload, Image as ImageIcon } from 'lucide-react';
+import { Leaf, Plus, Droplet, Calendar, AlertCircle, Check, Loader2, Camera, Upload, Image as ImageIcon, X, Trash2 } from 'lucide-react';
 import { uploadPlantPhoto, updatePlantData } from '@/lib/firebase';
-import { analyzePlantPhoto, PlantAnalysisResult } from '@/lib/gemini';
+import { analyzePlantPhoto, PlantAnalysisResult, fetchPlantImage } from '@/lib/gemini';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlantTypeSelector } from '@/components/PlantTypeSelector';
 import { PlantTypeInfo } from '@/lib/plantDatabase';
@@ -33,6 +33,7 @@ export default function MyPlants() {
   const [analyzingPhoto, setAnalyzingPhoto] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<PlantAnalysisResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const newPlantPhotoRef = useRef<HTMLInputElement>(null);
   
   // Add plant form state
   const [newPlant, setNewPlant] = useState({
@@ -40,6 +41,14 @@ export default function MyPlants() {
     species: '',
     notes: ''
   });
+  
+  // New plant photo state
+  const [newPlantPhoto, setNewPlantPhoto] = useState<File | null>(null);
+  const [newPlantPhotoPreview, setNewPlantPhotoPreview] = useState<string | null>(null);
+  const [newPlantAnalysisResult, setNewPlantAnalysisResult] = useState<PlantAnalysisResult | null>(null);
+  const [analyzingNewPlantPhoto, setAnalyzingNewPlantPhoto] = useState(false);
+  const [fetchingPlantImage, setFetchingPlantImage] = useState(false);
+  const [autoPlantImageUrl, setAutoPlantImageUrl] = useState<string | null>(null);
   
   // Selected plant type from selector
   const [selectedPlantType, setSelectedPlantType] = useState<PlantTypeInfo | null>(null);
@@ -334,6 +343,94 @@ export default function MyPlants() {
                       </div>
                     )}
                   </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="photo">Plant Photo</Label>
+                    {newPlantPhotoPreview ? (
+                      <div className="relative w-full h-48 rounded-md overflow-hidden">
+                        <img 
+                          src={newPlantPhotoPreview} 
+                          alt="Plant preview" 
+                          className="w-full h-full object-cover"
+                        />
+                        {newPlantAnalysisResult && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white p-2 text-sm">
+                            <p>Detected: {newPlantAnalysisResult.commonName}</p>
+                          </div>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="absolute top-2 right-2 bg-white dark:bg-black bg-opacity-70 dark:bg-opacity-70"
+                          onClick={() => {
+                            setNewPlantPhotoPreview(null);
+                            setNewPlantPhoto(null);
+                            setNewPlantAnalysisResult(null);
+                            if (newPlantPhotoRef.current) {
+                              newPlantPhotoRef.current.value = '';
+                            }
+                          }}
+                        >
+                          Change
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md p-4 text-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <div className="flex space-x-4">
+                            <div className="flex flex-col items-center cursor-pointer" onClick={() => newPlantPhotoRef.current?.click()}>
+                              <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-1">
+                                <Upload className="h-6 w-6 text-green-500" />
+                              </div>
+                              <span className="text-xs font-medium">Upload</span>
+                            </div>
+                            
+                            <div className="flex flex-col items-center cursor-pointer" onClick={() => {
+                              if (newPlantPhotoRef.current) {
+                                newPlantPhotoRef.current.capture = "environment";
+                                newPlantPhotoRef.current.click();
+                              }
+                            }}>
+                              <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-1">
+                                <Camera className="h-6 w-6 text-blue-500" />
+                              </div>
+                              <span className="text-xs font-medium">Camera</span>
+                            </div>
+                          </div>
+                          
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Upload or take a photo for AI identification
+                          </p>
+                        </div>
+                        <input
+                          type="file"
+                          ref={newPlantPhotoRef}
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleNewPlantPhotoSelect}
+                        />
+                      </div>
+                    )}
+                    {analyzingNewPlantPhoto && (
+                      <div className="flex items-center justify-center py-2 text-sm text-gray-500">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Analyzing photo...
+                      </div>
+                    )}
+                    {autoPlantImageUrl && (
+                      <div className="flex items-center justify-between mt-1 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md">
+                        <span className="text-xs text-green-700 dark:text-green-400">Reference image added from plant database</span>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 w-6 p-0" 
+                          onClick={() => setAutoPlantImageUrl(null)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  
                   <div className="grid gap-2">
                     <Label htmlFor="notes">Notes (Optional)</Label>
                     <Input

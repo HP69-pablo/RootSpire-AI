@@ -292,3 +292,70 @@ export async function analyzePlantPhoto(imageUrl: string): Promise<PlantAnalysis
     };
   }
 }
+
+// Function to fetch a plant image from online sources
+export async function fetchPlantImage(plantName: string): Promise<string | null> {
+  try {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('Gemini API key is missing');
+    }
+    
+    // Construct the API payload with the plant name
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    
+    // Create the prompt for finding a plant image
+    const prompt = `
+    You are a search assistant that helps find plant images. 
+    I need you to provide a direct image URL for a high-quality, representative image of the plant: "${plantName}".
+    Rules:
+    1. Only return a direct URL to an image (jpg, png, webp)
+    2. Find images from open-access sources or stock photos that are free to use
+    3. Only return the URL, nothing else
+    4. The image should show the plant clearly, preferably in its natural habitat or as a houseplant
+    5. Do not include any text, explanation or quotes before or after the URL
+    
+    Just return the complete, direct image URL.
+    `;
+    
+    const payload = {
+      contents: [{
+        parts: [{ text: prompt }]
+      }]
+    };
+    
+    // Make the API request
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API request failed with status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Extract the response text
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text.trim();
+    
+    if (!responseText) {
+      throw new Error('No response received from Gemini API');
+    }
+    
+    // Check if response is a valid URL to an image
+    if (/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i.test(responseText)) {
+      return responseText;
+    } else {
+      // Try to extract a URL from the response
+      const urlMatch = responseText.match(/(https?:\/\/[^\s"']+\.(jpg|jpeg|png|webp|gif)(\?[^\s"']*)?)/i);
+      return urlMatch ? urlMatch[0] : null;
+    }
+  } catch (error) {
+    console.error('Error fetching plant image:', error);
+    return null;
+  }
+}
