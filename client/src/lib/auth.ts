@@ -308,6 +308,22 @@ export const loginWithEmail = async (
         // Clear the temp password as it's been used
         await set(tempPasswordRef, null);
         
+        // For users logging in with a reset password, make sure they have an expertise level
+        // This will skip the expertise selection screen
+        try {
+          // Set a default expertise level if needed
+          if (!userProfile.expertiseLevel) {
+            const defaultExpertiseLevel = 'beginner';
+            await updateExpertiseLevel(userId, defaultExpertiseLevel);
+            
+            // Update the local profile
+            userProfile.expertiseLevel = defaultExpertiseLevel;
+          }
+        } catch (err) {
+          console.log("Could not set expertise level:", err);
+          // Continue anyway
+        }
+        
         // Since we can't directly reset the password without user being authenticated,
         // we'll need to rely on the temp password mechanism for logging in
         return userProfile;
@@ -338,10 +354,10 @@ export const resetPassword = async (email: string): Promise<string> => {
     
     // Find the user by email
     snapshot.forEach((childSnapshot) => {
-      const userProfile = childSnapshot.val() as UserProfile;
-      if (userProfile.email === email) {
+      const userProfile = childSnapshot.val();
+      if (userProfile && userProfile.email === email) {
         userId = userProfile.uid;
-        userData = userProfile;
+        userData = userProfile as UserProfile;
       }
     });
     
@@ -364,6 +380,16 @@ export const resetPassword = async (email: string): Promise<string> => {
         password: newPassword,
         timestamp: Date.now()
       });
+      
+      // Make sure the user has an expertise level to skip that screen after login
+      try {
+        // Try to set a default expertise level to skip the expertise selection screen
+        const defaultExpertiseLevel = 'beginner';
+        await updateExpertiseLevel(userId, defaultExpertiseLevel);
+      } catch (error) {
+        console.log("Could not set default expertise level:", error);
+        // Continue anyway, not critical
+      }
       
       return newPassword;
     } catch (resetError) {

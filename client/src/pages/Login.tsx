@@ -248,8 +248,8 @@ export default function Login() {
     }
   };
 
-  // If already signed in and has expertise, redirect to dashboard
-  if (user && !loading && !showExpertiseSelection) {
+  // If already signed in and has expertise (or came from password reset), redirect to dashboard
+  if (user && !loading && (!showExpertiseSelection || newPassword)) {
     setLocation('/');
     return null;
   }
@@ -320,9 +320,10 @@ export default function Login() {
                         <Button
                           variant="default"
                           onClick={() => {
+                            // Auto-fill the email and password fields
+                            setPassword(newPassword || '');
+                            // Go back to login screen
                             setShowResetPassword(false);
-                            setNewPassword(null);
-                            // Pre-fill the email field in the login form
                             setShowEmailForm(true);
                           }}
                           className="w-full bg-green-600 hover:bg-green-700 text-white h-12"
