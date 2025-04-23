@@ -21,11 +21,7 @@ import { motion } from 'framer-motion';
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const [sensorData, setSensorData] = useState<SensorData>({
-    temperature: 24.5,
-    humidity: 38,
-    timestamp: Date.now()
-  });
+  const [sensorData, setSensorData] = useState<SensorData | null>(null);
   const [historyData, setHistoryData] = useState<SensorHistory>({});
   const [plantConfig, setPlantConfig] = useState<PlantConfigValues>({
     plantType: 'succulent',
@@ -101,23 +97,30 @@ export default function Dashboard() {
   }, [sensorData, plantConfig]);
   
   const checkForAlerts = () => {
+    // If we don't have sensor data yet, no alerts to check
+    if (!sensorData) {
+      return;
+    }
+    
     // Check temperature (highest priority)
-    if (sensorData.temperature < plantConfig.tempMin || sensorData.temperature > plantConfig.tempMax) {
+    const temp = sensorData.temperature;
+    if (temp < plantConfig.tempMin || temp > plantConfig.tempMax) {
       setAlert({
         show: true,
         title: 'Temperature Alert',
-        message: `Temperature is ${sensorData.temperature < plantConfig.tempMin ? 'below' : 'above'} the ideal range (${plantConfig.tempMin}°C - ${plantConfig.tempMax}°C).`,
+        message: `Temperature is ${temp < plantConfig.tempMin ? 'below' : 'above'} the ideal range (${plantConfig.tempMin}°C - ${plantConfig.tempMax}°C).`,
         type: 'warning'
       });
       return;
     }
     
     // Check humidity
-    if (sensorData.humidity < plantConfig.humidityMin || sensorData.humidity > plantConfig.humidityMax) {
+    const humidity = sensorData.humidity / 1000; // Convert from ppm to percentage
+    if (humidity < plantConfig.humidityMin || humidity > plantConfig.humidityMax) {
       setAlert({
         show: true,
         title: 'Humidity Alert',
-        message: `Humidity is ${sensorData.humidity < plantConfig.humidityMin ? 'below' : 'above'} the ideal range (${plantConfig.humidityMin}% - ${plantConfig.humidityMax}%).`,
+        message: `Humidity is ${humidity < plantConfig.humidityMin ? 'below' : 'above'} the ideal range (${plantConfig.humidityMin}% - ${plantConfig.humidityMax}%).`,
         type: 'warning'
       });
       return;
@@ -216,27 +219,27 @@ export default function Dashboard() {
           </motion.div>
         )}
         
-        {/* Data Visualization Section */}
-        <motion.div
+        {/* Plant Environment Section - Now at the top */}
+        <motion.div 
+          className="my-4"
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="my-8"
-        >
-          <DataVisualization historyData={historyData} />
-        </motion.div>
-        
-        {/* Plant Controls Section */}
-        <motion.div 
-          className="my-8"
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
         >
           <PlantControls 
             onAction={handlePlantControlAction}
             sensorData={sensorData}
           />
+        </motion.div>
+        
+        {/* Data Visualization Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="my-8"
+        >
+          <DataVisualization historyData={historyData} />
         </motion.div>
         
         {/* Plant Emergency SOS Button */}

@@ -9,7 +9,7 @@ import { PlantControls as PlantControlsType, SensorData } from '@/lib/firebase';
 
 interface PlantControlsProps {
   onAction: (action: string, state: boolean) => void;
-  sensorData?: SensorData;
+  sensorData?: SensorData | null;
 }
 
 export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
