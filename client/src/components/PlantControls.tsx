@@ -120,34 +120,6 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
         
         <CardContent className="relative z-10 p-4">
           <div className="grid grid-cols-1 gap-3">
-            {/* UV Light Control - More compact */}
-            <motion.div 
-              className="p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between"
-              whileHover={{ scale: 1.01 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              <div className="flex items-center gap-2">
-                <motion.div 
-                  className={`p-1.5 rounded-full ${controls.uvLight ? 'bg-yellow-100 dark:bg-yellow-900/30' : 'bg-gray-100 dark:bg-gray-800'}`}
-                  animate={{ 
-                    boxShadow: controls.uvLight 
-                      ? ['0 0 0 rgba(252, 211, 77, 0)', '0 0 10px rgba(252, 211, 77, 0.7)', '0 0 0 rgba(252, 211, 77, 0)'] 
-                      : 'none'
-                  }}
-                  transition={{ duration: 2, repeat: controls.uvLight ? Infinity : 0 }}
-                >
-                  <Sun className={`h-4 w-4 ${controls.uvLight ? 'text-yellow-500' : 'text-gray-400'}`} />
-                </motion.div>
-                <h3 className="font-medium text-sm">UV Light</h3>
-              </div>
-              
-              <Switch 
-                checked={controls.uvLight} 
-                onCheckedChange={handleUvLightToggle} 
-                className="data-[state=checked]:bg-green-500 h-5 w-9"
-              />
-            </motion.div>
-            
             {/* Temperature & Humidity Readings */}
             <div className="flex gap-3">
               {/* Temperature Reading */}
@@ -208,6 +180,34 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
                 </div>
               </motion.div>
             </div>
+            
+            {/* UV Light Control - More compact */}
+            <motion.div 
+              className="p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between"
+              whileHover={{ scale: 1.01 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              <div className="flex items-center gap-2">
+                <motion.div 
+                  className={`p-1.5 rounded-full ${controls.uvLight ? 'bg-yellow-100 dark:bg-yellow-900/30' : 'bg-gray-100 dark:bg-gray-800'}`}
+                  animate={{ 
+                    boxShadow: controls.uvLight 
+                      ? ['0 0 0 rgba(252, 211, 77, 0)', '0 0 10px rgba(252, 211, 77, 0.7)', '0 0 0 rgba(252, 211, 77, 0)'] 
+                      : 'none'
+                  }}
+                  transition={{ duration: 2, repeat: controls.uvLight ? Infinity : 0 }}
+                >
+                  <Sun className={`h-4 w-4 ${controls.uvLight ? 'text-yellow-500' : 'text-gray-400'}`} />
+                </motion.div>
+                <h3 className="font-medium text-sm">UV Light</h3>
+              </div>
+              
+              <Switch 
+                checked={controls.uvLight} 
+                onCheckedChange={handleUvLightToggle} 
+                className="data-[state=checked]:bg-green-500 h-5 w-9"
+              />
+            </motion.div>
             
             {/* Watering Control - Compact */}
             <motion.div 
