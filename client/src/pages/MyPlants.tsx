@@ -12,7 +12,13 @@ import { addUserPlant, UserPlant } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { Leaf, Plus, Droplet, Calendar, AlertCircle, Check, Loader2, Camera, Upload, Image as ImageIcon, X, Trash2 } from 'lucide-react';
-import { uploadPlantPhoto, updatePlantData, subscribeSensorData, SensorData } from '@/lib/firebase';
+import { 
+  uploadPlantPhoto, 
+  updatePlantData, 
+  subscribeSensorData, 
+  setWateringActive,
+  SensorData 
+} from '@/lib/firebase';
 import { getDatabase, ref, set } from 'firebase/database';
 import { analyzePlantPhoto, PlantAnalysisResult, fetchPlantImage } from '@/lib/gemini';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
