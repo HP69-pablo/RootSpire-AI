@@ -35,6 +35,36 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
     if (humidityPercent > 80) return "High";
     return "Optimal";
   };
+  
+  // Get temperature color based on value
+  const getTemperatureColor = (temp: number) => {
+    if (temp <= 10) return "text-blue-500";
+    if (temp >= 30) return "text-red-500";
+    if (temp >= 20) return "text-orange-500";
+    return "text-green-500";
+  };
+  
+  const getTemperatureBackground = (temp: number) => {
+    if (temp <= 10) return "bg-blue-100 dark:bg-blue-900/30";
+    if (temp >= 30) return "bg-red-100 dark:bg-red-900/30";
+    if (temp >= 20) return "bg-orange-100 dark:bg-orange-900/30";
+    return "bg-green-100 dark:bg-green-900/30";
+  };
+  
+  // Get humidity color based on value (in parts per million, scaled to percentage)
+  const getHumidityColor = (humidity: number) => {
+    const humidityPercent = humidity / 1000;
+    if (humidityPercent < 20) return "text-orange-500";
+    if (humidityPercent > 80) return "text-blue-500";
+    return "text-green-500";
+  };
+  
+  const getHumidityBackground = (humidity: number) => {
+    const humidityPercent = humidity / 1000;
+    if (humidityPercent < 20) return "bg-orange-100 dark:bg-orange-900/30";
+    if (humidityPercent > 80) return "bg-blue-100 dark:bg-blue-900/30";
+    return "bg-green-100 dark:bg-green-900/30";
+  };
 
   // Handle UV light toggle
   const handleUvLightToggle = (checked: boolean) => {
@@ -84,7 +114,7 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
             >
               <Leaf className="h-5 w-5 text-green-600" />
             </motion.div>
-            Plant Controls
+            Plant Environment
           </CardTitle>
         </CardHeader>
         
@@ -129,9 +159,9 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <motion.div 
-                      className={`p-1.5 rounded-full ${sensorData?.temperature && sensorData.temperature > 25 ? 'bg-red-100 dark:bg-red-900/30' : 'bg-blue-100 dark:bg-blue-900/30'}`}
+                      className={`p-1.5 rounded-full ${sensorData ? getTemperatureBackground(sensorData.temperature) : 'bg-gray-100 dark:bg-gray-800'}`}
                     >
-                      <Thermometer className={`h-4 w-4 ${sensorData?.temperature && sensorData.temperature > 25 ? 'text-red-500' : 'text-blue-500'}`} />
+                      <Thermometer className={`h-4 w-4 ${sensorData ? getTemperatureColor(sensorData.temperature) : 'text-gray-400'}`} />
                     </motion.div>
                     <div>
                       <h3 className="font-medium text-sm">Temperature</h3>
@@ -157,11 +187,11 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <motion.div 
-                      className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30"
+                      className={`p-1.5 rounded-full ${sensorData ? getHumidityBackground(sensorData.humidity) : 'bg-gray-100 dark:bg-gray-800'}`}
                       animate={{ scale: [1, 1.1, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      <Droplets className="h-4 w-4 text-blue-500" />
+                      <Droplets className={`h-4 w-4 ${sensorData ? getHumidityColor(sensorData.humidity) : 'text-gray-400'}`} />
                     </motion.div>
                     <div>
                       <h3 className="font-medium text-sm">Humidity</h3>

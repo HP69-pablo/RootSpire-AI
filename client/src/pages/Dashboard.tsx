@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
-import { StatusOverview } from '@/components/StatusOverview';
 import { AlertBanner } from '@/components/AlertBanner';
 import { DataVisualization } from '@/components/DataVisualization';
 import { PlantConfig, PlantConfigValues } from '@/components/PlantConfig';
@@ -200,15 +199,6 @@ export default function Dashboard() {
       <Header />
       
       <main className="container mx-auto px-4 py-6 md:py-10">
-        {/* Status Overview Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <StatusOverview sensorData={sensorData} config={plantConfig} />
-        </motion.div>
-        
         {/* Alert Banner */}
         {alert.show && (
           <motion.div
