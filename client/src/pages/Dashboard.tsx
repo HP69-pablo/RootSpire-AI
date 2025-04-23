@@ -239,7 +239,14 @@ export default function Dashboard() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="my-8"
         >
-          <DataVisualization historyData={historyData} />
+          <DataVisualization 
+            historyData={historyData} 
+            currentData={sensorData ? {
+              temperature: sensorData.temperature,
+              humidity: sensorData.humidity,
+              light: sensorData.light
+            } : undefined}
+          />
         </motion.div>
         
         {/* Plant Emergency SOS Button */}
