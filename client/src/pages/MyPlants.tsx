@@ -58,6 +58,7 @@ export default function MyPlants() {
   
   // Sensor data from Firebase
   const [sensorData, setSensorData] = useState<SensorData | null>(null);
+  const [wateringDisabled, setWateringDisabled] = useState(false);
 
   // Handle authentication state
   useEffect(() => {
@@ -1010,19 +1011,65 @@ export default function MyPlants() {
                             variant="outline" 
                             size="sm"
                             className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900 dark:hover:bg-blue-900/20"
+                            disabled={wateringDisabled}
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent opening details modal
-                              // Mark as watered
+                              
+                              // First, activate the watering system in Firebase
                               if (user && plant) {
-                                updatePlantData(user.uid, plant.id, {
-                                  lastWatered: Date.now()
-                                }).then(() => {
-                                  refreshProfile();
-                                  toast({
-                                    title: "Plant watered",
-                                    description: `${plant.name} has been marked as watered.`
+                                setWateringDisabled(true);
+                                
+                                // Activate the watering system
+                                setWateringActive(true)
+                                  .then(() => {
+                                    toast({
+                                      title: "Watering...",
+                                      description: `Watering system activated for ${plant.name}.`
+                                    });
+                                    
+                                    // After 3 seconds, turn off the watering system
+                                    setTimeout(() => {
+                                      setWateringActive(false)
+                                        .then(() => {
+                                          console.log('Watering system deactivated');
+                                          
+                                          // Now update the plant's last watered timestamp
+                                          return updatePlantData(user.uid, plant.id, {
+                                            lastWatered: Date.now()
+                                          });
+                                        })
+                                        .then(() => {
+                                          refreshProfile();
+                                          toast({
+                                            title: "Plant watered",
+                                            description: `${plant.name} has been marked as watered.`
+                                          });
+                                          
+                                          // Add a cooldown to prevent button spamming
+                                          setTimeout(() => {
+                                            setWateringDisabled(false);
+                                          }, 5000);
+                                        })
+                                        .catch(error => {
+                                          console.error('Error during watering process:', error);
+                                          setWateringDisabled(false);
+                                          toast({
+                                            title: "Watering failed",
+                                            description: "There was an error with the watering system.",
+                                            variant: "destructive"
+                                          });
+                                        });
+                                    }, 3000);
+                                  })
+                                  .catch(error => {
+                                    console.error('Failed to activate watering system:', error);
+                                    setWateringDisabled(false);
+                                    toast({
+                                      title: "Watering failed",
+                                      description: "Could not activate the watering system.",
+                                      variant: "destructive"
+                                    });
                                   });
-                                });
                               }
                             }}
                           >

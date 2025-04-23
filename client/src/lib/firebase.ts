@@ -295,6 +295,95 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
   };
 }
 
+// Generate and store sensor history data
+export async function generateSensorHistory(): Promise<void> {
+  if (!database) {
+    console.error('Firebase database not initialized when trying to generate history data');
+    return;
+  }
+
+  try {
+    // Get current sensor data as a base
+    const tempRef = ref(database, 'sensorData/current/temperature');
+    const humidityRef = ref(database, 'sensorData/current/humidity');
+    const lightRef = ref(database, 'sensorData/current/light');
+    
+    const tempSnapshot = await get(tempRef);
+    const humiditySnapshot = await get(humidityRef);
+    const lightSnapshot = await get(lightRef);
+    
+    const baseTemp = tempSnapshot.exists() ? tempSnapshot.val() : 22;
+    const baseHumidity = humiditySnapshot.exists() ? humiditySnapshot.val() : 50;
+    const baseLight = lightSnapshot.exists() ? lightSnapshot.val() : 70;
+    
+    // Generate 24 hours of data with slight variations
+    const now = Date.now();
+    const hourMs = 60 * 60 * 1000;
+    const historyData: SensorHistory = {};
+    
+    // Clear existing history first
+    const historyRef = ref(database, 'sensorData/history');
+    await set(historyRef, null);
+    
+    // Generate data points for the last 24 hours
+    for (let i = 0; i < 24; i++) {
+      const timestamp = now - (i * hourMs);
+      
+      // Create variations based on time of day
+      // Morning (6-12): increasing temp and light
+      // Afternoon (12-18): high temp and light
+      // Evening (18-24): decreasing temp and light
+      // Night (0-6): low temp and light
+      const hour = new Date(timestamp).getHours();
+      
+      let tempVariation = 0;
+      let lightVariation = 0;
+      
+      if (hour >= 6 && hour < 12) {
+        // Morning - rising
+        tempVariation = ((hour - 6) / 6) * 8;  // 0 to 8 degree increase
+        lightVariation = ((hour - 6) / 6) * 40;  // 0 to 40% increase
+      } else if (hour >= 12 && hour < 18) {
+        // Afternoon - steady high
+        tempVariation = 8 - ((hour - 12) / 6) * 2;  // 8 to 6 degree increase
+        lightVariation = 40 - ((hour - 12) / 6) * 10;  // 40 to 30% increase
+      } else if (hour >= 18 && hour < 24) {
+        // Evening - falling
+        tempVariation = 6 - ((hour - 18) / 6) * 6;  // 6 to 0 degree increase
+        lightVariation = 30 - ((hour - 18) / 6) * 30;  // 30 to 0% increase
+      } else {
+        // Night - low
+        tempVariation = -3 + ((hour) / 6) * 3;  // -3 to 0 degree change
+        lightVariation = -30;  // 30% decrease
+      }
+      
+      // Apply random noise
+      const tempNoise = Math.random() * 4 - 2;  // -2 to +2
+      const humidityNoise = Math.random() * 10 - 5;  // -5 to +5
+      const lightNoise = Math.random() * 10 - 5;  // -5 to +5
+      
+      // Calculate final values with bounds
+      const finalTemp = Math.max(10, Math.min(35, baseTemp + tempVariation + tempNoise));
+      const finalHumidity = Math.max(20, Math.min(90, baseHumidity + humidityNoise));
+      const finalLight = Math.max(5, Math.min(100, baseLight + lightVariation + lightNoise));
+      
+      // Save to history object
+      historyData[timestamp] = {
+        temperature: Math.round(finalTemp),
+        humidity: Math.round(finalHumidity),
+        light: Math.round(finalLight)
+      };
+    }
+    
+    // Save to Firebase
+    await set(historyRef, historyData);
+    console.log('Successfully generated and stored 24 hours of sensor history data');
+    
+  } catch (error) {
+    console.error('Error generating sensor history:', error);
+  }
+}
+
 // Get sensor history data
 export function getSensorHistory(days: number, callback: (data: SensorHistory) => void) {
   if (!database) {
@@ -307,7 +396,22 @@ export function getSensorHistory(days: number, callback: (data: SensorHistory) =
   const startTime = endTime - (days * 24 * 60 * 60 * 1000);
   console.log(`Setting up subscription to history data at path: sensorData/history (for ${days} days)`);
   
+  // Check if history exists, if not generate it
   const historyRef = ref(database, 'sensorData/history');
+  
+  // First check if history data exists
+  get(historyRef).then(snapshot => {
+    if (!snapshot.exists() || Object.keys(snapshot.val()).length === 0) {
+      console.log('No history data found, generating sample data...');
+      generateSensorHistory()
+        .then(() => console.log('History data generation completed'))
+        .catch(err => console.error('Failed to generate history data:', err));
+    }
+  }).catch(error => {
+    console.error('Error checking history data:', error);
+  });
+  
+  // Set up real-time listener for history data
   const unsubscribe = onValue(historyRef, (snapshot: DataSnapshot) => {
     console.log('Got history data update, snapshot exists:', snapshot.exists());
     
