@@ -244,7 +244,8 @@ export default function Dashboard() {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <PlantControls 
-            onAction={handlePlantControlAction} 
+            onAction={handlePlantControlAction}
+            sensorData={sensorData}
           />
         </motion.div>
         

@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
-import { Leaf, Droplet, Sun, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Leaf, Droplet, Sun, Thermometer, Droplets } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { PlantControls as PlantControlsType } from '@/lib/firebase';
+import { PlantControls as PlantControlsType, SensorData } from '@/lib/firebase';
 
 interface PlantControlsProps {
   onAction: (action: string, state: boolean) => void;
+  sensorData?: SensorData;
 }
 
-export function PlantControls({ onAction }: PlantControlsProps) {
+export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
   const { toast } = useToast();
   const [controls, setControls] = useState<PlantControlsType>({
     uvLight: false,
@@ -19,6 +20,21 @@ export function PlantControls({ onAction }: PlantControlsProps) {
   });
   const [isWatering, setIsWatering] = useState(false);
   const [wateringDisabled, setWateringDisabled] = useState(false);
+  
+  // Temperature and humidity status indicators
+  const getTemperatureStatus = (temp: number) => {
+    if (temp < 10) return "Low";
+    if (temp > 32) return "High";
+    return "Optimal";
+  };
+  
+  const getHumidityStatus = (humidity: number) => {
+    // The humidity is in parts per million, scale it to percentage for easier reading
+    const humidityPercent = humidity / 1000;
+    if (humidityPercent < 20) return "Low";
+    if (humidityPercent > 80) return "High";
+    return "Optimal";
+  };
 
   // Handle UV light toggle
   const handleUvLightToggle = (checked: boolean) => {
@@ -72,67 +88,118 @@ export function PlantControls({ onAction }: PlantControlsProps) {
           </CardTitle>
         </CardHeader>
         
-        <CardContent className="relative z-10 space-y-6 p-6">
-          <div className="grid grid-cols-1 gap-6">
-            {/* UV Light Control */}
+        <CardContent className="relative z-10 p-4">
+          <div className="grid grid-cols-1 gap-3">
+            {/* UV Light Control - More compact */}
             <motion.div 
-              className="p-5 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between"
-              whileHover={{ scale: 1.02 }}
+              className="p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between"
+              whileHover={{ scale: 1.01 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <motion.div 
-                  className={`p-2 rounded-full ${controls.uvLight ? 'bg-yellow-100 dark:bg-yellow-900/30' : 'bg-gray-100 dark:bg-gray-800'}`}
+                  className={`p-1.5 rounded-full ${controls.uvLight ? 'bg-yellow-100 dark:bg-yellow-900/30' : 'bg-gray-100 dark:bg-gray-800'}`}
                   animate={{ 
                     boxShadow: controls.uvLight 
-                      ? ['0 0 0 rgba(252, 211, 77, 0)', '0 0 15px rgba(252, 211, 77, 0.7)', '0 0 0 rgba(252, 211, 77, 0)'] 
+                      ? ['0 0 0 rgba(252, 211, 77, 0)', '0 0 10px rgba(252, 211, 77, 0.7)', '0 0 0 rgba(252, 211, 77, 0)'] 
                       : 'none'
                   }}
                   transition={{ duration: 2, repeat: controls.uvLight ? Infinity : 0 }}
                 >
-                  <Sun className={`h-6 w-6 ${controls.uvLight ? 'text-yellow-500' : 'text-gray-400'}`} />
+                  <Sun className={`h-4 w-4 ${controls.uvLight ? 'text-yellow-500' : 'text-gray-400'}`} />
                 </motion.div>
-                <div>
-                  <h3 className="font-medium">UV Light</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {controls.uvLight ? 'Currently active' : 'Currently inactive'}
-                  </p>
-                </div>
+                <h3 className="font-medium text-sm">UV Light</h3>
               </div>
               
               <Switch 
                 checked={controls.uvLight} 
                 onCheckedChange={handleUvLightToggle} 
-                className="data-[state=checked]:bg-green-500"
+                className="data-[state=checked]:bg-green-500 h-5 w-9"
               />
             </motion.div>
             
-            {/* Watering Control */}
+            {/* Temperature & Humidity Readings */}
+            <div className="flex gap-3">
+              {/* Temperature Reading */}
+              <motion.div 
+                className="flex-1 p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+                whileHover={{ scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <motion.div 
+                      className={`p-1.5 rounded-full ${sensorData?.temperature && sensorData.temperature > 25 ? 'bg-red-100 dark:bg-red-900/30' : 'bg-blue-100 dark:bg-blue-900/30'}`}
+                    >
+                      <Thermometer className={`h-4 w-4 ${sensorData?.temperature && sensorData.temperature > 25 ? 'text-red-500' : 'text-blue-500'}`} />
+                    </motion.div>
+                    <div>
+                      <h3 className="font-medium text-sm">Temperature</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {sensorData ? getTemperatureStatus(sensorData.temperature) : 'No data'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-semibold">
+                      {sensorData ? `${sensorData.temperature}°C` : '--'}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+              
+              {/* Humidity Reading */}
+              <motion.div 
+                className="flex-1 p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+                whileHover={{ scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <motion.div 
+                      className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30"
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <Droplets className="h-4 w-4 text-blue-500" />
+                    </motion.div>
+                    <div>
+                      <h3 className="font-medium text-sm">Humidity</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {sensorData ? getHumidityStatus(sensorData.humidity) : 'No data'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-semibold">
+                      {sensorData ? `${(sensorData.humidity / 1000).toFixed(1)}%` : '--'}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+            
+            {/* Watering Control - Compact */}
             <motion.div 
-              className="p-5 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
-              whileHover={{ scale: 1.02 }}
+              className="p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+              whileHover={{ scale: 1.01 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
                   <motion.div 
-                    className={`p-2 rounded-full ${isWatering ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-gray-100 dark:bg-gray-800'}`}
+                    className={`p-1.5 rounded-full ${isWatering ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-gray-100 dark:bg-gray-800'}`}
                     animate={{ 
-                      y: isWatering ? [0, -5, 0] : 0,
+                      y: isWatering ? [0, -3, 0] : 0,
                       boxShadow: isWatering 
-                        ? ['0 0 0 rgba(96, 165, 250, 0)', '0 0 15px rgba(96, 165, 250, 0.7)', '0 0 0 rgba(96, 165, 250, 0)'] 
+                        ? ['0 0 0 rgba(96, 165, 250, 0)', '0 0 10px rgba(96, 165, 250, 0.7)', '0 0 0 rgba(96, 165, 250, 0)'] 
                         : 'none'
                     }}
                     transition={{ duration: 1.5, repeat: isWatering ? Infinity : 0, ease: "easeInOut" }}
                   >
-                    <Droplet className={`h-6 w-6 ${isWatering ? 'text-blue-500' : 'text-gray-400'}`} />
+                    <Droplet className={`h-4 w-4 ${isWatering ? 'text-blue-500' : 'text-gray-400'}`} />
                   </motion.div>
-                  <div>
-                    <h3 className="font-medium">Watering System</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {isWatering ? 'Watering in progress...' : 'Ready to water'}
-                    </p>
-                  </div>
+                  <h3 className="font-medium text-sm">Water Plants</h3>
                 </div>
                 
                 {wateringDisabled && !isWatering && (
@@ -145,8 +212,9 @@ export function PlantControls({ onAction }: PlantControlsProps) {
               <Button 
                 onClick={handleWateringClick}
                 disabled={wateringDisabled || isWatering}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl h-11 font-medium transition-all duration-300 relative overflow-hidden"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-lg h-8 text-xs font-medium transition-all duration-300 relative overflow-hidden"
                 variant="default"
+                size="sm"
               >
                 {isWatering ? (
                   <>
