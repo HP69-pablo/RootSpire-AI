@@ -59,11 +59,10 @@ export default function MyPlants() {
   // Sensor data from Firebase
   const [sensorData, setSensorData] = useState<SensorData | null>(null);
 
-  // Redirect to login if not authenticated
+  // Handle authentication state
   useEffect(() => {
-    if (!loading && !user) {
-      setLocation('/login');
-    }
+    // Don't redirect immediately, let the component render the login prompt
+    // This is intentional to provide a better user experience with a message
   }, [user, loading, setLocation]);
   
   // Subscribe to sensor data from Firebase
@@ -593,6 +592,32 @@ export default function MyPlants() {
           <div className="text-center">
             <Loader2 className="h-10 w-10 animate-spin mx-auto text-green-500" />
             <h3 className="mt-4 text-xl">Loading your plants...</h3>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show a login prompt if user is not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen font-sans transition-colors duration-300 ease-out bg-gradient-to-br from-slate-50 to-white text-slate-900 dark:from-slate-900 dark:to-slate-800 dark:text-white">
+        <Header />
+        <div className="container mx-auto p-4 flex items-center justify-center h-[80vh]">
+          <div className="max-w-md bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden md:max-w-2xl p-8 text-center">
+            <div className="mb-6">
+              <Leaf className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold mb-3">Please Log In</h1>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                You need to log in to check your plants' health and manage your collection.
+              </p>
+            </div>
+            <Button 
+              onClick={() => setLocation('/login')}
+              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg"
+            >
+              Go to Login
+            </Button>
           </div>
         </div>
       </div>

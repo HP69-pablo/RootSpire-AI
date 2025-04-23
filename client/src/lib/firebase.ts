@@ -230,9 +230,6 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
     timestamp: Date.now()
   };
   
-  // Track how many sensors have reported so we can send the complete data
-  let sensorsReported = 0;
-  
   // Subscribe to temperature updates
   const tempUnsubscribe = onValue(temperatureRef, (snapshot: DataSnapshot) => {
     console.log('Got temperature update, snapshot exists:', snapshot.exists());
@@ -242,14 +239,11 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
       if (typeof temperature === 'number') {
         sensorData.temperature = temperature;
         console.log('Updated temperature value:', temperature);
+        
+        // Call callback immediately with updated data for real-time updates
+        sensorData.timestamp = Date.now();
+        callback({...sensorData}); // Create a new object to trigger state update
       }
-    }
-    
-    sensorsReported++;
-    if (sensorsReported >= 3) {
-      sensorData.timestamp = Date.now();
-      callback(sensorData);
-      sensorsReported = 0;
     }
   }, (error) => {
     console.error('Error subscribing to temperature data:', error);
@@ -264,14 +258,11 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
       if (typeof humidity === 'number') {
         sensorData.humidity = humidity;
         console.log('Updated humidity value:', humidity);
+        
+        // Call callback immediately with updated data for real-time updates
+        sensorData.timestamp = Date.now();
+        callback({...sensorData}); // Create a new object to trigger state update
       }
-    }
-    
-    sensorsReported++;
-    if (sensorsReported >= 3) {
-      sensorData.timestamp = Date.now();
-      callback(sensorData);
-      sensorsReported = 0;
     }
   }, (error) => {
     console.error('Error subscribing to humidity data:', error);
@@ -286,14 +277,11 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
       if (typeof light === 'number') {
         sensorData.light = light;
         console.log('Updated light value:', light);
+        
+        // Call callback immediately with updated data for real-time updates
+        sensorData.timestamp = Date.now();
+        callback({...sensorData}); // Create a new object to trigger state update
       }
-    }
-    
-    sensorsReported++;
-    if (sensorsReported >= 3) {
-      sensorData.timestamp = Date.now();
-      callback(sensorData);
-      sensorsReported = 0;
     }
   }, (error) => {
     console.error('Error subscribing to light data:', error);
