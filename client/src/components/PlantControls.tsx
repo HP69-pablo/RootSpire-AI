@@ -65,6 +65,27 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
     if (humidityPercent > 80) return "bg-blue-100 dark:bg-blue-900/30";
     return "bg-green-100 dark:bg-green-900/30";
   };
+  
+  // Get light status based on value
+  const getLightStatus = (light: number) => {
+    if (light < 30) return "Low";
+    if (light > 70) return "Bright";
+    return "Medium";
+  };
+  
+  // Get light color based on value
+  const getLightColor = (light: number) => {
+    if (light < 30) return "text-gray-500";
+    if (light > 70) return "text-yellow-500";
+    return "text-yellow-400";
+  };
+  
+  // Get light background based on value
+  const getLightBackground = (light: number) => {
+    if (light < 30) return "bg-gray-100 dark:bg-gray-800";
+    if (light > 70) return "bg-yellow-100 dark:bg-yellow-900/30";
+    return "bg-yellow-50 dark:bg-yellow-900/20";
+  };
 
   // Handle UV light toggle
   const handleUvLightToggle = (checked: boolean) => {
@@ -208,6 +229,40 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
                 </div>
               </motion.div>
             </div>
+            
+            {/* Light Reading */}
+            <motion.div 
+              className="p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+              whileHover={{ scale: 1.01 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <motion.div 
+                    className={`p-1.5 rounded-full ${sensorData?.light ? getLightBackground(sensorData.light) : 'bg-gray-100 dark:bg-gray-800'}`}
+                    animate={{ 
+                      boxShadow: sensorData?.light && sensorData.light > 50
+                        ? ['0 0 0 rgba(252, 211, 77, 0)', '0 0 10px rgba(252, 211, 77, 0.7)', '0 0 0 rgba(252, 211, 77, 0)'] 
+                        : 'none'
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Sun className={`h-4 w-4 ${sensorData?.light ? getLightColor(sensorData.light) : 'text-gray-400'}`} />
+                  </motion.div>
+                  <div>
+                    <h3 className="font-medium text-sm">Light Level</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {sensorData?.light ? getLightStatus(sensorData.light) : 'No data'}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-lg font-semibold">
+                    {sensorData && sensorData.light !== undefined ? `${sensorData.light}%` : '--'}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
             
             {/* Watering Control - Compact */}
             <motion.div 
