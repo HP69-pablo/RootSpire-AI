@@ -365,6 +365,39 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
               </motion.div>
             </div>
             
+            {/* Plant Type Selection */}
+            <motion.div 
+              className="p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+              whileHover={{ scale: 1.01 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <motion.div 
+                  className="p-1.5 rounded-full bg-purple-100 dark:bg-purple-900/30"
+                  animate={{ rotate: [0, 5, 0, -5, 0] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <Flower className="h-4 w-4 text-purple-500" />
+                </motion.div>
+                <Label htmlFor="plantType" className="font-medium text-sm">Plant Type</Label>
+              </div>
+              
+              <div className="flex gap-2">
+                <Input
+                  id="plantType"
+                  placeholder="Enter plant species (e.g. Aloe Vera)"
+                  value={plantType}
+                  onChange={handlePlantTypeChange}
+                  className="flex-1 h-9 text-sm"
+                />
+                
+                <OptimizeEnvironmentButton 
+                  plantType={plantType} 
+                  onOptimize={handleOptimize}
+                />
+              </div>
+            </motion.div>
+            
             {/* Watering Control - Compact */}
             <motion.div 
               className="p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
