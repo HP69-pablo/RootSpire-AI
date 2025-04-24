@@ -29,10 +29,10 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
   };
   
   const getHumidityStatus = (humidity: number) => {
-    // The humidity is in parts per million, scale it to percentage for easier reading
-    const humidityPercent = humidity / 1000;
-    if (humidityPercent < 20) return "Low";
-    if (humidityPercent > 80) return "High";
+    // Normalize humidity if the value is unrealistically high (legacy data might be in ppm)
+    const normalizedHumidity = humidity > 100 ? humidity / 1000 : humidity;
+    if (normalizedHumidity < 20) return "Low";
+    if (normalizedHumidity > 80) return "High";
     return "Optimal";
   };
   
@@ -51,18 +51,20 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
     return "bg-green-100 dark:bg-green-900/30";
   };
   
-  // Get humidity color based on value (in parts per million, scaled to percentage)
+  // Get humidity color based on value
   const getHumidityColor = (humidity: number) => {
-    const humidityPercent = humidity / 1000;
-    if (humidityPercent < 20) return "text-orange-500";
-    if (humidityPercent > 80) return "text-blue-500";
+    // Normalize humidity if the value is unrealistically high (legacy data might be in ppm)
+    const normalizedHumidity = humidity > 100 ? humidity / 1000 : humidity;
+    if (normalizedHumidity < 20) return "text-orange-500";
+    if (normalizedHumidity > 80) return "text-blue-500";
     return "text-green-500";
   };
   
   const getHumidityBackground = (humidity: number) => {
-    const humidityPercent = humidity / 1000;
-    if (humidityPercent < 20) return "bg-orange-100 dark:bg-orange-900/30";
-    if (humidityPercent > 80) return "bg-blue-100 dark:bg-blue-900/30";
+    // Normalize humidity if the value is unrealistically high (legacy data might be in ppm)
+    const normalizedHumidity = humidity > 100 ? humidity / 1000 : humidity;
+    if (normalizedHumidity < 20) return "bg-orange-100 dark:bg-orange-900/30";
+    if (normalizedHumidity > 80) return "bg-blue-100 dark:bg-blue-900/30";
     return "bg-green-100 dark:bg-green-900/30";
   };
   
@@ -244,7 +246,7 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
                   </div>
                   <div className="text-right">
                     <span className="text-lg font-semibold">
-                      {sensorData ? `${(sensorData.humidity / 1000).toFixed(1)}%` : '--'}
+                      {sensorData ? `${sensorData.humidity > 100 ? (sensorData.humidity / 1000).toFixed(1) : sensorData.humidity}%` : '--'}
                     </span>
                   </div>
                 </div>
