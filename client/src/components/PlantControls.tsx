@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
-import { Leaf, Droplet, Sun, Thermometer, Droplets, Gauge, Flower } from 'lucide-react';
+import { Leaf, Droplet, Sun, Thermometer, Droplets, Gauge, Flower, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { PlantControls as PlantControlsType, SensorData } from '@/lib/firebase';
 import { OptimizeEnvironmentButton } from './OptimizeEnvironmentButton';
-import { OptimalEnvironmentValues } from '@/lib/environmentOptimizer';
+import { getOptimalEnvironmentValues, OptimalEnvironmentValues } from '@/lib/environmentOptimizer';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -25,6 +25,7 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
   const [isWatering, setIsWatering] = useState(false);
   const [wateringDisabled, setWateringDisabled] = useState(false);
   const [plantType, setPlantType] = useState<string>("");
+  const [plantTypeLoading, setPlantTypeLoading] = useState(false);
   const [customRanges, setCustomRanges] = useState({
     temperature: { min: 10, max: 32 },
     humidity: { min: 20, max: 80 },
@@ -150,7 +151,31 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
   
   // Handle plant type change
   const handlePlantTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPlantType(e.target.value);
+    const newPlantType = e.target.value;
+    setPlantType(newPlantType);
+    
+    // Auto-optimize if plant type is 3 characters or longer and has changed
+    if (newPlantType.length >= 3 && newPlantType !== plantType) {
+      // Use a delay to prevent too many API calls while typing
+      const optimizationTimer = setTimeout(async () => {
+        try {
+          setPlantTypeLoading(true);
+          const values = await getOptimalEnvironmentValues(newPlantType);
+          handleOptimize(values);
+        } catch (error) {
+          console.error("Error auto-optimizing environment:", error);
+          toast({
+            title: "Auto-optimization Failed",
+            description: "Could not determine optimal environment values automatically.",
+            variant: "destructive"
+          });
+        } finally {
+          setPlantTypeLoading(false);
+        }
+      }, 1000); // 1-second delay to avoid multiple API calls while typing
+      
+      return () => clearTimeout(optimizationTimer);
+    }
   };
   
   // Handle environment optimization from AI
@@ -380,22 +405,39 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
                   <Flower className="h-4 w-4 text-purple-500" />
                 </motion.div>
                 <Label htmlFor="plantType" className="font-medium text-sm">Plant Type</Label>
+                
+                {plantTypeLoading && (
+                  <div className="flex items-center text-xs text-blue-500 gap-1 ml-auto">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>Optimizing...</span>
+                  </div>
+                )}
               </div>
               
-              <div className="flex gap-2">
+              <div className="relative">
                 <Input
                   id="plantType"
                   placeholder="Enter plant species (e.g. Aloe Vera)"
                   value={plantType}
                   onChange={handlePlantTypeChange}
-                  className="flex-1 h-9 text-sm"
+                  className="w-full h-9 text-sm pr-8"
                 />
                 
-                <OptimizeEnvironmentButton 
-                  plantType={plantType} 
-                  onOptimize={handleOptimize}
-                />
+                {plantType && (
+                  <motion.div 
+                    className="absolute right-2 top-1/2 -translate-y-1/2"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                  >
+                    <Flower className="h-4 w-4 text-purple-500" />
+                  </motion.div>
+                )}
               </div>
+              
+              <p className="text-xs text-gray-500 mt-2">
+                Type plant name to automatically optimize environment settings
+              </p>
             </motion.div>
             
             {/* Watering Control - Compact */}
