@@ -82,8 +82,8 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
   // Get light status based on value - using dynamic thresholds
   const getLightStatus = (light: number) => {
     if (light < customRanges.light.min) return "Low";
-    if (light > customRanges.light.max) return "Bright";
-    return "Medium";
+    if (light > customRanges.light.max) return "High";
+    return "Optimal";
   };
   
   // Get light color based on value - using dynamic thresholds
