@@ -195,6 +195,7 @@ export interface SensorData {
   temperature: number;
   humidity: number;
   light?: number;
+  soilMoisture?: number;
   timestamp: number;
 }
 
@@ -203,6 +204,7 @@ export interface SensorHistory {
     temperature: number;
     humidity: number;
     light?: number;
+    soilMoisture?: number;
   };
 }
 
@@ -218,10 +220,11 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
 
   console.log('Setting up subscription to real-time sensor data according to specific paths');
   
-  // Individual references for temperature, humidity, and light
+  // Individual references for temperature, humidity, light and soil moisture
   const temperatureRef = ref(database, 'sensorData/current/temperature');
   const humidityRef = ref(database, 'sensorData/current/humidity');
   const lightRef = ref(database, 'sensorData/current/Light'); // Note: "Light" with capital L as specified
+  const soilMoistureRef = ref(database, 'sensorData/current/soilMoister'); // Note: "soilMoister" as specified
   
   // Initialize the data object
   let sensorData: SensorData = {
@@ -286,12 +289,32 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
   }, (error) => {
     console.error('Error subscribing to light data:', error);
   });
+  
+  // Subscribe to soil moisture updates
+  const soilMoistureUnsubscribe = onValue(soilMoistureRef, (snapshot: DataSnapshot) => {
+    console.log('Got soil moisture update, snapshot exists:', snapshot.exists());
+    
+    if (snapshot.exists()) {
+      const soilMoisture = snapshot.val();
+      if (typeof soilMoisture === 'number') {
+        sensorData.soilMoisture = soilMoisture;
+        console.log('Updated soil moisture value:', soilMoisture);
+        
+        // Call callback immediately with updated data for real-time updates
+        sensorData.timestamp = Date.now();
+        callback({...sensorData}); // Create a new object to trigger state update
+      }
+    }
+  }, (error) => {
+    console.error('Error subscribing to soil moisture data:', error);
+  });
 
   // Return a combined unsubscribe function
   return () => {
     tempUnsubscribe();
     humidityUnsubscribe();
     lightUnsubscribe();
+    soilMoistureUnsubscribe();
   };
 }
 
@@ -306,15 +329,18 @@ export async function generateSensorHistory(): Promise<void> {
     // Get current sensor data as a base
     const tempRef = ref(database, 'sensorData/current/temperature');
     const humidityRef = ref(database, 'sensorData/current/humidity');
-    const lightRef = ref(database, 'sensorData/current/light');
+    const lightRef = ref(database, 'sensorData/current/Light');
+    const soilMoistureRef = ref(database, 'sensorData/current/soilMoister');
     
     const tempSnapshot = await get(tempRef);
     const humiditySnapshot = await get(humidityRef);
     const lightSnapshot = await get(lightRef);
+    const soilMoistureSnapshot = await get(soilMoistureRef);
     
     const baseTemp = tempSnapshot.exists() ? tempSnapshot.val() : 22;
     const baseHumidity = humiditySnapshot.exists() ? humiditySnapshot.val() : 50;
     const baseLight = lightSnapshot.exists() ? lightSnapshot.val() : 70;
+    const baseSoilMoisture = soilMoistureSnapshot.exists() ? soilMoistureSnapshot.val() : 60;
     
     // Generate 24 hours of data with slight variations
     const now = Date.now();
@@ -361,17 +387,20 @@ export async function generateSensorHistory(): Promise<void> {
       const tempNoise = Math.random() * 4 - 2;  // -2 to +2
       const humidityNoise = Math.random() * 10 - 5;  // -5 to +5
       const lightNoise = Math.random() * 10 - 5;  // -5 to +5
+      const soilMoistureNoise = Math.random() * 8 - 4;  // -4 to +4
       
       // Calculate final values with bounds
       const finalTemp = Math.max(10, Math.min(35, baseTemp + tempVariation + tempNoise));
       const finalHumidity = Math.max(20, Math.min(90, baseHumidity + humidityNoise));
       const finalLight = Math.max(5, Math.min(100, baseLight + lightVariation + lightNoise));
+      const finalSoilMoisture = Math.max(10, Math.min(95, baseSoilMoisture + soilMoistureNoise));
       
       // Save to history object
       historyData[timestamp] = {
         temperature: Math.round(finalTemp),
         humidity: Math.round(finalHumidity),
-        light: Math.round(finalLight)
+        light: Math.round(finalLight),
+        soilMoisture: Math.round(finalSoilMoisture)
       };
     }
     
@@ -438,18 +467,20 @@ export function getSensorHistory(days: number, callback: (data: SensorHistory) =
           
           // Extract data based on structure (might be nested or flat)
           const entry = value as any;
-          let temperature, humidity, light;
+          let temperature, humidity, light, soilMoisture;
           
           if (entry.temperature !== undefined) {
             // Direct properties on the entry
             temperature = entry.temperature;
             humidity = entry.humidity;
             light = entry.light;
+            soilMoisture = entry.soilMoisture;
           } else if (entry.data && typeof entry.data === 'object') {
             // Nested under a 'data' property
             temperature = entry.data.temperature;
             humidity = entry.data.humidity;
             light = entry.data.light;
+            soilMoisture = entry.data.soilMoisture;
           }
           
           // Only add valid entries
@@ -462,6 +493,11 @@ export function getSensorHistory(days: number, callback: (data: SensorHistory) =
             // Add light if available
             if (typeof light === 'number') {
               processedData[timestamp].light = light;
+            }
+            
+            // Add soil moisture if available
+            if (typeof soilMoisture === 'number') {
+              processedData[timestamp].soilMoisture = soilMoisture;
             }
           }
         }
