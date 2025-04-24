@@ -122,19 +122,39 @@ export default function Dashboard() {
       return;
     }
 
-    // Check humidity
-    const humidity = sensorData.humidity; // Convert from ppm to percentage
+    // Check humidity - humidity is in raw percentage format directly from sensor
+    const humidity = sensorData.humidity;
+    // If humidity value is unrealistically high (like 330000), normalize it
+    const normalizedHumidity = humidity > 100 ? humidity / 1000 : humidity;
+    
     if (
-      humidity < plantConfig.humidityMin ||
-      humidity > plantConfig.humidityMax
+      normalizedHumidity < plantConfig.humidityMin ||
+      normalizedHumidity > plantConfig.humidityMax
     ) {
       setAlert({
         show: true,
         title: "Humidity Alert",
-        message: `Humidity is ${humidity < plantConfig.humidityMin ? "below" : "above"} the ideal range (${plantConfig.humidityMin}% - ${plantConfig.humidityMax}%).`,
+        message: `Humidity is ${normalizedHumidity < plantConfig.humidityMin ? "below" : "above"} the ideal range (${plantConfig.humidityMin}% - ${plantConfig.humidityMax}%).`,
         type: "warning",
       });
       return;
+    }
+    
+    // Check soil moisture if available
+    if (sensorData.soilMoisture !== undefined) {
+      const soilMoisture = sensorData.soilMoisture;
+      if (
+        soilMoisture < plantConfig.soilMoistureMin ||
+        soilMoisture > plantConfig.soilMoistureMax
+      ) {
+        setAlert({
+          show: true,
+          title: "Soil Moisture Alert",
+          message: `Soil moisture is ${soilMoisture < plantConfig.soilMoistureMin ? "below" : "above"} the ideal range (${plantConfig.soilMoistureMin}% - ${plantConfig.soilMoistureMax}%).`,
+          type: "warning",
+        });
+        return;
+      }
     }
 
     // No alerts needed
@@ -255,8 +275,10 @@ export default function Dashboard() {
               sensorData
                 ? {
                     temperature: sensorData.temperature,
-                    humidity: sensorData.humidity,
+                    // Normalize humidity value if it's too large (like 330000)
+                    humidity: sensorData.humidity > 100 ? sensorData.humidity / 1000 : sensorData.humidity,
                     light: sensorData.light,
+                    soilMoisture: sensorData.soilMoisture,
                   }
                 : undefined
             }

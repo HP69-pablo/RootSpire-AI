@@ -17,6 +17,7 @@ interface DataVisualizationProps {
     temperature: number;
     humidity: number;
     light?: number;
+    soilMoisture?: number;
   };
 }
 
@@ -93,7 +94,7 @@ export function DataVisualization({ historyData, currentData }: DataVisualizatio
         temperature: currentData.temperature,
         humidity: currentData.humidity,
         light: currentData.light || null,
-        soilMoisture: null, // We might not have real-time soil moisture
+        soilMoisture: currentData.soilMoisture || null,
         timeFormatted: 'Now'
       });
     }

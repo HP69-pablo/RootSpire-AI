@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
-import { Leaf, Droplet, Sun, Thermometer, Droplets } from 'lucide-react';
+import { Leaf, Droplet, Sun, Thermometer, Droplets, Gauge } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,27 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
     if (light < 30) return "bg-gray-100 dark:bg-gray-800";
     if (light > 70) return "bg-yellow-100 dark:bg-yellow-900/30";
     return "bg-yellow-50 dark:bg-yellow-900/20";
+  };
+  
+  // Get soil moisture status based on value
+  const getSoilMoistureStatus = (soilMoisture: number) => {
+    if (soilMoisture < 30) return "Dry";
+    if (soilMoisture > 70) return "Wet";
+    return "Optimal";
+  };
+  
+  // Get soil moisture color based on value
+  const getSoilMoistureColor = (soilMoisture: number) => {
+    if (soilMoisture < 30) return "text-orange-500";
+    if (soilMoisture > 70) return "text-blue-500";
+    return "text-emerald-500";
+  };
+  
+  // Get soil moisture background based on value
+  const getSoilMoistureBackground = (soilMoisture: number) => {
+    if (soilMoisture < 30) return "bg-orange-100 dark:bg-orange-900/30";
+    if (soilMoisture > 70) return "bg-blue-100 dark:bg-blue-900/30";
+    return "bg-emerald-100 dark:bg-emerald-900/30";
   };
 
   // Handle UV light toggle
