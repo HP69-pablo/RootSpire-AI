@@ -1415,18 +1415,18 @@ export default function MyPlants() {
                               </div>
                               <div>
                                 <div className="text-sm text-gray-500 dark:text-gray-400">Light</div>
-                                <div className="font-medium">{sensorData.light} lux</div>
+                                <div className="font-medium">{sensorData.light}%</div>
                               </div>
                             </div>
                             <Badge 
                               className={
-                                sensorData.light > 3000 ? "bg-orange-500" : 
-                                sensorData.light < 800 ? "bg-indigo-500" : 
+                                sensorData.light > 80 ? "bg-orange-500" : 
+                                sensorData.light < 30 ? "bg-indigo-500" : 
                                 "bg-green-500"
                               }
                             >
-                              {sensorData.light > 3000 ? "Bright" : 
-                               sensorData.light < 800 ? "Low" : 
+                              {sensorData.light > 80 ? "Bright" : 
+                               sensorData.light < 30 ? "Low" : 
                                "Good"}
                             </Badge>
                           </div>
@@ -1513,7 +1513,7 @@ export default function MyPlants() {
                               <p>Humidity is high, ensure good air circulation to prevent fungal issues.</p>
                             </div>
                           )}
-                          {sensorData.light !== undefined && sensorData.light < 800 && (
+                          {sensorData.light !== undefined && sensorData.light < 30 && (
                             <div className="flex items-start mb-2">
                               <AlertCircle className="h-4 w-4 text-indigo-500 mt-0.5 mr-2 flex-shrink-0" />
                               <p>Light levels are low, consider moving to a brighter location.</p>
@@ -1529,7 +1529,7 @@ export default function MyPlants() {
                           {/* If everything is optimal */}
                           {sensorData.temperature >= 10 && sensorData.temperature <= 30 &&
                            sensorData.humidity >= 30 && sensorData.humidity <= 70 &&
-                           (sensorData.light === undefined || sensorData.light >= 800) &&
+                           (sensorData.light === undefined || sensorData.light >= 30) &&
                            (selectedPlant.lastWatered && (Date.now() - selectedPlant.lastWatered) <= (1000 * 60 * 60 * 24 * 5)) && (
                             <div className="flex items-start mb-2">
                               <Check className="h-4 w-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
