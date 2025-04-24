@@ -251,39 +251,72 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
               </motion.div>
             </div>
             
-            {/* Light Reading */}
-            <motion.div 
-              className="p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
-              whileHover={{ scale: 1.01 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <motion.div 
-                    className={`p-1.5 rounded-full ${sensorData?.light ? getLightBackground(sensorData.light) : 'bg-gray-100 dark:bg-gray-800'}`}
-                    animate={{ 
-                      boxShadow: sensorData?.light && sensorData.light > 50
-                        ? ['0 0 0 rgba(252, 211, 77, 0)', '0 0 10px rgba(252, 211, 77, 0.7)', '0 0 0 rgba(252, 211, 77, 0)'] 
-                        : 'none'
-                    }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Sun className={`h-4 w-4 ${sensorData?.light ? getLightColor(sensorData.light) : 'text-gray-400'}`} />
-                  </motion.div>
-                  <div>
-                    <h3 className="font-medium text-sm">Light Level</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {sensorData?.light ? getLightStatus(sensorData.light) : 'No data'}
-                    </p>
+            {/* Light & Soil Moisture Readings */}
+            <div className="flex gap-3">
+              {/* Light Reading */}
+              <motion.div 
+                className="flex-1 p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+                whileHover={{ scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <motion.div 
+                      className={`p-1.5 rounded-full ${sensorData?.light ? getLightBackground(sensorData.light) : 'bg-gray-100 dark:bg-gray-800'}`}
+                      animate={{ 
+                        boxShadow: sensorData?.light && sensorData.light > 50
+                          ? ['0 0 0 rgba(252, 211, 77, 0)', '0 0 10px rgba(252, 211, 77, 0.7)', '0 0 0 rgba(252, 211, 77, 0)'] 
+                          : 'none'
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <Sun className={`h-4 w-4 ${sensorData?.light ? getLightColor(sensorData.light) : 'text-gray-400'}`} />
+                    </motion.div>
+                    <div>
+                      <h3 className="font-medium text-sm">Light Level</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {sensorData?.light ? getLightStatus(sensorData.light) : 'No data'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-semibold">
+                      {sensorData && sensorData.light !== undefined ? `${sensorData.light}%` : '--'}
+                    </span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-lg font-semibold">
-                    {sensorData && sensorData.light !== undefined ? `${sensorData.light}%` : '--'}
-                  </span>
+              </motion.div>
+              
+              {/* Soil Moisture Reading */}
+              <motion.div 
+                className="flex-1 p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+                whileHover={{ scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <motion.div 
+                      className={`p-1.5 rounded-full ${sensorData?.soilMoisture ? getSoilMoistureBackground(sensorData.soilMoisture) : 'bg-gray-100 dark:bg-gray-800'}`}
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                    >
+                      <Gauge className={`h-4 w-4 ${sensorData?.soilMoisture ? getSoilMoistureColor(sensorData.soilMoisture) : 'text-gray-400'}`} />
+                    </motion.div>
+                    <div>
+                      <h3 className="font-medium text-sm">Soil Moisture</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {sensorData?.soilMoisture ? getSoilMoistureStatus(sensorData.soilMoisture) : 'No data'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-semibold">
+                      {sensorData && sensorData.soilMoisture !== undefined ? `${sensorData.soilMoisture}%` : '--'}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
             
             {/* Watering Control - Compact */}
             <motion.div 
