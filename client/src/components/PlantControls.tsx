@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
-import { Leaf, Droplet, Sun, Thermometer, Droplets, Gauge } from 'lucide-react';
+import { Leaf, Droplet, Sun, Thermometer, Droplets, Gauge, Flower } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { PlantControls as PlantControlsType, SensorData } from '@/lib/firebase';
+import { OptimizeEnvironmentButton } from './OptimizeEnvironmentButton';
+import { OptimalEnvironmentValues } from '@/lib/environmentOptimizer';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface PlantControlsProps {
   onAction: (action: string, state: boolean) => void;
@@ -20,93 +24,100 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
   });
   const [isWatering, setIsWatering] = useState(false);
   const [wateringDisabled, setWateringDisabled] = useState(false);
+  const [plantType, setPlantType] = useState<string>("");
+  const [customRanges, setCustomRanges] = useState({
+    temperature: { min: 10, max: 32 },
+    humidity: { min: 20, max: 80 },
+    light: { min: 30, max: 70 },
+    soilMoisture: { min: 30, max: 70 }
+  });
   
-  // Temperature and humidity status indicators
+  // Temperature and humidity status indicators - using dynamic thresholds
   const getTemperatureStatus = (temp: number) => {
-    if (temp < 10) return "Low";
-    if (temp > 32) return "High";
+    if (temp < customRanges.temperature.min) return "Low";
+    if (temp > customRanges.temperature.max) return "High";
     return "Optimal";
   };
   
   const getHumidityStatus = (humidity: number) => {
     // Normalize humidity if the value is unrealistically high (legacy data might be in ppm)
     const normalizedHumidity = humidity > 100 ? humidity / 1000 : humidity;
-    if (normalizedHumidity < 20) return "Low";
-    if (normalizedHumidity > 80) return "High";
+    if (normalizedHumidity < customRanges.humidity.min) return "Low";
+    if (normalizedHumidity > customRanges.humidity.max) return "High";
     return "Optimal";
   };
   
-  // Get temperature color based on value
+  // Get temperature color based on value - using dynamic thresholds
   const getTemperatureColor = (temp: number) => {
-    if (temp <= 10) return "text-blue-500";
-    if (temp >= 30) return "text-red-500";
-    if (temp >= 20) return "text-orange-500";
+    if (temp < customRanges.temperature.min) return "text-blue-500";
+    if (temp > customRanges.temperature.max) return "text-red-500";
+    if (temp >= (customRanges.temperature.min + customRanges.temperature.max) / 2) return "text-orange-500";
     return "text-green-500";
   };
   
   const getTemperatureBackground = (temp: number) => {
-    if (temp <= 10) return "bg-blue-100 dark:bg-blue-900/30";
-    if (temp >= 30) return "bg-red-100 dark:bg-red-900/30";
-    if (temp >= 20) return "bg-orange-100 dark:bg-orange-900/30";
+    if (temp < customRanges.temperature.min) return "bg-blue-100 dark:bg-blue-900/30";
+    if (temp > customRanges.temperature.max) return "bg-red-100 dark:bg-red-900/30";
+    if (temp >= (customRanges.temperature.min + customRanges.temperature.max) / 2) return "bg-orange-100 dark:bg-orange-900/30";
     return "bg-green-100 dark:bg-green-900/30";
   };
   
-  // Get humidity color based on value
+  // Get humidity color based on value - using dynamic thresholds
   const getHumidityColor = (humidity: number) => {
     // Normalize humidity if the value is unrealistically high (legacy data might be in ppm)
     const normalizedHumidity = humidity > 100 ? humidity / 1000 : humidity;
-    if (normalizedHumidity < 20) return "text-orange-500";
-    if (normalizedHumidity > 80) return "text-blue-500";
+    if (normalizedHumidity < customRanges.humidity.min) return "text-orange-500";
+    if (normalizedHumidity > customRanges.humidity.max) return "text-blue-500";
     return "text-green-500";
   };
   
   const getHumidityBackground = (humidity: number) => {
     // Normalize humidity if the value is unrealistically high (legacy data might be in ppm)
     const normalizedHumidity = humidity > 100 ? humidity / 1000 : humidity;
-    if (normalizedHumidity < 20) return "bg-orange-100 dark:bg-orange-900/30";
-    if (normalizedHumidity > 80) return "bg-blue-100 dark:bg-blue-900/30";
+    if (normalizedHumidity < customRanges.humidity.min) return "bg-orange-100 dark:bg-orange-900/30";
+    if (normalizedHumidity > customRanges.humidity.max) return "bg-blue-100 dark:bg-blue-900/30";
     return "bg-green-100 dark:bg-green-900/30";
   };
   
-  // Get light status based on value
+  // Get light status based on value - using dynamic thresholds
   const getLightStatus = (light: number) => {
-    if (light < 30) return "Low";
-    if (light > 70) return "Bright";
+    if (light < customRanges.light.min) return "Low";
+    if (light > customRanges.light.max) return "Bright";
     return "Medium";
   };
   
-  // Get light color based on value
+  // Get light color based on value - using dynamic thresholds
   const getLightColor = (light: number) => {
-    if (light < 30) return "text-gray-500";
-    if (light > 70) return "text-yellow-500";
+    if (light < customRanges.light.min) return "text-gray-500";
+    if (light > customRanges.light.max) return "text-yellow-500";
     return "text-yellow-400";
   };
   
-  // Get light background based on value
+  // Get light background based on value - using dynamic thresholds
   const getLightBackground = (light: number) => {
-    if (light < 30) return "bg-gray-100 dark:bg-gray-800";
-    if (light > 70) return "bg-yellow-100 dark:bg-yellow-900/30";
+    if (light < customRanges.light.min) return "bg-gray-100 dark:bg-gray-800";
+    if (light > customRanges.light.max) return "bg-yellow-100 dark:bg-yellow-900/30";
     return "bg-yellow-50 dark:bg-yellow-900/20";
   };
   
-  // Get soil moisture status based on value
+  // Get soil moisture status based on value - using dynamic thresholds
   const getSoilMoistureStatus = (soilMoisture: number) => {
-    if (soilMoisture < 30) return "Dry";
-    if (soilMoisture > 70) return "Wet";
+    if (soilMoisture < customRanges.soilMoisture.min) return "Dry";
+    if (soilMoisture > customRanges.soilMoisture.max) return "Wet";
     return "Optimal";
   };
   
-  // Get soil moisture color based on value
+  // Get soil moisture color based on value - using dynamic thresholds
   const getSoilMoistureColor = (soilMoisture: number) => {
-    if (soilMoisture < 30) return "text-orange-500";
-    if (soilMoisture > 70) return "text-blue-500";
+    if (soilMoisture < customRanges.soilMoisture.min) return "text-orange-500";
+    if (soilMoisture > customRanges.soilMoisture.max) return "text-blue-500";
     return "text-emerald-500";
   };
   
-  // Get soil moisture background based on value
+  // Get soil moisture background based on value - using dynamic thresholds
   const getSoilMoistureBackground = (soilMoisture: number) => {
-    if (soilMoisture < 30) return "bg-orange-100 dark:bg-orange-900/30";
-    if (soilMoisture > 70) return "bg-blue-100 dark:bg-blue-900/30";
+    if (soilMoisture < customRanges.soilMoisture.min) return "bg-orange-100 dark:bg-orange-900/30";
+    if (soilMoisture > customRanges.soilMoisture.max) return "bg-blue-100 dark:bg-blue-900/30";
     return "bg-emerald-100 dark:bg-emerald-900/30";
   };
 
@@ -135,6 +146,40 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
         setWateringDisabled(false);
       }, 5000);
     }, 3000);
+  };
+  
+  // Handle plant type change
+  const handlePlantTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPlantType(e.target.value);
+  };
+  
+  // Handle environment optimization from AI
+  const handleOptimize = (optimalValues: OptimalEnvironmentValues) => {
+    setCustomRanges({
+      temperature: { 
+        min: optimalValues.temperature.min, 
+        max: optimalValues.temperature.max 
+      },
+      humidity: { 
+        min: optimalValues.humidity.min, 
+        max: optimalValues.humidity.max 
+      },
+      light: { 
+        min: optimalValues.light.min, 
+        max: optimalValues.light.max 
+      },
+      soilMoisture: { 
+        min: optimalValues.soilMoisture.min, 
+        max: optimalValues.soilMoisture.max 
+      }
+    });
+    
+    // Update the status indicator functions with the new ranges
+    // This dynamically applies the AI-optimized thresholds
+    toast({
+      title: "Environment Optimized",
+      description: `Thresholds have been set for ${plantType}`,
+    });
   };
 
   return (
