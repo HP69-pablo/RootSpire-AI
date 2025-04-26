@@ -242,11 +242,11 @@ export function FloatingNavigation() {
             )}
           </AnimatePresence>
           
-          {/* Main navigation bar with ultra-premium Apple-inspired glassmorphism */}
+          {/* Apple Fitness navigation bar with dark background and subtle borders */}
           <motion.div
-            className="dark:bg-gray-900/85 bg-white/90 backdrop-blur-2xl rounded-full shadow-xl mx-4 pointer-events-auto"
+            className="bg-black border border-gray-800 backdrop-blur-2xl rounded-full shadow-xl mx-4 pointer-events-auto"
             style={{
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(255, 255, 255, 0.1) inset, 0 0 0 0.5px rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               width: 'calc(100% - 2rem)',
@@ -274,8 +274,8 @@ export function FloatingNavigation() {
                     <motion.div
                       className={`flex flex-col items-center justify-center py-2 px-2.5 rounded-full ${
                         active 
-                          ? 'bg-gradient-to-b from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-700/70 shadow-lg' 
-                          : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100/20 dark:hover:bg-gray-700/20 transition-all'
+                          ? 'bg-gray-800/90 shadow-lg' 
+                          : 'text-gray-500 hover:bg-gray-800/50 transition-all'
                       } cursor-pointer`}
                       whileTap="tap"
                       variants={iconVariants}
@@ -296,12 +296,9 @@ export function FloatingNavigation() {
                       <motion.div
                         className={`flex items-center justify-center p-2 rounded-full ${
                           active 
-                            ? 'bg-gradient-to-br from-primary/20 to-primary/5 text-primary dark:from-primary/30 dark:to-primary/10 shadow-sm' 
-                            : 'text-gray-600 dark:text-gray-400'
+                            ? 'text-primary' 
+                            : 'text-gray-400'
                         }`}
-                        style={{
-                          boxShadow: active ? '0 3px 10px rgba(0, 0, 0, 0.05), 0 0 0 0.5px rgba(255, 255, 255, 0.2)' : 'none'
-                        }}
                         animate={active ? {
                           scale: [1, 1.03, 1],
                           transition: { 
@@ -317,7 +314,7 @@ export function FloatingNavigation() {
                       </motion.div>
                       
                       <span className={`text-xs mt-1.5 font-medium sf-pro-display tracking-tight ${
-                        active ? 'text-primary-dark dark:text-primary-light' : 'text-gray-600 dark:text-gray-400'
+                        active ? 'text-primary' : 'text-gray-400'
                       }`}>
                         {item.label}
                       </span>
