@@ -392,16 +392,13 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
     <motion.div 
       whileHover={{ 
         scale: 1.02,
-        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.15), 0 5px 15px rgba(0, 0, 0, 0.1)"
+        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.2)"
       }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
       className="w-full h-full"
     >
       {/* Apple Fitness-style card */}
-      <Card className="overflow-hidden p-0 border border-gray-800/50 bg-black backdrop-blur-xl rounded-2xl shadow-md aspect-square flex flex-col"
-        style={{
-          boxShadow: "0 8px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)"
-        }}
+      <Card className="fitness-card overflow-hidden p-0"
       >
         <div className="p-4 flex flex-col justify-between h-full">
           {/* Card Header - Apple Fitness Style */}
@@ -439,56 +436,59 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
                 </span>
               </div>
               
-              {/* Micro Chart - Apple Fitness Style */}
+              {/* Apple Fitness Style Bar Chart */}
               {value !== "none" && (
-                <div className="fitness-metric-chart mt-4 w-full">
-                  {/* Generate 7 bars like D-S-M-T-W-T-F */}
-                  {Array.from({ length: 7 }).map((_, index) => {
-                    // Randomly generate height for demo
-                    const randomHeight = (Math.random() * 0.7 + 0.3) * 100;
-                    const isActive = index === 6; // Last day is today
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center">
+                <div className="mt-6 w-full space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="h-8 w-full">
+                      <div className="fitness-chart-bar w-full">
                         <motion.div 
-                          className={`fitness-chart-bar ${isActive ? 'fitness-chart-bar-active' : ''}`}
-                          initial={{ height: '0%' }}
-                          animate={{ height: `${randomHeight}%` }}
-                          transition={{ duration: 0.5, delay: index * 0.05 }}
+                          className="fitness-chart-progress"
+                          style={{ 
+                            width: type === "soil" 
+                              ? `${Math.min(100, Number(value) * 1.5)}%` 
+                              : type === "humidity" 
+                                ? `${Math.min(100, Number(value))}%` 
+                                : type === "temperature" 
+                                  ? `${Math.min(100, (Number(value) / 40) * 100)}%`
+                                  : "50%",
+                            backgroundColor: type === "temperature" 
+                              ? "#FF2D55" 
+                              : type === "humidity" 
+                                ? "#5AC8FA" 
+                                : "#30D158" 
+                          }}
+                          initial={{ width: "0%" }}
+                          animate={{ width: value === "none" ? "0%" :
+                            type === "soil" 
+                              ? `${Math.min(100, Number(value) * 1.5)}%` 
+                              : type === "humidity" 
+                                ? `${Math.min(100, Number(value))}%` 
+                                : type === "temperature" 
+                                  ? `${Math.min(100, (Number(value) / 40) * 100)}%`
+                                  : "50%"
+                          }}
+                          transition={{ duration: 1, ease: "easeOut" }}
                         />
-                        <span className="fitness-chart-day">
-                          {['S', 'M', 'T', 'W', 'T', 'F', 'S'][index]}
-                        </span>
                       </div>
-                    );
-                  })}
+                    </div>
+                  </div>
                 </div>
               )}
             </motion.div>
           </motion.div>
           
-          {/* Value Progress Bar */}
-          <motion.div 
-            className="w-full h-1 mb-1 rounded-full overflow-hidden bg-gray-200/50 dark:bg-gray-700/30"
-            initial={{ width: "0%" }}
-            animate={{ width: "100%" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            <motion.div 
-              className={`h-full bg-gradient-to-r ${colorScheme.gradient}`}
-              initial={{ width: "0%" }}
-              animate={{ 
-                width: type === "soil" 
-                  ? `${Math.min(100, Number(value) * 1.5)}%` 
-                  : type === "humidity" 
-                    ? `${Math.min(100, Number(value))}%` 
-                    : type === "temperature" 
-                      ? `${Math.min(100, (Number(value) / 40) * 100)}%`
-                      : "50%"
-              }}
-              transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-            />
-          </motion.div>
+          {/* Status Indicator */}
+          <div className="flex items-center justify-between text-xs mt-2">
+            <span className="text-gray-500">
+              {status}
+            </span>
+            <span className="text-gray-500">
+              {type === "temperature" ? "Max 40°C" : 
+               type === "humidity" ? "Max 100%" : 
+               "Max 100%"}
+            </span>
+          </div>
         </div>
       </Card>
     </motion.div>

@@ -227,7 +227,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen font-sans transition-colors duration-300 ease-out bg-gradient-to-br from-slate-50 via-slate-50/90 to-white text-slate-900 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-800 dark:text-white overflow-hidden">
+    <div className="fitness-app-bg min-h-screen font-sans">
       <main className="container mx-auto px-4 py-6 md:py-10 pb-24">
         {/* Alert Banner */}
         {alert.show && (
@@ -289,13 +289,13 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden">
+          <div className="fitness-card overflow-hidden">
             <div className="p-6">
               <h2 className="text-xl font-bold mb-4 flex items-center">
                 <span className="text-red-500 mr-2">●</span>
                 Plant Emergency SOS
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
+              <p className="text-gray-400 mb-6">
                 Is your plant showing signs of distress? Get instant AI-powered
                 advice to help diagnose and treat common plant issues.
               </p>
@@ -304,7 +304,7 @@ export default function Dashboard() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-8 rounded-full shadow-md flex items-center justify-center"
+                  className="bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-8 rounded-full flex items-center justify-center"
                   onClick={() => {
                     toast({
                       title: "Plant SOS Activated",
@@ -337,8 +337,8 @@ export default function Dashboard() {
         </motion.div>
       </main>
 
-      <footer className="mt-12 border-t border-gray-200 dark:border-gray-700 py-6">
-        <div className="container mx-auto px-4 text-center text-sm text-gray-500 dark:text-gray-400">
+      <footer className="mt-12 border-t border-gray-800 py-6">
+        <div className="container mx-auto px-4 text-center text-sm text-gray-500">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
