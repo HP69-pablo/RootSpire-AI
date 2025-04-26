@@ -221,6 +221,118 @@ export interface PlantHistoryData {
   soilMoisture?: number;
 }
 
+// Get historical data for a specific metric
+export async function getMetricHistory(
+  metric: 'temperature' | 'humidity' | 'light' | 'soilMoisture',
+  days: number = 1,
+  plantId: string = 'default'
+): Promise<MetricHistoryPoint[]> {
+  if (!database) {
+    console.error('Firebase database not initialized when trying to get metric history');
+    return [];
+  }
+  
+  try {
+    // Get reference to history data
+    const historyRef = ref(database, 'sensorData/history');
+    
+    // Get snapshot of history data
+    const snapshot = await get(historyRef);
+    
+    if (!snapshot.exists()) {
+      console.warn('No history data found for metric:', metric);
+      await generateSensorHistory();
+      return [];
+    }
+    
+    const historyData = snapshot.val();
+    
+    // Calculate time range
+    const endTime = Date.now();
+    const startTime = endTime - (days * 24 * 60 * 60 * 1000);
+    
+    // Process and filter data
+    const result: MetricHistoryPoint[] = [];
+    
+    // Convert to array and sort
+    Object.keys(historyData)
+      .map(ts => parseInt(ts))
+      .filter(ts => ts >= startTime && ts <= endTime)
+      .sort((a, b) => a - b)
+      .forEach(ts => {
+        const entry = historyData[ts];
+        if (entry && typeof entry[metric] === 'number') {
+          result.push({
+            timestamp: ts,
+            value: entry[metric]
+          });
+        }
+      });
+    
+    return result;
+  } catch (error) {
+    console.error(`Error getting ${metric} history:`, error);
+    return [];
+  }
+}
+
+// Get all metrics history data as an array of data points
+export async function getAllMetricsHistory(
+  days: number = 1,
+  plantId: string = 'default'
+): Promise<PlantHistoryData[]> {
+  if (!database) {
+    console.error('Firebase database not initialized when trying to get all metrics history');
+    return [];
+  }
+  
+  try {
+    // Get reference to history data
+    const historyRef = ref(database, 'sensorData/history');
+    
+    // Get snapshot of history data
+    const snapshot = await get(historyRef);
+    
+    if (!snapshot.exists()) {
+      console.warn('No history data found');
+      await generateSensorHistory();
+      return [];
+    }
+    
+    const historyData = snapshot.val();
+    
+    // Calculate time range
+    const endTime = Date.now();
+    const startTime = endTime - (days * 24 * 60 * 60 * 1000);
+    
+    // Process and filter data
+    const result: PlantHistoryData[] = [];
+    
+    // Convert to array and sort
+    Object.keys(historyData)
+      .map(ts => parseInt(ts))
+      .filter(ts => ts >= startTime && ts <= endTime)
+      .sort((a, b) => a - b)
+      .forEach(ts => {
+        const entry = historyData[ts];
+        if (entry) {
+          result.push({
+            timestamp: ts,
+            temperature: entry.temperature,
+            humidity: entry.humidity,
+            light: entry.light,
+            soilMoisture: entry.soilMoisture
+          });
+        }
+      });
+    
+    return result;
+  } catch (error) {
+    console.error('Error getting all metrics history:', error);
+    return [];
+  }
+}
+
 // Subscribe to real-time sensor data using the specific paths provided:
 // /sensorData/current/temperature
 // /sensorData/current/humidity

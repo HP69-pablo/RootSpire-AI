@@ -11,6 +11,7 @@ import Settings from "@/pages/Settings";
 import { ThemeProvider } from "./lib/ThemeProvider";
 import { AuthProvider } from "./lib/AuthProvider";
 import { ChatBubble } from "@/components/ChatBubble";
+import { FloatingNavigation } from "@/components/FloatingNavigation";
 
 function Router() {
   return (
@@ -30,9 +31,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <Router />
-          <ChatBubble />
-          <Toaster />
+          <div className="pb-24"> {/* Add padding to bottom for floating nav bar */}
+            <Router />
+            <ChatBubble />
+            <FloatingNavigation />
+            <Toaster />
+          </div>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

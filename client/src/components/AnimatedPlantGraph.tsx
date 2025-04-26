@@ -1,94 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
   ResponsiveContainer,
-  Area,
-  AreaChart
+  Legend
 } from 'recharts';
-import { Card, CardContent } from "@/components/ui/card";
-import { Droplet, Sun, Thermometer, Gauge } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { format } from 'date-fns';
 
-// Custom styled tooltip
-const CustomTooltip = ({ active, payload, label, dataType }: any) => {
-  if (active && payload && payload.length) {
-    // Get the right color based on data type
-    const getColor = () => {
-      switch (dataType) {
-        case 'temperature':
-          return 'rgb(239, 68, 68)';
-        case 'humidity':
-          return 'rgb(59, 130, 246)';
-        case 'light':
-          return 'rgb(250, 204, 21)';
-        case 'soilMoisture':
-          return 'rgb(16, 185, 129)';
-        default:
-          return 'rgb(107, 114, 128)';
-      }
-    };
-
-    // Get the right unit based on data type
-    const getUnit = () => {
-      switch (dataType) {
-        case 'temperature':
-          return '°C';
-        case 'humidity':
-        case 'soilMoisture':
-          return '%';
-        case 'light':
-          return ' lux';
-        default:
-          return '';
-      }
-    };
-
-    // Convert timestamp to readable time
-    const getTimeString = () => {
-      const date = new Date(label);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    };
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glassmorphic-card p-3 shadow-lg min-w-[180px]"
-        style={{
-          borderLeft: `4px solid ${getColor()}`,
-        }}
-      >
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{getTimeString()}</p>
-        <div className="flex items-center gap-2 mb-1">
-          {dataType === 'temperature' && <Thermometer size={16} className="text-red-500" />}
-          {dataType === 'humidity' && <Droplet size={16} className="text-blue-500" />}
-          {dataType === 'light' && <Sun size={16} className="text-yellow-500" />}
-          {dataType === 'soilMoisture' && <Gauge size={16} className="text-emerald-500" />}
-          <p className="font-medium">
-            {payload[0].value.toFixed(1)}{getUnit()}
-          </p>
-        </div>
-        <div className="h-1 w-full bg-gradient-to-r from-white/5 to-white/20 dark:from-gray-800/30 dark:to-gray-800/50 rounded-full overflow-hidden">
-          <motion.div
-            className="h-full rounded-full"
-            style={{ backgroundColor: getColor() }}
-            initial={{ width: 0 }}
-            animate={{ width: `${Math.min(100, payload[0].value)}%` }}
-            transition={{ duration: 0.5 }}
-          />
-        </div>
-      </motion.div>
-    );
-  }
-
-  return null;
-};
-
+// Interface for the component props
 interface AnimatedPlantGraphProps {
   data: Array<{
     timestamp: number;
@@ -103,243 +27,191 @@ interface AnimatedPlantGraphProps {
   height?: number;
 }
 
+// Mapping for the data types, their colors, gradients and units
+const typeConfig = {
+  temperature: {
+    color: '#FF5C5C',
+    gradient: ['#FF6666', '#FFCCCC'],
+    unit: '°C',
+    name: 'Temperature'
+  },
+  humidity: {
+    color: '#5C9CFF',
+    gradient: ['#66A3FF', '#CCE0FF'],
+    unit: '%',
+    name: 'Humidity'
+  },
+  light: {
+    color: '#FFD15C',
+    gradient: ['#FFD966', '#FFECC4'],
+    unit: '%',
+    name: 'Light'
+  },
+  soilMoisture: {
+    color: '#5CBF6A',
+    gradient: ['#66CC72', '#CCE8D0'],
+    unit: '%',
+    name: 'Soil Moisture'
+  }
+};
+
 export function AnimatedPlantGraph({
   data,
   dataType,
   timeRange = '24h',
   title,
-  height = 220
+  height = 250
 }: AnimatedPlantGraphProps) {
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const prevDataLength = useRef<number>(0);
-
-  // Process and sort data by timestamp
-  useEffect(() => {
-    if (!data || data.length === 0) return;
-
-    // Trigger animation if data length has changed
-    if (data.length !== prevDataLength.current) {
-      setIsAnimating(true);
-      const timer = setTimeout(() => setIsAnimating(false), 800);
-      prevDataLength.current = data.length;
-      return () => clearTimeout(timer);
-    }
-
+  const [isVisible, setIsVisible] = useState(false);
+  
+  // Format the data for the chart
+  const formattedData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     // Sort data by timestamp
     const sortedData = [...data].sort((a, b) => a.timestamp - b.timestamp);
-
-    // Process data for the chart
-    const processedData = sortedData.map(item => ({
-      timestamp: item.timestamp,
-      [dataType]: item[dataType] || 0
-    }));
-
-    setChartData(processedData);
-  }, [data, dataType]);
-
-  // Get the color based on data type
-  const getLineColor = () => {
-    switch (dataType) {
-      case 'temperature':
-        return 'rgb(239, 68, 68)';
-      case 'humidity':
-        return 'rgb(59, 130, 246)';
-      case 'light':
-        return 'rgb(250, 204, 21)';
-      case 'soilMoisture':
-        return 'rgb(16, 185, 129)';
-      default:
-        return 'rgb(107, 114, 128)';
-    }
-  };
-
-  // Get the gradient based on data type
-  const getGradientColors = () => {
-    switch (dataType) {
-      case 'temperature':
-        return {
-          light: ['#FEE2E2', '#FECACA', '#FCA5A5'],
-          dark: ['rgba(239, 68, 68, 0.3)', 'rgba(239, 68, 68, 0.1)', 'rgba(239, 68, 68, 0)']
-        };
-      case 'humidity':
-        return {
-          light: ['#DBEAFE', '#BFDBFE', '#93C5FD'],
-          dark: ['rgba(59, 130, 246, 0.3)', 'rgba(59, 130, 246, 0.1)', 'rgba(59, 130, 246, 0)']
-        };
-      case 'light':
-        return {
-          light: ['#FEF3C7', '#FDE68A', '#FCD34D'],
-          dark: ['rgba(250, 204, 21, 0.3)', 'rgba(250, 204, 21, 0.1)', 'rgba(250, 204, 21, 0)']
-        };
-      case 'soilMoisture':
-        return {
-          light: ['#D1FAE5', '#A7F3D0', '#6EE7B7'],
-          dark: ['rgba(16, 185, 129, 0.3)', 'rgba(16, 185, 129, 0.1)', 'rgba(16, 185, 129, 0)']
-        };
-      default:
-        return {
-          light: ['#F3F4F6', '#E5E7EB', '#D1D5DB'],
-          dark: ['rgba(107, 114, 128, 0.3)', 'rgba(107, 114, 128, 0.1)', 'rgba(107, 114, 128, 0)']
-        };
-    }
-  };
-
-  // Get the icon based on data type
-  const getIcon = () => {
-    switch (dataType) {
-      case 'temperature':
-        return <Thermometer className="h-5 w-5 text-red-500" />;
-      case 'humidity':
-        return <Droplet className="h-5 w-5 text-blue-500" />;
-      case 'light':
-        return <Sun className="h-5 w-5 text-yellow-500" />;
-      case 'soilMoisture':
-        return <Gauge className="h-5 w-5 text-emerald-500" />;
-      default:
-        return null;
-    }
-  };
-
-  // Get the title for the graph
-  const getTitle = () => {
-    if (title) return title;
     
-    switch (dataType) {
-      case 'temperature':
-        return 'Temperature';
-      case 'humidity':
-        return 'Humidity';
-      case 'light':
-        return 'Light Intensity';
-      case 'soilMoisture':
-        return 'Soil Moisture';
-      default:
-        return 'Plant Data';
-    }
-  };
-
-  // Format timestamp for x-axis
-  const formatTimestamp = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  // Get the unit for y-axis
-  const getUnit = () => {
-    switch (dataType) {
-      case 'temperature':
-        return '°C';
-      case 'humidity':
-      case 'soilMoisture':
-        return '%';
-      case 'light':
-        return 'lux';
-      default:
-        return '';
-    }
-  };
-
-  const gradientColors = getGradientColors();
-  const lineColor = getLineColor();
-
-  return (
-    <motion.div 
-      className="w-full"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <Card className="glassmorphic-card overflow-hidden border-0">
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="p-2 rounded-full bg-white/70 dark:bg-gray-800/70 shadow-sm">
-              {getIcon()}
-            </div>
-            <div>
-              <h3 className="text-base font-medium">{getTitle()}</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Last {timeRange} of data</p>
-            </div>
-          </div>
-
-          {chartData.length > 0 ? (
-            <motion.div 
-              animate={isAnimating ? { opacity: [0.7, 1] } : {}}
-              transition={{ duration: 0.5 }}
-              className="w-full"
-              style={{ height }}
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart 
-                  data={chartData}
-                  margin={{top: 10, right: 10, left: -20, bottom: 0}}
-                >
-                  <defs>
-                    <linearGradient id={`${dataType}ColorGradient`} x1="0" y1="0" x2="0" y2="1">
-                      <stop 
-                        offset="5%" 
-                        stopColor={lineColor} 
-                        stopOpacity={0.8}
-                      />
-                      <stop 
-                        offset="95%" 
-                        stopColor={lineColor} 
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  </defs>
-                  
-                  <CartesianGrid 
-                    strokeDasharray="3 3" 
-                    stroke="rgba(107, 114, 128, 0.2)" 
-                    vertical={false}
-                  />
-                  
-                  <XAxis 
-                    dataKey="timestamp" 
-                    tickFormatter={formatTimestamp}
-                    tick={{ fontSize: 10, fill: 'rgb(107, 114, 128)' }}
-                    stroke="rgba(107, 114, 128, 0.2)"
-                    tickMargin={5}
-                  />
-                  
-                  <YAxis 
-                    unit={getUnit()}
-                    tick={{ fontSize: 10, fill: 'rgb(107, 114, 128)' }}
-                    stroke="rgba(107, 114, 128, 0.2)"
-                    tickMargin={5}
-                    domain={['dataMin - 5', 'dataMax + 5']}
-                  />
-                  
-                  <Tooltip 
-                    content={<CustomTooltip dataType={dataType} />}
-                    position={{ y: -50 }}
-                  />
-                  
-                  <Area 
-                    type="monotone" 
-                    dataKey={dataType} 
-                    stroke={lineColor} 
-                    strokeWidth={2}
-                    fill={`url(#${dataType}ColorGradient)`}
-                    animationDuration={1000}
-                    activeDot={{ 
-                      r: 6, 
-                      stroke: 'white', 
-                      strokeWidth: 2,
-                      fill: lineColor
-                    }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </motion.div>
-          ) : (
-            <div className="flex items-center justify-center" style={{ height }}>
-              <p className="text-gray-400 text-sm">No data available</p>
-            </div>
-          )}
+    return sortedData.map(item => ({
+      time: format(new Date(item.timestamp), 'HH:mm'),
+      fullTime: new Date(item.timestamp),
+      value: item[dataType] || 0
+    }));
+  }, [data, dataType]);
+  
+  // Animation effect to reveal the graph
+  useEffect(() => {
+    // Small delay to ensure the component has mounted
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Get configuration for the current data type
+  const config = typeConfig[dataType];
+  
+  // Custom tooltip component with Apple-inspired design
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            {format(payload[0].payload.fullTime, 'MMM d, yyyy HH:mm')}
+          </p>
+          <p className="text-lg font-semibold" style={{ color: config.color }}>
+            {payload[0].value}{config.unit}
+          </p>
         </div>
-      </Card>
-    </motion.div>
+      );
+    }
+    return null;
+  };
+  
+  // Define motion variants for the animation
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        staggerChildren: 0.1
+      }
+    }
+  };
+  
+  const chartVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut"
+      }
+    }
+  };
+  
+  return (
+    <AnimatePresence>
+      {formattedData.length > 0 && (
+        <motion.div
+          className="w-full rounded-xl bg-white dark:bg-gray-800 shadow-lg p-4 overflow-hidden"
+          style={{
+            borderRadius: '16px',
+            backdropFilter: 'blur(10px)',
+            background: 'rgba(255, 255, 255, 0.95)',
+            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
+          }}
+          variants={containerVariants}
+          initial="hidden"
+          animate={isVisible ? "visible" : "hidden"}
+        >
+          <motion.div className="flex justify-between items-center mb-4" variants={chartVariants}>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+              {title || `${config.name} over time`}
+            </h3>
+            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              Last {timeRange}
+            </div>
+          </motion.div>
+          
+          <motion.div
+            variants={chartVariants}
+            style={{ height: `${height}px` }}
+            className="w-full"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={formattedData}
+                margin={{ top: 5, right: 5, left: 0, bottom: 20 }}
+              >
+                <defs>
+                  <linearGradient id={`gradient-${dataType}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={config.gradient[0]} stopOpacity={0.8} />
+                    <stop offset="95%" stopColor={config.gradient[1]} stopOpacity={0.2} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.15)" />
+                <XAxis
+                  dataKey="time"
+                  tick={{ fontSize: 12 }}
+                  tickLine={false}
+                  stroke="rgba(150,150,150,0.3)"
+                />
+                <YAxis
+                  tick={{ fontSize: 12 }}
+                  tickLine={false}
+                  stroke="rgba(150,150,150,0.3)"
+                  domain={['dataMin - 5', 'dataMax + 5']}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke={config.color}
+                  strokeWidth={3}
+                  dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
+                  activeDot={{ r: 6, strokeWidth: 0, fill: config.color }}
+                  isAnimationActive={true}
+                  animationDuration={1500}
+                  animationEasing="ease-in-out"
+                  name={config.name}
+                  fill={`url(#gradient-${dataType})`}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </motion.div>
+          
+          <motion.div
+            className="flex justify-center mt-2 text-xs text-gray-500 dark:text-gray-400"
+            variants={chartVariants}
+          >
+            {`${formattedData.length} data points • Values in ${config.unit}`}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

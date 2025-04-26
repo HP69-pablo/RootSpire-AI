@@ -1,15 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, TooltipProps } from 'recharts';
-import { SensorHistory } from '@/lib/firebase';
-import { format, subHours, subMinutes } from 'date-fns';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { 
-  NameType, 
-  ValueType 
-} from 'recharts/types/component/DefaultTooltipContent';
+import React, { useState, useMemo } from 'react';
+import { AnimatedPlantGraph } from './AnimatedPlantGraph';
+import { SensorHistory, PlantHistoryData } from '../lib/firebase';
+import { motion } from 'framer-motion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface DataVisualizationProps {
   historyData: SensorHistory;
@@ -24,320 +17,182 @@ interface DataVisualizationProps {
 type TimeFrame = '1h' | '6h' | '12h' | '24h' | 'custom';
 
 export function DataVisualization({ historyData, currentData }: DataVisualizationProps) {
+  const [activeMetric, setActiveMetric] = useState<'temperature' | 'humidity' | 'light' | 'soilMoisture'>('temperature');
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('24h');
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [customHours, setCustomHours] = useState<number>(2);
-  const [customMinutes, setCustomMinutes] = useState<number>(0);
-  const [hoveredValues, setHoveredValues] = useState<{
-    temperature?: number;
-    humidity?: number;
-    soilMoisture?: number;
-    light?: number;
-    time?: string;
-  } | null>(null);
   
-  const processChartData = useCallback(() => {
-    if (Object.keys(historyData).length === 0) return;
+  // Convert history data object to array
+  const historyArray = useMemo(() => {
+    const result: PlantHistoryData[] = [];
     
-    // Convert historyData to array format for Recharts
-    const dataArray = Object.entries(historyData).map(([timestamp, data]) => ({
-      timestamp: parseInt(timestamp),
-      ...data
-    }));
+    // Convert timestamp keys to numbers and sort
+    const sortedTimestamps = Object.keys(historyData)
+      .map(ts => parseInt(ts))
+      .sort((a, b) => a - b);
     
-    // Sort by timestamp
-    dataArray.sort((a, b) => a.timestamp - b.timestamp);
-    
-    // Calculate cutoff time based on selected time frame
+    // Filter based on selected time frame
     const now = Date.now();
-    let cutoffTime: number;
+    let timeLimit: number;
     
-    switch (timeFrame) {
+    switch(timeFrame) {
       case '1h':
-        cutoffTime = subHours(now, 1).getTime();
+        timeLimit = now - (60 * 60 * 1000);
         break;
       case '6h':
-        cutoffTime = subHours(now, 6).getTime();
+        timeLimit = now - (6 * 60 * 60 * 1000);
         break;
       case '12h':
-        cutoffTime = subHours(now, 12).getTime();
+        timeLimit = now - (12 * 60 * 60 * 1000);
         break;
       case '24h':
-        cutoffTime = subHours(now, 24).getTime();
-        break;
-      case 'custom':
-        cutoffTime = subMinutes(subHours(now, customHours), customMinutes).getTime();
-        break;
       default:
-        cutoffTime = subHours(now, 24).getTime();
+        timeLimit = now - (24 * 60 * 60 * 1000);
     }
     
-    // Filter data by time frame
-    const filteredData = dataArray.filter(item => item.timestamp >= cutoffTime);
+    // Create data points from filtered timestamps
+    sortedTimestamps.forEach(ts => {
+      if (ts >= timeLimit) {
+        const dataPoint = historyData[ts];
+        result.push({
+          timestamp: ts,
+          temperature: dataPoint.temperature,
+          humidity: dataPoint.humidity,
+          light: dataPoint.light,
+          soilMoisture: dataPoint.soilMoisture
+        });
+      }
+    });
     
-    // Format data for chart
-    const formattedData = filteredData.map(item => ({
-      time: item.timestamp,
-      temperature: item.temperature,
-      humidity: item.humidity,
-      soilMoisture: item.soilMoisture || null,
-      light: item.light || null,
-      // Format the timestamp for display
-      timeFormatted: format(new Date(item.timestamp), timeFrame === '1h' ? 'h:mm a' : 'h a')
-    }));
-    
-    // Add current real-time data if available
-    if (currentData && formattedData.length > 0) {
-      // Add current data point at the end
-      formattedData.push({
-        time: now,
-        temperature: currentData.temperature,
-        humidity: currentData.humidity,
-        light: currentData.light || null,
-        soilMoisture: currentData.soilMoisture || null,
-        timeFormatted: 'Now'
+    // Add current data point if available
+    if (currentData) {
+      result.push({
+        timestamp: now,
+        ...currentData
       });
     }
     
-    setChartData(formattedData);
-  }, [historyData, timeFrame, customHours, customMinutes, currentData]);
+    return result;
+  }, [historyData, currentData, timeFrame]);
   
-  useEffect(() => {
-    processChartData();
-  }, [processChartData]);
-  
-  // Custom tooltip component to show real-time values on hover
-  const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
-    if (active && payload && payload.length) {
-      // Update hovered values when tooltip is active
-      const data = {
-        temperature: payload[0]?.value as number,
-        humidity: payload[1]?.value as number,
-        soilMoisture: payload[2]?.value as number,
-        light: payload[3]?.value as number,
-        time: label
-      };
-      
-      return (
-        <div className="custom-tooltip bg-white dark:bg-slate-800 p-3 border border-gray-200 dark:border-gray-700 rounded-md shadow-md">
-          <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">{`Time: ${label}`}</p>
-          {payload.map((entry, index) => (
-            entry.value !== null && (
-              <p 
-                key={`item-${index}`} 
-                className="text-sm" 
-                style={{ color: entry.color }}
-              >
-                {`${entry.name}: ${entry.value}${String(entry.name).includes('Temperature') ? '°C' : '%'}`}
-              </p>
-            )
-          ))}
-        </div>
-      );
+  // Generate time range display text
+  const timeRangeText = useMemo(() => {
+    switch(timeFrame) {
+      case '1h': return '1 Hour';
+      case '6h': return '6 Hours';
+      case '12h': return '12 Hours';
+      case '24h': return '24 Hours';
+      default: return 'Custom';
     }
-    
-    return null;
-  };
+  }, [timeFrame]);
   
-  const handleTimeFrameChange = (value: string) => {
-    setTimeFrame(value as TimeFrame);
-  };
-  
-  const handleCustomHoursChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value) && value >= 0 && value <= 72) {
-      setCustomHours(value);
+  // Define animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        delayChildren: 0.3,
+        staggerChildren: 0.2
+      }
     }
   };
   
-  const handleCustomMinutesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value) && value >= 0 && value < 60) {
-      setCustomMinutes(value);
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100
+      }
     }
   };
   
   return (
-    <section className="mb-8">
-      <Card className="bg-white dark:bg-slate-800 shadow-sm border border-gray-100 dark:border-gray-700">
-        <CardHeader className="pb-2">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle className="text-lg font-medium">Sensor History</CardTitle>
-            
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Time Frame Selector */}
-              <Select
-                value={timeFrame}
-                onValueChange={handleTimeFrameChange}
-              >
-                <SelectTrigger className="w-[120px] h-8">
-                  <SelectValue placeholder="Time frame" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1h">Last hour</SelectItem>
-                  <SelectItem value="6h">6 hours</SelectItem>
-                  <SelectItem value="12h">12 hours</SelectItem>
-                  <SelectItem value="24h">24 hours</SelectItem>
-                  <SelectItem value="custom">Custom</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              {/* Custom time input fields, only visible when custom is selected */}
-              {timeFrame === 'custom' && (
-                <div className="flex items-center gap-2">
-                  <div className="flex flex-col">
-                    <Label htmlFor="hours" className="text-xs mb-1">Hours</Label>
-                    <Input 
-                      id="hours"
-                      type="number" 
-                      min="0" 
-                      max="72"
-                      value={customHours} 
-                      onChange={handleCustomHoursChange}
-                      className="w-16 h-8"
-                    />
-                  </div>
-                  <div className="flex flex-col">
-                    <Label htmlFor="minutes" className="text-xs mb-1">Minutes</Label>
-                    <Input 
-                      id="minutes"
-                      type="number" 
-                      min="0" 
-                      max="59"
-                      value={customMinutes} 
-                      onChange={handleCustomMinutesChange}
-                      className="w-16 h-8"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </CardHeader>
+    <motion.div
+      className="w-full p-4"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div
+        className="flex flex-col space-y-4"
+        variants={itemVariants}
+      >
+        <div className="flex flex-col space-y-2">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+            Plant Health Trends
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400">
+            Track your plant's environmental conditions over time
+          </p>
+        </div>
         
-        <CardContent>
-          <div className="h-[260px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={chartData}
-                margin={{ top: 5, right: 20, left: 10, bottom: 20 }}
-                onMouseMove={(e) => {
-                  if (e?.activePayload) {
-                    setHoveredValues({
-                      temperature: e.activePayload[0]?.value as number,
-                      humidity: e.activePayload[1]?.value as number,
-                      soilMoisture: e.activePayload[2]?.value as number,
-                      light: e.activePayload[3]?.value as number,
-                      time: e.activeLabel as string
-                    });
-                  }
-                }}
-                onMouseLeave={() => setHoveredValues(null)}
+        <Tabs defaultValue="temperature" className="w-full" onValueChange={(value) => setActiveMetric(value as any)}>
+          <TabsList className="grid grid-cols-4 mb-4">
+            <TabsTrigger value="temperature">Temperature</TabsTrigger>
+            <TabsTrigger value="humidity">Humidity</TabsTrigger>
+            <TabsTrigger value="light">Light</TabsTrigger>
+            <TabsTrigger value="soilMoisture">Soil</TabsTrigger>
+          </TabsList>
+          
+          <div className="mb-4 flex justify-end space-x-2">
+            {['1h', '6h', '12h', '24h'].map((tf) => (
+              <button
+                key={tf}
+                onClick={() => setTimeFrame(tf as TimeFrame)}
+                className={`px-3 py-1 text-sm rounded-full transition-all ${
+                  timeFrame === tf 
+                    ? 'bg-primary text-white font-medium shadow-md' 
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                }`}
               >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
-                <XAxis 
-                  dataKey="timeFormatted" 
-                  tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <YAxis 
-                  yAxisId="temp"
-                  orientation="left"
-                  domain={['dataMin - 5', 'dataMax + 5']}
-                  tickCount={5}
-                  tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                  label={{ value: '°C', position: 'insideLeft', angle: -90, dy: 40, fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <YAxis 
-                  yAxisId="humidity"
-                  orientation="right"
-                  domain={[0, 100]}
-                  tickCount={5}
-                  tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                  label={{ value: '%', position: 'insideRight', angle: 90, dx: 15, fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <Tooltip 
-                  content={<CustomTooltip />}
-                  cursor={{ stroke: 'hsl(var(--muted))', strokeWidth: 1 }}
-                />
-                <Legend verticalAlign="top" height={36} iconSize={10} iconType="circle" />
-                <Line 
-                  yAxisId="temp"
-                  type="monotone" 
-                  dataKey="temperature" 
-                  stroke="#ef4444" 
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                  activeDot={{ r: 4, stroke: '#ef4444', strokeWidth: 2 }}
-                  name="Temperature (°C)"
-                  isAnimationActive={false}
-                />
-                <Line 
-                  yAxisId="humidity"
-                  type="monotone" 
-                  dataKey="humidity" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                  activeDot={{ r: 4, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
-                  name="Humidity (%)"
-                  isAnimationActive={false}
-                />
-                <Line 
-                  yAxisId="humidity"
-                  type="monotone" 
-                  dataKey="soilMoisture" 
-                  stroke="#10b981" 
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                  activeDot={{ r: 4, stroke: '#10b981', strokeWidth: 2 }}
-                  name="Soil Moisture (%)"
-                  isAnimationActive={false}
-                />
-                <Line 
-                  yAxisId="humidity"
-                  type="monotone" 
-                  dataKey="light" 
-                  stroke="#f59e0b" 
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                  activeDot={{ r: 4, stroke: '#f59e0b', strokeWidth: 2 }}
-                  name="Light Level (%)"
-                  isAnimationActive={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+                {tf}
+              </button>
+            ))}
           </div>
           
-          {hoveredValues && (
-            <div className="mt-2 text-sm bg-gray-50 dark:bg-gray-800/50 p-2 rounded-md grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <span className="text-gray-500 dark:text-gray-400">Temp:</span>
-                <span className="font-medium">{hoveredValues.temperature?.toFixed(1)}°C</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
-                <span className="text-gray-500 dark:text-gray-400">Humidity:</span>
-                <span className="font-medium">{hoveredValues.humidity?.toFixed(0)}%</span>
-              </div>
-              {hoveredValues.soilMoisture !== null && (
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                  <span className="text-gray-500 dark:text-gray-400">Soil:</span>
-                  <span className="font-medium">{hoveredValues.soilMoisture?.toFixed(0)}%</span>
-                </div>
-              )}
-              {hoveredValues.light !== null && (
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                  <span className="text-gray-500 dark:text-gray-400">Light:</span>
-                  <span className="font-medium">{hoveredValues.light?.toFixed(0)}%</span>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </section>
+          <TabsContent value="temperature">
+            <AnimatedPlantGraph
+              data={historyArray}
+              dataType="temperature"
+              timeRange={timeRangeText}
+              title="Temperature History"
+            />
+          </TabsContent>
+          
+          <TabsContent value="humidity">
+            <AnimatedPlantGraph
+              data={historyArray}
+              dataType="humidity"
+              timeRange={timeRangeText}
+              title="Humidity History"
+            />
+          </TabsContent>
+          
+          <TabsContent value="light">
+            <AnimatedPlantGraph
+              data={historyArray}
+              dataType="light"
+              timeRange={timeRangeText}
+              title="Light Exposure History"
+            />
+          </TabsContent>
+          
+          <TabsContent value="soilMoisture">
+            <AnimatedPlantGraph
+              data={historyArray}
+              dataType="soilMoisture"
+              timeRange={timeRangeText}
+              title="Soil Moisture History"
+            />
+          </TabsContent>
+        </Tabs>
+        
+        <div className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
+          {historyArray.length} data points collected • Last updated: {new Date().toLocaleTimeString()}
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
