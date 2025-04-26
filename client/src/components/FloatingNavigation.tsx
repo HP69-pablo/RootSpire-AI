@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, Link } from 'wouter';
 import { 
@@ -8,31 +8,63 @@ import {
   MessageCircle, 
   Settings,
   Camera,
-  Upload
+  Upload,
+  Plus
 } from 'lucide-react';
 
 export function FloatingNavigation() {
   const [location] = useLocation();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  
+  // Handle scroll effect
+  useEffect(() => {
+    const controlNavbar = () => {
+      if (typeof window !== 'undefined') {
+        // For mobile experience: hide on scroll down, show on scroll up
+        if (window.scrollY > lastScrollY && window.scrollY > 100) {
+          // Scrolling down & past threshold - hide navbar
+          setIsVisible(false);
+        } else {
+          // Scrolling up or at top - show navbar
+          setIsVisible(true);
+        }
+        
+        // Update last scroll position
+        setLastScrollY(window.scrollY);
+      }
+    };
+
+    // Add scroll event listener
+    window.addEventListener('scroll', controlNavbar);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('scroll', controlNavbar);
+    };
+  }, [lastScrollY]);
   
   // Define animation variants
   const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 100 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
         type: "spring",
         stiffness: 300,
-        damping: 20,
+        damping: 30,
         staggerChildren: 0.1
       }
     },
     exit: {
       opacity: 0,
-      y: 20,
+      y: 100,
       transition: {
-        duration: 0.2
+        type: "spring",
+        stiffness: 300,
+        damping: 30
       }
     }
   };
@@ -48,7 +80,7 @@ export function FloatingNavigation() {
       }
     },
     tap: { 
-      scale: 0.85,
+      scale: 0.92,
       y: 2
     },
     bounce: (delay: number) => ({
@@ -64,10 +96,10 @@ export function FloatingNavigation() {
   };
   
   const panelVariants = {
-    hidden: { opacity: 0, height: 0, y: 10 },
+    hidden: { opacity: 0, scale: 0.9, y: 20 },
     visible: {
       opacity: 1,
-      height: 'auto',
+      scale: 1,
       y: 0,
       transition: {
         type: "spring",
@@ -96,105 +128,108 @@ export function FloatingNavigation() {
   ];
   
   return (
-    <motion.div
-      className="fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center pb-4 pointer-events-none"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
-      {/* Quick actions panel */}
-      <AnimatePresence>
-        {isPanelOpen && (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          className="fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center pb-6 pointer-events-none"
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          variants={containerVariants}
+        >
+          {/* Quick actions panel */}
+          <AnimatePresence>
+            {isPanelOpen && (
+              <motion.div
+                className="mb-4 dark:bg-gray-800/90 bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg p-5 mx-4 pointer-events-auto"
+                variants={panelVariants}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+                style={{
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)'
+                }}
+              >
+                <div className="grid grid-cols-2 gap-4 w-full">
+                  {quickActions.map((action, index) => (
+                    <motion.button
+                      key={action.label}
+                      className="flex flex-col items-center justify-center space-y-3 p-4 rounded-xl dark:bg-gray-700/80 bg-gray-50/80 hover:bg-gray-100 dark:hover:bg-gray-600/90 transition-colors backdrop-blur-md"
+                      onClick={() => {
+                        action.action();
+                        setIsPanelOpen(false);
+                      }}
+                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.03 }}
+                      variants={iconVariants}
+                    >
+                      <action.icon className="h-7 w-7 text-primary" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 sf-pro-display">
+                        {action.label}
+                      </span>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          {/* Main navigation bar */}
           <motion.div
-            className="mb-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mx-4 pointer-events-auto"
-            variants={panelVariants}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
+            className="dark:bg-gray-800/90 bg-white/90 backdrop-blur-xl rounded-full shadow-lg mx-4 pointer-events-auto"
             style={{
-              borderRadius: '16px',
-              backdropFilter: 'blur(10px)',
-              background: 'rgba(255, 255, 255, 0.95)',
-              boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
+              width: 'calc(100% - 2rem)',
+              maxWidth: '500px'
             }}
           >
-            <div className="grid grid-cols-2 gap-4 w-full">
-              {quickActions.map((action, index) => (
-                <motion.button
-                  key={action.label}
-                  className="flex flex-col items-center justify-center space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                  onClick={() => {
-                    action.action();
-                    setIsPanelOpen(false);
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                  variants={iconVariants}
+            <div className="flex items-center justify-around p-3">
+              {navItems.map((item, index) => {
+                const active = isActive(item.path);
+                
+                return (
+                  <Link key={item.path} href={item.path}>
+                    <motion.div
+                      className={`flex flex-col items-center justify-center p-3 rounded-full ${
+                        active ? 'text-primary' : 'text-gray-500 dark:text-gray-400'
+                      } cursor-pointer`}
+                      whileTap="tap"
+                      variants={iconVariants}
+                      custom={index * 0.15}
+                      animate={active ? ["visible", "bounce"] : "visible"}
+                    >
+                      <item.icon
+                        className={`h-6 w-6 transition-transform ${active ? 'scale-110' : ''}`}
+                      />
+                      <span className="text-xs mt-1 font-medium sf-pro-display">
+                        {item.label}
+                      </span>
+                    </motion.div>
+                  </Link>
+                );
+              })}
+              
+              {/* Center Action Button */}
+              <motion.button
+                className="flex items-center justify-center p-3.5 rounded-full bg-primary text-white shadow-md"
+                onClick={() => setIsPanelOpen(!isPanelOpen)}
+                whileTap={{ scale: 0.85 }}
+                whileHover={{ scale: 1.08 }}
+                variants={iconVariants}
+              >
+                <motion.div
+                  animate={{ rotate: isPanelOpen ? 45 : 0 }}
+                  className="flex items-center justify-center"
+                  style={{ originX: 0.5, originY: 0.5 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <action.icon className="h-6 w-6 text-primary" />
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                    {action.label}
-                  </span>
-                </motion.button>
-              ))}
+                  <Plus className="h-6 w-6" />
+                </motion.div>
+              </motion.button>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-      
-      {/* Main navigation bar */}
-      <motion.div
-        className="bg-white dark:bg-gray-800 rounded-full shadow-lg mx-4 pointer-events-auto"
-        style={{
-          borderRadius: '28px',
-          backdropFilter: 'blur(10px)',
-          background: 'rgba(255, 255, 255, 0.95)',
-          boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
-        }}
-      >
-        <div className="flex items-center justify-around px-4 py-2">
-          {navItems.map((item, index) => {
-            const active = isActive(item.path);
-            
-            return (
-              <Link key={item.path} href={item.path}>
-                <motion.div
-                  className={`flex flex-col items-center justify-center p-3 rounded-full ${
-                    active ? 'text-primary' : 'text-gray-500 dark:text-gray-400'
-                  } cursor-pointer`}
-                  whileTap="tap"
-                  variants={iconVariants}
-                  custom={index * 0.2}
-                  animate={active ? ["visible", "bounce"] : "visible"}
-                >
-                  <item.icon
-                    className={`h-6 w-6 transition-transform ${active ? 'scale-110' : ''}`}
-                  />
-                  <span className="text-xs mt-1 font-medium">
-                    {item.label}
-                  </span>
-                </motion.div>
-              </Link>
-            );
-          })}
-          
-          {/* Center Action Button */}
-          <motion.button
-            className={`flex items-center justify-center p-3 rounded-full bg-primary text-white`}
-            onClick={() => setIsPanelOpen(!isPanelOpen)}
-            whileTap={{ scale: 0.85 }}
-            whileHover={{ scale: 1.1 }}
-            variants={iconVariants}
-          >
-            <motion.span
-              animate={{ rotate: isPanelOpen ? 45 : 0 }}
-              className="text-xl font-bold"
-              style={{ originX: 0.5, originY: 0.5 }}
-            >
-              +
-            </motion.span>
-          </motion.button>
-        </div>
-      </motion.div>
-    </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
