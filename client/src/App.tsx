@@ -37,6 +37,8 @@ function App() {
             <ChatBubble />
             <FloatingNavigation />
             <Toaster />
+            {/* Data collector runs in the background with no UI */}
+            <DataCollector />
           </div>
         </AuthProvider>
       </ThemeProvider>
