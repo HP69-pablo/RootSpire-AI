@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { Thermometer, Droplets, Gauge } from "lucide-react";
 
 type SensorType = "temperature" | "humidity" | "soil";
 
@@ -137,48 +138,200 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
     return value;
   };
 
+  // Get color scheme based on sensor type and status
+  const getColorScheme = () => {
+    if (value === "none") return {
+      gradient: "from-gray-200 to-gray-100 dark:from-gray-800 dark:to-gray-700",
+      icon: "text-gray-400 dark:text-gray-500",
+      value: "text-gray-700 dark:text-gray-300"
+    };
+    
+    switch (type) {
+      case "temperature":
+        if (status === "High") return {
+          gradient: "from-red-100 to-red-50 dark:from-red-900/30 dark:to-red-800/20",
+          icon: "text-red-500 dark:text-red-400",
+          value: "text-red-700 dark:text-red-300",
+          status: "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300"
+        };
+        if (status === "Low") return {
+          gradient: "from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20",
+          icon: "text-blue-500 dark:text-blue-400",
+          value: "text-blue-700 dark:text-blue-300",
+          status: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+        };
+        return {
+          gradient: "from-green-100 to-green-50 dark:from-green-900/30 dark:to-green-800/20",
+          icon: "text-green-500 dark:text-green-400",
+          value: "text-green-700 dark:text-green-300",
+          status: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
+        };
+      
+      case "humidity":
+        if (status === "High") return {
+          gradient: "from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20",
+          icon: "text-blue-500 dark:text-blue-400",
+          value: "text-blue-700 dark:text-blue-300",
+          status: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+        };
+        if (status === "Low") return {
+          gradient: "from-orange-100 to-orange-50 dark:from-orange-900/30 dark:to-orange-800/20",
+          icon: "text-orange-500 dark:text-orange-400",
+          value: "text-orange-700 dark:text-orange-300",
+          status: "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300"
+        };
+        return {
+          gradient: "from-green-100 to-green-50 dark:from-green-900/30 dark:to-green-800/20",
+          icon: "text-green-500 dark:text-green-400",
+          value: "text-green-700 dark:text-green-300",
+          status: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
+        };
+      
+      case "soil":
+        if (status === "Low" || status === "Critical") return {
+          gradient: "from-orange-100 to-orange-50 dark:from-orange-900/30 dark:to-orange-800/20",
+          icon: "text-orange-500 dark:text-orange-400",
+          value: "text-orange-700 dark:text-orange-300",
+          status: "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300"
+        };
+        if (status === "High") return {
+          gradient: "from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20",
+          icon: "text-blue-500 dark:text-blue-400",
+          value: "text-blue-700 dark:text-blue-300",
+          status: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+        };
+        return {
+          gradient: "from-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:to-emerald-800/20",
+          icon: "text-emerald-500 dark:text-emerald-400",
+          value: "text-emerald-700 dark:text-emerald-300",
+          status: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+        };
+    }
+  };
+  
+  const colorScheme = getColorScheme();
+  
+  // Modern icons for sensors
+  const getModernIcon = () => {
+    switch (type) {
+      case "temperature":
+        return (
+          <motion.div 
+            className={`p-3 rounded-full bg-gradient-to-br ${colorScheme.gradient}`}
+            animate={{ 
+              scale: animated ? [1, 1.05, 1] : 1,
+            }}
+            transition={{ duration: 0.5 }}
+          >
+            <Thermometer className={`h-6 w-6 ${colorScheme.icon}`} />
+          </motion.div>
+        );
+      case "humidity":
+        return (
+          <motion.div 
+            className={`p-3 rounded-full bg-gradient-to-br ${colorScheme.gradient}`}
+            animate={{ 
+              scale: animated ? [1, 1.05, 1] : 1,
+              y: status === "Low" ? 0 : [0, -2, 0]
+            }}
+            transition={{ 
+              scale: { duration: 0.5 },
+              y: { duration: 2, repeat: status !== "Low" ? Infinity : 0, repeatType: "reverse" }
+            }}
+          >
+            <Droplets className={`h-6 w-6 ${colorScheme.icon}`} />
+          </motion.div>
+        );
+      case "soil":
+        return (
+          <motion.div 
+            className={`p-3 rounded-full bg-gradient-to-br ${colorScheme.gradient}`}
+            animate={{ 
+              scale: animated ? [1, 1.05, 1] : 1,
+              rotate: status === "Low" ? [-5, 5, -5] : 0
+            }}
+            transition={{ 
+              scale: { duration: 0.5 },
+              rotate: { duration: 2, repeat: status === "Low" ? Infinity : 0, repeatType: "mirror" }
+            }}
+          >
+            <Gauge className={`h-6 w-6 ${colorScheme.icon}`} />
+          </motion.div>
+        );
+    }
+  };
+
   return (
-    <Card className="bg-white dark:bg-slate-800 shadow-sm p-5 border border-gray-100 dark:border-gray-700 transition-all duration-200 hover:shadow-md">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{getLabel()}</h3>
-          <div className="flex items-baseline">
-            <motion.span 
-              key={String(value)}
-              initial={animated ? { opacity: 0.5 } : { opacity: 1 }}
-              animate={{ opacity: 1 }}
-              className="text-3xl font-semibold font-mono"
-            >
-              {displayValue()}
-            </motion.span>
-            <span className="ml-1 text-lg">{value !== "none" ? getUnit() : ""}</span>
+    <motion.div 
+      whileHover={{ 
+        scale: 1.02,
+        boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(255, 255, 255, 0.1)" 
+      }}
+      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+    >
+      <Card className="glassmorphic-card overflow-hidden p-0 border-0">
+        <div className={`h-1 w-full bg-gradient-to-r ${colorScheme.gradient}`} />
+        
+        <div className="p-4">
+          <div className="flex justify-between items-center mb-3">
+            {getModernIcon()}
+            
+            <div className="text-right">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{getLabel()}</h3>
+              <div className="flex items-baseline justify-end">
+                <motion.span 
+                  key={String(value)}
+                  initial={animated ? { opacity: 0.5, y: -5 } : { opacity: 1, y: 0 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`text-3xl font-semibold font-mono ${colorScheme.value}`}
+                >
+                  {displayValue()}
+                </motion.span>
+                <span className="ml-1 text-lg text-gray-600 dark:text-gray-400">{value !== "none" ? getUnit() : ""}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between mt-4">
+            <div>
+              {value !== "none" && (
+                <div className="flex items-center bg-white/50 dark:bg-slate-800/50 rounded-md px-2 py-1">
+                  {getChange() > 0 ? (
+                    <svg className="h-3.5 w-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
+                  ) : getChange() < 0 ? (
+                    <svg className="h-3.5 w-3.5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  ) : (
+                    <svg className="h-3.5 w-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
+                    </svg>
+                  )}
+                  <span className={`text-xs font-medium ml-1 ${
+                    getChange() > 0 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : getChange() < 0 
+                        ? 'text-orange-600 dark:text-orange-400' 
+                        : 'text-gray-500'
+                  }`}>
+                    {getChange() > 0 ? '+' : getChange() < 0 ? '' : '±'}{getChange().toFixed(type === 'temperature' ? 1 : 0)}{getUnit()}
+                  </span>
+                </div>
+              )}
+              {value === "none" && (
+                <div className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md text-gray-500 dark:text-gray-400">
+                  No sensor data
+                </div>
+              )}
+            </div>
+            <div className={`px-2 py-1 rounded-full ${colorScheme.status || getStatusClasses()} text-xs font-medium`}>
+              {status}
+            </div>
           </div>
         </div>
-        
-        {getIcon()}
-      </div>
-      
-      <div className="flex items-center justify-between">
-        <div>
-          {value !== "none" && (
-            <div className="flex items-center">
-              {getChangeIcon()}
-              <span className={`text-xs font-medium ${getChange() > 0 ? 'text-success-500' : 'text-warning-500'}`}>
-                {getChange() > 0 ? '+' : ''}{getChange().toFixed(type === 'temperature' ? 1 : 0)}{getUnit()}
-              </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">from last hour</span>
-            </div>
-          )}
-          {value === "none" && (
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              No sensor connected
-            </div>
-          )}
-        </div>
-        <div className={`px-2 py-1 rounded-full ${getStatusClasses()} text-xs font-medium`}>
-          {status}
-        </div>
-      </div>
-    </Card>
+      </Card>
+    </motion.div>
   );
 }
