@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
-import { Leaf, Droplet, Sun, Thermometer, Droplets, Gauge, Flower, Loader2 } from 'lucide-react';
+import { Leaf, Droplet, Sun, Thermometer, Droplets, Gauge, Flower, Loader2, RefreshCw, AlertTriangle, 
+         Sparkle as Sparkles, DropletIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -628,105 +629,200 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
             
             {/* Plant Type Selection */}
             <motion.div 
-              className="p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
-              whileHover={{ scale: 1.01 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              className="glassmorphic rounded-xl p-0 overflow-hidden"
+              whileHover={{ 
+                scale: 1.02, 
+                boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(255, 255, 255, 0.1)" 
+              }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <motion.div 
-                  className="p-1.5 rounded-full bg-purple-100 dark:bg-purple-900/30"
-                  animate={{ rotate: [0, 5, 0, -5, 0] }}
-                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <Flower className="h-4 w-4 text-purple-500" />
-                </motion.div>
-                <Label htmlFor="plantType" className="font-medium text-sm">Plant Type</Label>
+              <div className="h-1 w-full bg-gradient-to-r from-purple-500 to-indigo-400" />
+              
+              <div className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <motion.div 
+                    className="p-2 rounded-full bg-gradient-to-br from-purple-100 to-indigo-50 dark:from-purple-900/40 dark:to-indigo-900/20"
+                    animate={{ 
+                      rotate: [0, 5, 0, -5, 0],
+                      scale: [1, 1.05, 1]
+                    }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <Flower className="h-5 w-5 text-purple-500 dark:text-purple-400" />
+                  </motion.div>
+                  <div>
+                    <Label htmlFor="plantType" className="font-medium text-sm">Plant Type</Label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Enter species for optimal settings
+                    </p>
+                  </div>
+                  
+                  {plantTypeLoading && (
+                    <div className="flex items-center text-xs gap-1 ml-auto bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-1 rounded-full">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Loader2 className="h-3 w-3" />
+                      </motion.div>
+                      <span>Smart Optimizing...</span>
+                    </div>
+                  )}
+                </div>
                 
-                {plantTypeLoading && (
-                  <div className="flex items-center text-xs text-blue-500 gap-1 ml-auto">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    <span>Optimizing...</span>
+                <div className="relative">
+                  <Input
+                    id="plantType"
+                    placeholder="Enter plant species (e.g. Aloe Vera)"
+                    value={plantType}
+                    onChange={handlePlantTypeChange}
+                    className="apple-input w-full h-10 text-sm pr-8 border-0 focus:ring-purple-400/50"
+                  />
+                  
+                  {plantType && (
+                    <motion.div 
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.5 }}
+                    >
+                      <Flower className="h-4 w-4 text-purple-500" />
+                    </motion.div>
+                  )}
+                </div>
+                
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/10 rounded-lg p-2 mt-3">
+                  <p className="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
+                    <Flower className="h-3.5 w-3.5 text-purple-500" />
+                    <span>AI will auto-optimize environment for your plant</span>
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+            
+            {/* Watering Control */}
+            <motion.div 
+              className="glassmorphic rounded-xl p-0 overflow-hidden"
+              whileHover={{ 
+                scale: 1.02, 
+                boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(255, 255, 255, 0.1)" 
+              }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <div className={`h-1 w-full ${
+                isWatering 
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-400' 
+                  : 'bg-gradient-to-r from-blue-400 to-sky-400'
+              }`} />
+              
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <motion.div 
+                      className={`p-2 rounded-full ${
+                        isWatering 
+                          ? 'bg-gradient-to-br from-blue-100 to-cyan-50 dark:from-blue-900/40 dark:to-cyan-900/20' 
+                          : 'bg-gradient-to-br from-blue-50 to-sky-50 dark:from-blue-900/20 dark:to-sky-900/10'
+                      }`}
+                      animate={{ 
+                        y: isWatering ? [0, -3, 0] : 0,
+                        boxShadow: isWatering 
+                          ? ['0 0 0 rgba(96, 165, 250, 0)', '0 0 15px rgba(96, 165, 250, 0.7)', '0 0 0 rgba(96, 165, 250, 0)'] 
+                          : 'none'
+                      }}
+                      transition={{ duration: 1.5, repeat: isWatering ? Infinity : 0, ease: "easeInOut" }}
+                    >
+                      <Droplets className={`h-5 w-5 ${
+                        isWatering 
+                          ? 'text-blue-500 dark:text-blue-400' 
+                          : 'text-blue-400 dark:text-blue-500/60'
+                      }`} />
+                    </motion.div>
+                    <div>
+                      <h3 className="font-medium text-sm">Water Plants</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {isWatering 
+                          ? 'Watering in progress...' 
+                          : wateringDisabled 
+                            ? `Available again in ${Math.ceil(5)}s` 
+                            : 'Ready to water your plants'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {isWatering && (
+                    <div className="flex items-center justify-center h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Loader2 className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
+                      </motion.div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="relative">
+                  <Button 
+                    onClick={handleWateringClick}
+                    disabled={wateringDisabled || isWatering}
+                    className={`w-full h-11 rounded-xl font-medium transition-all duration-300 relative overflow-hidden disabled:opacity-60 ${
+                      isWatering 
+                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white cursor-default' 
+                        : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                    }`}
+                  >
+                    {isWatering ? (
+                      <>
+                        <span className="relative z-10 flex items-center justify-center gap-2">
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                          >
+                            <Droplet className="h-4 w-4" />
+                          </motion.div>
+                          <span>Watering in Progress</span>
+                        </span>
+                        <motion.div 
+                          className="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-500 origin-left"
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: isWatering ? 1 : 0 }}
+                          transition={{ duration: 3, ease: "easeInOut" }}
+                          style={{ transformOrigin: 'left' }}
+                        />
+                      </>
+                    ) : (
+                      <span className="relative z-10 flex items-center justify-center gap-2">
+                        <Droplet className="h-4 w-4" />
+                        <span>Water Now</span>
+                      </span>
+                    )}
+                  </Button>
+                  
+                  {isWatering && (
+                    <motion.div 
+                      className="absolute inset-x-0 -bottom-4 flex justify-center"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                    >
+                      <div className="px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs">
+                        Watering for optimal soil moisture
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+                
+                {!isWatering && !wateringDisabled && sensorData?.soilMoisture && sensorData.soilMoisture < 30 && (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2 mt-3">
+                    <p className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                      <Thermometer className="h-3.5 w-3.5 text-amber-500" />
+                      <span>Soil moisture is low, watering recommended</span>
+                    </p>
                   </div>
                 )}
               </div>
-              
-              <div className="relative">
-                <Input
-                  id="plantType"
-                  placeholder="Enter plant species (e.g. Aloe Vera)"
-                  value={plantType}
-                  onChange={handlePlantTypeChange}
-                  className="w-full h-9 text-sm pr-8"
-                />
-                
-                {plantType && (
-                  <motion.div 
-                    className="absolute right-2 top-1/2 -translate-y-1/2"
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.5 }}
-                  >
-                    <Flower className="h-4 w-4 text-purple-500" />
-                  </motion.div>
-                )}
-              </div>
-              
-              <p className="text-xs text-gray-500 mt-2">
-                Type plant name to automatically optimize environment settings
-              </p>
-            </motion.div>
-            
-            {/* Watering Control - Compact */}
-            <motion.div 
-              className="p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
-              whileHover={{ scale: 1.01 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <motion.div 
-                    className={`p-1.5 rounded-full ${isWatering ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-gray-100 dark:bg-gray-800'}`}
-                    animate={{ 
-                      y: isWatering ? [0, -3, 0] : 0,
-                      boxShadow: isWatering 
-                        ? ['0 0 0 rgba(96, 165, 250, 0)', '0 0 10px rgba(96, 165, 250, 0.7)', '0 0 0 rgba(96, 165, 250, 0)'] 
-                        : 'none'
-                    }}
-                    transition={{ duration: 1.5, repeat: isWatering ? Infinity : 0, ease: "easeInOut" }}
-                  >
-                    <Droplet className={`h-4 w-4 ${isWatering ? 'text-blue-500' : 'text-gray-400'}`} />
-                  </motion.div>
-                  <h3 className="font-medium text-sm">Water Plants</h3>
-                </div>
-                
-                {wateringDisabled && !isWatering && (
-                  <span className="text-xs text-gray-500">
-                    Available in {Math.ceil(5)}s
-                  </span>
-                )}
-              </div>
-              
-              <Button 
-                onClick={handleWateringClick}
-                disabled={wateringDisabled || isWatering}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-lg h-8 text-xs font-medium transition-all duration-300 relative overflow-hidden"
-                variant="default"
-                size="sm"
-              >
-                {isWatering ? (
-                  <>
-                    <span className="relative z-10">Watering...</span>
-                    <motion.div 
-                      className="absolute bottom-0 left-0 right-0 bg-blue-400 h-full origin-bottom"
-                      initial={{ scaleY: 0 }}
-                      animate={{ scaleY: isWatering ? 1 : 0 }}
-                      transition={{ duration: 3, ease: "easeInOut" }}
-                    />
-                  </>
-                ) : (
-                  "Water Now"
-                )}
-              </Button>
             </motion.div>
           </div>
         </CardContent>
