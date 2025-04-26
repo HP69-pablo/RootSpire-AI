@@ -137,12 +137,12 @@ export function AnimatedPlantGraph({
     <AnimatePresence>
       {formattedData.length > 0 && (
         <motion.div
-          className="w-full rounded-xl bg-white dark:bg-gray-800 shadow-lg p-4 overflow-hidden"
+          className="w-full ios-card overflow-hidden sf-pro-display"
           style={{
-            borderRadius: '16px',
-            backdropFilter: 'blur(10px)',
-            background: 'rgba(255, 255, 255, 0.95)',
-            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
+            borderRadius: '20px',
+            backdropFilter: 'blur(20px)',
+            background: 'rgba(255, 255, 255, 0.85)',
+            boxShadow: '0 10px 30px rgba(31, 38, 135, 0.1), 0 1px 8px rgba(0, 0, 0, 0.06)'
           }}
           variants={containerVariants}
           initial="hidden"

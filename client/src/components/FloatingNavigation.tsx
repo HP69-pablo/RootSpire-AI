@@ -157,10 +157,10 @@ export function FloatingNavigation() {
             
             return (
               <Link key={item.path} href={item.path}>
-                <motion.a
+                <motion.div
                   className={`flex flex-col items-center justify-center p-3 rounded-full ${
                     active ? 'text-primary' : 'text-gray-500 dark:text-gray-400'
-                  }`}
+                  } cursor-pointer`}
                   whileTap="tap"
                   variants={iconVariants}
                   custom={index * 0.2}
@@ -172,7 +172,7 @@ export function FloatingNavigation() {
                   <span className="text-xs mt-1 font-medium">
                     {item.label}
                   </span>
-                </motion.a>
+                </motion.div>
               </Link>
             );
           })}

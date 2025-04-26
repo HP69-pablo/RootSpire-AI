@@ -269,25 +269,26 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
       }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
     >
-      <Card className="glassmorphic-card overflow-hidden p-0 border-0">
-        <div className={`h-1 w-full bg-gradient-to-r ${colorScheme.gradient}`} />
+      <Card className="overflow-hidden p-0 border-0 backdrop-blur-md bg-white/80 dark:bg-gray-800/80 rounded-xl shadow-lg">
+        <div className={`h-1.5 w-full bg-gradient-to-r ${colorScheme.gradient}`} />
         
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-3">
+        <div className="p-5">
+          <div className="flex justify-between items-center mb-4">
             {getModernIcon()}
             
             <div className="text-right">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{getLabel()}</h3>
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">{getLabel()}</h3>
               <div className="flex items-baseline justify-end">
                 <motion.span 
                   key={String(value)}
                   initial={animated ? { opacity: 0.5, y: -5 } : { opacity: 1, y: 0 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`text-3xl font-semibold font-mono ${colorScheme.value}`}
+                  className={`text-3xl font-bold ${colorScheme.value} tracking-tight`}
+                  style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
                 >
                   {displayValue()}
                 </motion.span>
-                <span className="ml-1 text-lg text-gray-600 dark:text-gray-400">{value !== "none" ? getUnit() : ""}</span>
+                <span className="ml-1 text-lg text-gray-600 dark:text-gray-400 font-normal">{value !== "none" ? getUnit() : ""}</span>
               </div>
             </div>
           </div>
@@ -295,7 +296,13 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
           <div className="flex items-center justify-between mt-4">
             <div>
               {value !== "none" && (
-                <div className="flex items-center bg-white/50 dark:bg-slate-800/50 rounded-md px-2 py-1">
+                <motion.div 
+                  className="flex items-center bg-white/70 dark:bg-slate-800/70 rounded-full px-3 py-1 shadow-sm"
+                  animate={animated ? {
+                    scale: [1, 1.05, 1]
+                  } : {}}
+                  transition={{ duration: 0.5 }}
+                >
                   {getChange() > 0 ? (
                     <svg className="h-3.5 w-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -318,17 +325,27 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
                   }`}>
                     {getChange() > 0 ? '+' : getChange() < 0 ? '' : '±'}{getChange().toFixed(type === 'temperature' ? 1 : 0)}{getUnit()}
                   </span>
-                </div>
+                </motion.div>
               )}
               {value === "none" && (
-                <div className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md text-gray-500 dark:text-gray-400">
+                <div className="text-xs bg-gray-100/70 dark:bg-gray-800/70 px-3 py-1 rounded-full shadow-sm text-gray-500 dark:text-gray-400 font-medium">
                   No sensor data
                 </div>
               )}
             </div>
-            <div className={`px-2 py-1 rounded-full ${colorScheme.status || getStatusClasses()} text-xs font-medium`}>
+            <motion.div 
+              className={`px-3 py-1 rounded-full shadow-sm ${colorScheme.status || getStatusClasses()} text-xs font-medium`}
+              animate={status === "Critical" ? {
+                scale: [1, 1.05, 1],
+                opacity: [0.9, 1, 0.9]
+              } : {}}
+              transition={{
+                repeat: status === "Critical" ? Infinity : 0,
+                duration: 1.5
+              }}
+            >
               {status}
-            </div>
+            </motion.div>
           </div>
         </div>
       </Card>
