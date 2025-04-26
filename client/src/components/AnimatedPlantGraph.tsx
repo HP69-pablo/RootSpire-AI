@@ -166,12 +166,14 @@ export function AnimatedPlantGraph({
       return (
         <div className="backdrop-blur-xl bg-white/90 dark:bg-gray-800/90 p-4 rounded-xl shadow-lg border-0 sf-pro-display animate-scale-pulse"
           style={{ 
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.04)',
+            boxShadow: isDarkMode 
+              ? '0 10px 25px rgba(0, 0, 0, 0.4), 0 5px 10px rgba(0, 0, 0, 0.3)'
+              : '0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.04)',
           }}>
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             {format(payload[0].payload.fullTime, 'MMM d, yyyy HH:mm')}
           </p>
-          <p className="text-xl font-bold tracking-tight" style={{ color: config.color }}>
+          <p className="text-xl font-bold tracking-tight" style={{ color: isDarkMode ? config.darkColor : config.color }}>
             {payload[0].value}{config.unit}
           </p>
         </div>
@@ -209,12 +211,16 @@ export function AnimatedPlantGraph({
     <AnimatePresence>
       {formattedData.length > 0 && (
         <motion.div
-          className="w-full ios-card overflow-hidden sf-pro-display"
+          className="w-full ios-card overflow-hidden sf-pro-display dark:text-white"
           style={{
             borderRadius: '20px',
             backdropFilter: 'blur(20px)',
-            background: 'rgba(255, 255, 255, 0.85)',
-            boxShadow: '0 10px 30px rgba(31, 38, 135, 0.1), 0 1px 8px rgba(0, 0, 0, 0.06)'
+            background: isDarkMode 
+              ? 'rgba(30, 41, 59, 0.85)' 
+              : 'rgba(255, 255, 255, 0.85)',
+            boxShadow: isDarkMode
+              ? '0 10px 30px rgba(0, 0, 0, 0.2), 0 1px 8px rgba(0, 0, 0, 0.3)'
+              : '0 10px 30px rgba(31, 38, 135, 0.1), 0 1px 8px rgba(0, 0, 0, 0.06)'
           }}
           variants={containerVariants}
           initial="hidden"
@@ -230,7 +236,10 @@ export function AnimatedPlantGraph({
               </p>
             </div>
             <div className="px-3 py-1 rounded-full bg-gray-100/80 dark:bg-gray-700/50 text-xs font-semibold text-gray-600 dark:text-gray-300 flex items-center">
-              <span className="w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: config.color, boxShadow: `0 0 3px ${config.color}` }}></span>
+              <span className="w-2 h-2 rounded-full mr-1.5" style={{ 
+                backgroundColor: isDarkMode ? config.darkColor : config.color, 
+                boxShadow: `0 0 3px ${isDarkMode ? config.darkColor : config.color}` 
+              }}></span>
               Last {timeRange}
             </div>
           </motion.div>
@@ -246,14 +255,18 @@ export function AnimatedPlantGraph({
                 margin={{ top: 5, right: 5, left: 0, bottom: 20 }}
               >
                 <defs>
-                  <linearGradient id={`gradient-${dataType}`} x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id={`gradient-${dataType}-light`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={config.gradient[0]} stopOpacity={0.8} />
                     <stop offset="95%" stopColor={config.gradient[1]} stopOpacity={0.2} />
+                  </linearGradient>
+                  <linearGradient id={`gradient-${dataType}-dark`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={config.darkGradient[0]} stopOpacity={0.8} />
+                    <stop offset="95%" stopColor={config.darkGradient[1]} stopOpacity={0.3} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
-                  stroke="rgba(200,200,200,0.15)" 
+                  stroke={isDarkMode ? "rgba(100,100,100,0.15)" : "rgba(200,200,200,0.15)"} 
                   vertical={false}
                 />
                 <XAxis
@@ -261,45 +274,59 @@ export function AnimatedPlantGraph({
                   tick={{ 
                     fontSize: 11, 
                     fontWeight: 500, 
-                    fill: 'rgba(100,100,100,0.8)',
-                    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                    fill: isDarkMode ? 'rgba(200,200,200,0.8)' : 'rgba(100,100,100,0.8)',
+                    fontFamily: "SF Pro Display, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
                   }}
                   tickLine={false}
-                  axisLine={{ stroke: 'rgba(200,200,200,0.3)', strokeWidth: 1 }}
+                  axisLine={{ stroke: isDarkMode ? 'rgba(100,100,100,0.3)' : 'rgba(200,200,200,0.3)', strokeWidth: 1 }}
                   dy={8}
                 />
                 <YAxis
                   tick={{ 
                     fontSize: 11, 
                     fontWeight: 500, 
-                    fill: 'rgba(100,100,100,0.8)',
-                    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                    fill: isDarkMode ? 'rgba(200,200,200,0.8)' : 'rgba(100,100,100,0.8)',
+                    fontFamily: "SF Pro Display, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
                   }}
                   tickLine={false}
-                  axisLine={{ stroke: 'rgba(200,200,200,0.3)', strokeWidth: 1 }}
+                  axisLine={{ stroke: isDarkMode ? 'rgba(100,100,100,0.3)' : 'rgba(200,200,200,0.3)', strokeWidth: 1 }}
                   domain={['dataMin - 5', 'dataMax + 5']}
                   dx={-5}
+                  width={30}
                 />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip 
+                  content={<CustomTooltip />} 
+                  cursor={{ 
+                    stroke: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', 
+                    strokeWidth: 1, 
+                    strokeDasharray: '3 3' 
+                  }}
+                />
                 <Line
-                  type="natural"
+                  type="monotone"
+                  connectNulls={true}
                   dataKey="value"
-                  stroke={config.color}
+                  stroke={isDarkMode ? config.darkColor : config.color}
                   strokeWidth={3}
-                  dot={{ r: 3, strokeWidth: 2, fill: 'white', stroke: config.color }}
+                  dot={{ 
+                    r: 4, 
+                    strokeWidth: 2, 
+                    fill: isDarkMode ? '#1e293b' : 'white', 
+                    stroke: isDarkMode ? config.darkColor : config.color 
+                  }}
                   activeDot={{ 
                     r: 6, 
                     strokeWidth: 3, 
-                    fill: 'white', 
-                    stroke: config.color,
-                    strokeOpacity: 0.8,
+                    fill: isDarkMode ? '#1e293b' : 'white', 
+                    stroke: isDarkMode ? config.darkColor : config.color,
+                    strokeOpacity: 0.9,
                     className: "animate-pulse-slow"
                   }}
                   isAnimationActive={true}
                   animationDuration={2000}
                   animationEasing="ease-in-out"
                   name={config.name}
-                  fill={`url(#gradient-${dataType})`}
+                  fill={`url(#gradient-${dataType}-${isDarkMode ? 'dark' : 'light'})`}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -313,7 +340,7 @@ export function AnimatedPlantGraph({
               {`${formattedData.length} data points`}
             </span>
             <span className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center">
-              <span className="h-3 w-3 mr-1.5 rounded-sm" style={{ backgroundColor: config.color }}></span>
+              <span className="h-3 w-3 mr-1.5 rounded-sm" style={{ backgroundColor: isDarkMode ? config.darkColor : config.color }}></span>
               Values in {config.unit}
             </span>
           </motion.div>

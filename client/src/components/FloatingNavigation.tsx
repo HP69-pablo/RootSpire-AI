@@ -18,32 +18,48 @@ export function FloatingNavigation() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   
-  // Handle scroll effect
+  // Handle scroll effect with improved behavior for Apple-inspired UX
   useEffect(() => {
     const controlNavbar = () => {
       if (typeof window !== 'undefined') {
-        // For mobile experience: hide on scroll down, show on scroll up
-        if (window.scrollY > lastScrollY && window.scrollY > 100) {
+        // Hide navbar only when scrolling down actively and past a threshold
+        // This creates a more fluid experience similar to iOS apps
+        if (window.scrollY > lastScrollY && window.scrollY > 150) {
           // Scrolling down & past threshold - hide navbar
           setIsVisible(false);
-        } else {
-          // Scrolling up or at top - show navbar
+        } else if (window.scrollY < lastScrollY || window.scrollY < 50) {
+          // Scrolling up or near the top - show navbar
           setIsVisible(true);
         }
         
-        // Update last scroll position
-        setLastScrollY(window.scrollY);
+        // Add small delay for smoother appearance
+        const timeoutId = setTimeout(() => {
+          // Update last scroll position with a slight delay to create a more natural feel
+          setLastScrollY(window.scrollY);
+        }, 50);
+        
+        return () => clearTimeout(timeoutId);
       }
     };
 
-    // Add scroll event listener
-    window.addEventListener('scroll', controlNavbar);
+    // Add scroll event listener with passive option for better performance
+    window.addEventListener('scroll', controlNavbar, { passive: true });
+
+    // Touch events for better mobile interaction: show navbar on touch start (like tapping)
+    const handleTouchStart = () => {
+      if (!isVisible && window.scrollY > 0) {
+        setIsVisible(true);
+      }
+    };
+    
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
 
     // Cleanup
     return () => {
       window.removeEventListener('scroll', controlNavbar);
+      window.removeEventListener('touchstart', handleTouchStart);
     };
-  }, [lastScrollY]);
+  }, [lastScrollY, isVisible]);
   
   // Define animation variants
   const containerVariants = {
@@ -137,33 +153,41 @@ export function FloatingNavigation() {
           exit="exit"
           variants={containerVariants}
         >
-          {/* Quick actions panel */}
+          {/* Quick actions panel with enhanced glassmorphism */}
           <AnimatePresence>
             {isPanelOpen && (
               <motion.div
-                className="mb-4 dark:bg-gray-800/90 bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg p-5 mx-4 pointer-events-auto"
+                className="mb-4 dark:bg-gray-800/80 bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg p-5 mx-4 pointer-events-auto border border-white/20 dark:border-gray-700/30"
                 variants={panelVariants}
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
                 style={{
-                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)'
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(255, 255, 255, 0.1) inset',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)'
                 }}
               >
                 <div className="grid grid-cols-2 gap-4 w-full">
                   {quickActions.map((action, index) => (
                     <motion.button
                       key={action.label}
-                      className="flex flex-col items-center justify-center space-y-3 p-4 rounded-xl dark:bg-gray-700/80 bg-gray-50/80 hover:bg-gray-100 dark:hover:bg-gray-600/90 transition-colors backdrop-blur-md"
+                      className="flex flex-col items-center justify-center space-y-3 p-4 rounded-xl dark:bg-gray-700/60 bg-gray-50/60 border border-white/20 dark:border-gray-700/30 hover:bg-gray-100/70 dark:hover:bg-gray-600/70 transition-all backdrop-blur-md"
                       onClick={() => {
                         action.action();
                         setIsPanelOpen(false);
                       }}
-                      whileTap={{ scale: 0.95 }}
-                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.92, y: 2 }}
+                      whileHover={{ 
+                        scale: 1.05, 
+                        boxShadow: '0 8px 20px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(255, 255, 255, 0.1) inset' 
+                      }}
                       variants={iconVariants}
+                      style={{
+                        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(255, 255, 255, 0.1) inset'
+                      }}
                     >
-                      <action.icon className="h-7 w-7 text-primary" />
+                      <action.icon className="h-7 w-7 text-primary drop-shadow-sm" />
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300 sf-pro-display">
                         {action.label}
                       </span>
@@ -174,11 +198,13 @@ export function FloatingNavigation() {
             )}
           </AnimatePresence>
           
-          {/* Main navigation bar */}
+          {/* Main navigation bar with enhanced glassmorphism */}
           <motion.div
-            className="dark:bg-gray-800/90 bg-white/90 backdrop-blur-xl rounded-full shadow-lg mx-4 pointer-events-auto"
+            className="dark:bg-gray-800/85 bg-white/85 backdrop-blur-2xl rounded-full shadow-xl mx-4 pointer-events-auto border border-white/20 dark:border-gray-700/30"
             style={{
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(255, 255, 255, 0.1) inset',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
               width: 'calc(100% - 2rem)',
               maxWidth: '500px'
             }}
@@ -191,15 +217,25 @@ export function FloatingNavigation() {
                   <Link key={item.path} href={item.path}>
                     <motion.div
                       className={`flex flex-col items-center justify-center p-3 rounded-full ${
-                        active ? 'text-primary' : 'text-gray-500 dark:text-gray-400'
+                        active 
+                          ? 'text-primary bg-gray-100/50 dark:bg-gray-700/50 border border-white/30 dark:border-gray-600/30 shadow-sm' 
+                          : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100/30 dark:hover:bg-gray-700/30 transition-all'
                       } cursor-pointer`}
                       whileTap="tap"
                       variants={iconVariants}
                       custom={index * 0.15}
                       animate={active ? ["visible", "bounce"] : "visible"}
+                      style={{
+                        backdropFilter: active ? 'blur(8px)' : 'none',
+                        WebkitBackdropFilter: active ? 'blur(8px)' : 'none'
+                      }}
+                      whileHover={!active ? {
+                        y: -2,
+                        transition: { duration: 0.2 }
+                      } : {}}
                     >
                       <item.icon
-                        className={`h-6 w-6 transition-transform ${active ? 'scale-110' : ''}`}
+                        className={`h-6 w-6 transition-transform ${active ? 'scale-110 drop-shadow-sm' : ''}`}
                       />
                       <span className="text-xs mt-1 font-medium sf-pro-display">
                         {item.label}
@@ -209,21 +245,32 @@ export function FloatingNavigation() {
                 );
               })}
               
-              {/* Center Action Button */}
+              {/* Center Action Button with enhanced Apple-like design */}
               <motion.button
-                className="flex items-center justify-center p-3.5 rounded-full bg-primary text-white shadow-md"
+                className="flex items-center justify-center p-3.5 rounded-full bg-gradient-to-br from-primary to-primary-dark text-white shadow-lg border border-white/10"
                 onClick={() => setIsPanelOpen(!isPanelOpen)}
-                whileTap={{ scale: 0.85 }}
-                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.85, boxShadow: '0 3px 10px rgba(0, 0, 0, 0.2)' }}
+                whileHover={{ 
+                  scale: 1.08, 
+                  boxShadow: '0 8px 25px rgba(0, 0, 0, 0.25), 0 2px 10px rgba(0, 0, 0, 0.2)', 
+                  y: -2 
+                }}
                 variants={iconVariants}
+                style={{
+                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2), 0 1px 8px rgba(255, 255, 255, 0.1) inset',
+                  filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))'
+                }}
               >
                 <motion.div
-                  animate={{ rotate: isPanelOpen ? 45 : 0 }}
+                  animate={{ 
+                    rotate: isPanelOpen ? 45 : 0,
+                    scale: isPanelOpen ? 1.1 : 1
+                  }}
                   className="flex items-center justify-center"
                   style={{ originX: 0.5, originY: 0.5 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <Plus className="h-6 w-6" />
+                  <Plus className="h-6 w-6 drop-shadow-sm" />
                 </motion.div>
               </motion.button>
             </div>
