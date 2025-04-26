@@ -999,7 +999,7 @@ export default function MyPlants() {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              className="flex-1 text-primary border-neutral-700 bg-neutral-800 hover:bg-neutral-700"
+                              className="flex-1 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800/50 dark:hover:bg-blue-800/50 shadow-sm"
                               disabled={wateringDisabled}
                               onClick={(e) => {
                                 e.stopPropagation(); // Prevent opening details modal
@@ -1068,7 +1068,7 @@ export default function MyPlants() {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              className="flex-1 text-primary border-neutral-700 bg-neutral-800 hover:bg-neutral-700"
+                              className="flex-1 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800/50 dark:hover:bg-emerald-800/50 shadow-sm"
                               onClick={(e) => {
                                 e.stopPropagation(); // Prevent opening details modal
                                 openPhotoDialog(plant);

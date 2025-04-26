@@ -113,15 +113,22 @@ export default function Settings() {
                           Switch between light and dark mode
                         </p>
                       </div>
-                      <Button variant="outline" onClick={toggleTheme}>
+                      <Button 
+                        variant="outline" 
+                        onClick={toggleTheme}
+                        className={`shadow-sm ${theme === 'dark' 
+                          ? 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100 hover:text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800/50 dark:hover:bg-yellow-800/50' 
+                          : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800/50 dark:hover:bg-purple-800/50'
+                        }`}
+                      >
                         {theme === 'dark' ? (
                           <>
-                            <Sun className="h-4 w-4 mr-2" />
+                            <Sun className="h-4 w-4 mr-2 text-yellow-600 dark:text-yellow-400" />
                             Light Mode
                           </>
                         ) : (
                           <>
-                            <Moon className="h-4 w-4 mr-2" />
+                            <Moon className="h-4 w-4 mr-2 text-purple-600 dark:text-purple-400" />
                             Dark Mode
                           </>
                         )}
