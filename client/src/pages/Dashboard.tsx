@@ -238,7 +238,7 @@ export default function Dashboard() {
 
   return (
     <div className="fitness-app-bg min-h-screen sf-pro">
-      <header className="sticky top-0 z-50 backdrop-blur-lg bg-black/80 border-b border-white/10">
+      <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/90 dark:bg-black/80 border-b border-gray-200 dark:border-white/10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center">
             <motion.div 
@@ -257,7 +257,7 @@ export default function Dashboard() {
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-xl font-semibold"
+              className="text-xl font-semibold text-gray-900 dark:text-white"
             >
               Plant Care
             </motion.h1>
@@ -267,7 +267,7 @@ export default function Dashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-sm text-gray-400 flex items-center"
+            className="text-sm text-gray-600 dark:text-gray-400 flex items-center"
           >
             <div className="flex items-center mr-2">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
@@ -288,7 +288,7 @@ export default function Dashboard() {
             transition={{ duration: 0.3 }}
             className="mb-4"
           >
-            <div className="apple-widget-glossy overflow-hidden p-1">
+            <div className="fitness-metric-card overflow-hidden p-1">
               <AlertBanner
                 title={alert.title}
                 message={alert.message}
@@ -305,10 +305,10 @@ export default function Dashboard() {
           transition={{ duration: 0.6 }}
           className="mb-6"
         >
-          <div className="apple-widget p-6 shadow-2xl">
+          <div className="fitness-metric-card p-6 shadow-md">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-semibold tracking-tight">Plant Status</h2>
-              <div className="bg-white/10 px-3 py-1 rounded-full text-sm">
+              <h2 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">Plant Status</h2>
+              <div className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full text-sm text-gray-800 dark:text-gray-200">
                 {sensorData ? new Date(sensorData.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'}
               </div>
             </div>
@@ -484,8 +484,8 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            <div className="apple-widget h-full p-6">
-              <h2 className="text-xl font-semibold tracking-tight mb-4 flex items-center">
+            <div className="fitness-metric-card h-full p-6">
+              <h2 className="text-xl font-semibold tracking-tight mb-4 flex items-center text-gray-900 dark:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-green-500">
                   <circle cx="12" cy="12" r="3"></circle>
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -507,8 +507,8 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="apple-widget h-full p-6">
-              <h2 className="text-xl font-semibold tracking-tight mb-4 flex items-center">
+            <div className="fitness-metric-card h-full p-6">
+              <h2 className="text-xl font-semibold tracking-tight mb-4 flex items-center text-gray-900 dark:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-blue-500">
                   <line x1="18" y1="20" x2="18" y2="10"></line>
                   <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -543,8 +543,8 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <div className="apple-widget-glossy p-6 bg-gradient-to-br from-red-900/30 to-red-950/80">
-              <h2 className="text-xl font-semibold tracking-tight mb-3 flex items-center">
+            <div className="fitness-metric-card p-6 bg-gradient-to-br from-red-100/30 to-red-200/30 dark:from-red-900/30 dark:to-red-950/80">
+              <h2 className="text-xl font-semibold tracking-tight mb-3 flex items-center text-gray-900 dark:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-red-500">
                   <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                   <line x1="12" y1="9" x2="12" y2="13"></line>
@@ -596,8 +596,8 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <div className="apple-widget-glossy p-6 bg-gradient-to-br from-green-900/30 to-emerald-950/80">
-              <h2 className="text-xl font-semibold tracking-tight mb-3 flex items-center">
+            <div className="fitness-metric-card p-6 bg-gradient-to-br from-green-100/30 to-emerald-200/30 dark:from-green-900/30 dark:to-emerald-950/80">
+              <h2 className="text-xl font-semibold tracking-tight mb-3 flex items-center text-gray-900 dark:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-green-500">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                   <circle cx="8.5" cy="8.5" r="1.5"></circle>
@@ -605,7 +605,7 @@ export default function Dashboard() {
                 </svg>
                 My Plant Gallery
               </h2>
-              <p className="text-gray-300 text-sm mb-4">
+              <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
                 Track your plants' growth progress with photos and see how they've changed over time.
               </p>
 
