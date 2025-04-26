@@ -238,7 +238,7 @@ export default function Dashboard() {
 
   return (
     <div className="dark fitness-app-bg min-h-screen sf-pro">
-      <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/90 dark:bg-black/80 border-b border-gray-200 dark:border-white/10">
+      <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/90 dark:bg-[#0c0f12]/90 border-b border-gray-200/50 dark:border-[#2C3038]/30">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center">
             <motion.div 
@@ -636,7 +636,7 @@ export default function Dashboard() {
         </div>
       </main>
 
-      <footer className="border-t border-gray-200 dark:border-white/10 mt-6 py-6 backdrop-blur-md bg-white/50 dark:bg-black/30">
+      <footer className="border-t border-gray-200/50 dark:border-[#2C3038]/30 mt-6 py-6 backdrop-blur-md bg-white/50 dark:bg-[#0c0f12]/30">
         <div className="container mx-auto px-4 text-center text-sm text-gray-600 dark:text-gray-400">
           <motion.div
             initial={{ opacity: 0 }}

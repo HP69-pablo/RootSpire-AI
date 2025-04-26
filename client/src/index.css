@@ -4,65 +4,67 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Light mode - inspired by Apple's pastel colors */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
     
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 47% 11%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222 47% 11%;
     
-    --primary: 175 100% 60%;
-    --primary-foreground: 0 0% 0%;
+    --primary: 142 71% 45%;
+    --primary-foreground: 210 40% 98%;
     
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
     
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 40% 95%;
+    --muted-foreground: 215 16% 45%;
     
-    --accent: 175 100% 60%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 142 71% 45%;
+    --accent-foreground: 210 40% 98%;
     
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
     
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 175 100% 60%;
+    --border: 214 32% 90%;
+    --input: 214 32% 90%;
+    --ring: 142 71% 45%;
     
     --radius: 1.0rem;
   }
   
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
+    /* Dark mode - modern Apple-like dark theme */
+    --background: 224 71% 2%;
+    --foreground: 210 40% 98%;
     
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
+    --card: 222 47% 5%;
+    --card-foreground: 210 40% 98%;
     
-    --popover: 224 71% 4%;
-    --popover-foreground: 215 20.2% 90%;
+    --popover: 222 47% 5%;
+    --popover-foreground: 210 40% 98%;
     
-    --primary: 175 100% 60%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 142 71% 45%;
+    --primary-foreground: 210 40% 98%;
     
-    --secondary: 222.2 47.4% 11.2%;
+    --secondary: 217 33% 12%;
     --secondary-foreground: 210 40% 98%;
     
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 217 33% 10%;
+    --muted-foreground: 215 20% 70%;
     
-    --accent: 175 100% 60%; 
+    --accent: 142 71% 45%;
     --accent-foreground: 210 40% 98%;
     
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 63% 35%;
     --destructive-foreground: 210 40% 98%;
     
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-    --ring: 175 100% 60%;
+    --border: 217 33% 15%;
+    --input: 217 33% 15%;
+    --ring: 142 71% 45%;
   }
 }
 
@@ -255,8 +257,10 @@
 
 /* Apple Fitness specific styles - Light and Dark Mode */
 .fitness-app-bg {
-  @apply bg-gradient-to-b from-[#f0f9ff] to-[#e0f2fe] text-gray-900;
-  @apply dark:bg-black dark:text-white;
+  /* Light mode - soft gradient with blue tones */
+  @apply bg-gradient-to-b from-[#eef6ff] to-[#e6f7f2] text-gray-900;
+  /* Dark mode - deep gradient with subtle color */
+  @apply dark:bg-gradient-to-b dark:from-[#0c0f12] dark:to-[#141a1f] dark:text-white;
   background-attachment: fixed;
 }
 
@@ -265,11 +269,16 @@
 }
 
 .fitness-metric-card {
-  @apply flex flex-col p-4 rounded-2xl overflow-hidden shadow-md;
-  @apply bg-white/80 border border-[#d1faee]/50 text-gray-800; 
-  @apply dark:bg-[#1C1C1E] dark:border-[#2C2C2E] dark:text-white;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  @apply flex flex-col p-4 rounded-2xl overflow-hidden;
+  /* Light mode - soft white with subtle shadow and green border */
+  @apply bg-white/90 border border-primary/10 text-gray-800 shadow-sm; 
+  @apply shadow-[0_8px_20px_rgba(20,150,100,0.07)];
+  /* Dark mode - subtle dark card with glassy effect */
+  @apply dark:bg-[#1A1C20] dark:border-[#2C3038] dark:text-white;
+  @apply dark:shadow-[0_8px_20px_rgba(0,0,0,0.15)];
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
 }
 
 .fitness-metric-title {
@@ -494,13 +503,14 @@
 
   body {
     @apply font-sans antialiased;
-    /* Light mode */
-    @apply bg-[#f0f9ff] text-gray-900;
-    /* Dark mode */
-    @apply dark:bg-black dark:text-white;
+    /* Light mode - soft blue-white background */
+    @apply bg-gradient-to-b from-[#eef6ff] to-[#e6f7f2] text-gray-900;
+    /* Dark mode - deep background with subtle gradient */
+    @apply dark:bg-gradient-to-b dark:from-[#0c0f12] dark:to-[#141a1f] dark:text-white;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.015em;
+    background-attachment: fixed;
   }
 }
