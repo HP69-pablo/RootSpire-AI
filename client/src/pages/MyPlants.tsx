@@ -850,30 +850,23 @@ export default function MyPlants() {
             </motion.div>
           ) : (
             <div className="flex justify-center">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
                 {userPlants.map((plant) => (
                   <motion.div
                     key={plant.id}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     whileHover={{ 
-                      y: -5, 
-                      scale: 1.03,
-                      boxShadow: "0 20px 30px -10px rgba(0, 0, 0, 0.1), 0 10px 20px -10px rgba(0, 0, 0, 0.04)"
+                      scale: 1.02,
+                      boxShadow: "0 10px 30px rgba(0, 0, 0, 0.2)"
                     }}
                     transition={{ duration: 0.4, ease: [0.19, 1.0, 0.22, 1.0] }}
                     className="w-full aspect-square"
                   >
                     <Card 
-                      className="overflow-hidden border-0 rounded-2xl shadow-lg bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl cursor-pointer group w-full h-full flex flex-col"
+                      className="overflow-hidden fitness-card cursor-pointer group w-full h-full flex flex-col"
                       onClick={() => openPlantDetails(plant)}
-                      style={{
-                        boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 5px 15px -5px rgba(0, 0, 0, 0.05)",
-                        background: "rgba(255, 255, 255, 0.85)",
-                        border: "1px solid rgba(255, 255, 255, 0.1)",
-                      }}
                     >
-                      <div className="h-1.5 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400 dark:from-green-500 dark:via-emerald-400 dark:to-teal-300" />
                       {plant.imageUrl ? (
                         <div className="w-full h-3/5 overflow-hidden relative">
                           <img 
