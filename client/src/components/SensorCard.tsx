@@ -141,7 +141,7 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
   // Get color scheme based on sensor type and status
   const getColorScheme = () => {
     if (value === "none") return {
-      gradient: "from-gray-200 to-gray-100 dark:from-gray-800 dark:to-gray-700",
+      gradient: "from-gray-100 to-white dark:from-gray-800 dark:to-gray-700",
       icon: "text-gray-400 dark:text-gray-500",
       value: "text-gray-700 dark:text-gray-300"
     };
@@ -149,62 +149,62 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
     switch (type) {
       case "temperature":
         if (status === "High") return {
-          gradient: "from-red-100 to-red-50 dark:from-red-900/30 dark:to-red-800/20",
-          icon: "text-red-500 dark:text-red-400",
-          value: "text-red-700 dark:text-red-300",
-          status: "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300"
+          gradient: "from-red-50 to-rose-50 dark:from-red-900/30 dark:to-red-800/20",
+          icon: "text-red-400 dark:text-red-400",
+          value: "text-red-600 dark:text-red-300",
+          status: "bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-300"
         };
         if (status === "Low") return {
-          gradient: "from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20",
-          icon: "text-blue-500 dark:text-blue-400",
-          value: "text-blue-700 dark:text-blue-300",
-          status: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+          gradient: "from-sky-50 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20",
+          icon: "text-sky-400 dark:text-blue-400",
+          value: "text-sky-600 dark:text-blue-300",
+          status: "bg-sky-50 dark:bg-blue-900/40 text-sky-600 dark:text-blue-300"
         };
         return {
-          gradient: "from-green-100 to-green-50 dark:from-green-900/30 dark:to-green-800/20",
-          icon: "text-green-500 dark:text-green-400",
-          value: "text-green-700 dark:text-green-300",
-          status: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
+          gradient: "from-green-50 to-teal-50 dark:from-green-900/30 dark:to-green-800/20",
+          icon: "text-teal-400 dark:text-green-400",
+          value: "text-teal-600 dark:text-green-300",
+          status: "bg-teal-50 dark:bg-green-900/40 text-teal-600 dark:text-green-300"
         };
       
       case "humidity":
         if (status === "High") return {
-          gradient: "from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20",
-          icon: "text-blue-500 dark:text-blue-400",
-          value: "text-blue-700 dark:text-blue-300",
-          status: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+          gradient: "from-cyan-50 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20",
+          icon: "text-cyan-400 dark:text-blue-400",
+          value: "text-cyan-600 dark:text-blue-300",
+          status: "bg-cyan-50 dark:bg-blue-900/40 text-cyan-600 dark:text-blue-300"
         };
         if (status === "Low") return {
-          gradient: "from-orange-100 to-orange-50 dark:from-orange-900/30 dark:to-orange-800/20",
-          icon: "text-orange-500 dark:text-orange-400",
-          value: "text-orange-700 dark:text-orange-300",
-          status: "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300"
+          gradient: "from-amber-50 to-orange-50 dark:from-orange-900/30 dark:to-orange-800/20",
+          icon: "text-amber-400 dark:text-orange-400",
+          value: "text-amber-600 dark:text-orange-300",
+          status: "bg-amber-50 dark:bg-orange-900/40 text-amber-600 dark:text-orange-300"
         };
         return {
-          gradient: "from-green-100 to-green-50 dark:from-green-900/30 dark:to-green-800/20",
-          icon: "text-green-500 dark:text-green-400",
-          value: "text-green-700 dark:text-green-300",
-          status: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
+          gradient: "from-emerald-50 to-green-50 dark:from-green-900/30 dark:to-green-800/20",
+          icon: "text-emerald-400 dark:text-green-400",
+          value: "text-emerald-600 dark:text-green-300",
+          status: "bg-emerald-50 dark:bg-green-900/40 text-emerald-600 dark:text-green-300"
         };
       
       case "soil":
         if (status === "Low" || status === "Critical") return {
-          gradient: "from-orange-100 to-orange-50 dark:from-orange-900/30 dark:to-orange-800/20",
-          icon: "text-orange-500 dark:text-orange-400",
-          value: "text-orange-700 dark:text-orange-300",
-          status: "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300"
+          gradient: "from-amber-50 to-orange-50 dark:from-orange-900/30 dark:to-orange-800/20",
+          icon: "text-amber-400 dark:text-orange-400",
+          value: "text-amber-600 dark:text-orange-300",
+          status: "bg-amber-50 dark:bg-orange-900/40 text-amber-600 dark:text-orange-300"
         };
         if (status === "High") return {
-          gradient: "from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20",
-          icon: "text-blue-500 dark:text-blue-400",
-          value: "text-blue-700 dark:text-blue-300",
-          status: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+          gradient: "from-sky-50 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20",
+          icon: "text-sky-400 dark:text-blue-400",
+          value: "text-sky-600 dark:text-blue-300",
+          status: "bg-sky-50 dark:bg-blue-900/40 text-sky-600 dark:text-blue-300"
         };
         return {
-          gradient: "from-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:to-emerald-800/20",
-          icon: "text-emerald-500 dark:text-emerald-400",
-          value: "text-emerald-700 dark:text-emerald-300",
-          status: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+          gradient: "from-teal-50 to-emerald-50 dark:from-emerald-900/30 dark:to-emerald-800/20",
+          icon: "text-teal-400 dark:text-emerald-400",
+          value: "text-teal-600 dark:text-emerald-300",
+          status: "bg-teal-50 dark:bg-emerald-900/40 text-teal-600 dark:text-emerald-300"
         };
     }
   };
@@ -392,7 +392,7 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
     <motion.div 
       whileHover={{ 
         scale: 1.02,
-        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.2)"
+        boxShadow: "0 10px 30px rgba(0, 150, 136, 0.1)"
       }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
       className="w-full h-full"
@@ -404,7 +404,7 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
           {/* Card Header - Apple Fitness Style */}
           <div className="flex justify-between items-start">
             <motion.h3 
-              className="text-sm font-medium text-gray-400 sf-pro-display tracking-tight"
+              className="text-sm font-medium text-gray-600 dark:text-gray-400 sf-pro-display tracking-tight"
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.9 }}
               transition={{ duration: 0.5 }}
@@ -427,7 +427,7 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
                   key={String(value)}
                   initial={animated ? { opacity: 0.5, y: -5 } : { opacity: 1, y: 0 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-5xl font-bold text-white tracking-tight sf-pro-display"
+                  className="text-5xl font-bold text-gray-900 dark:text-white tracking-tight sf-pro-display"
                 >
                   {displayValue()}
                 </motion.span>
