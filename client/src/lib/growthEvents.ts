@@ -34,7 +34,13 @@ export async function createGrowthEvent(
       plantId,
       timestamp: Date.now(),
       type: eventType,
-      ...eventData
+      ...(eventData.notes ? { notes: eventData.notes } : {}),
+      ...(eventData.height !== undefined ? { height: eventData.height } : {}),
+      ...(eventData.width !== undefined ? { width: eventData.width } : {}),
+      ...(eventData.leafCount !== undefined ? { leafCount: eventData.leafCount } : {}),
+      ...(eventData.healthRating !== undefined ? { 
+        healthRating: eventData.healthRating as 1 | 2 | 3 | 4 | 5 
+      } : {})
     };
     
     // If there's an image file, upload it to Firebase Storage

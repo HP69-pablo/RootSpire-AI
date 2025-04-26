@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Calendar, TrendingUp, Plus, Camera, Droplet, Sun, Sprout } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { UserPlant } from '@/lib/auth';
+import { Loader2, Plus, Camera, ChevronDown, Ruler, Droplet, Flower, Scissors, FileText, 
+  Sprout, RefreshCw, Calendar, ChevronRight, Star, Clock, Activity } from 'lucide-react';
 
-// Define growth event types
 export type GrowthEventType = 'photo' | 'measurement' | 'watering' | 'fertilizing' | 'repotting' | 'pruning' | 'note';
 
-// Define growth event interface
 export interface GrowthEvent {
   id: string;
   plantId: string;
@@ -26,333 +26,324 @@ export interface GrowthEvent {
 interface PlantGrowthTimelineProps {
   plant: UserPlant;
   events?: GrowthEvent[];
+  isLoading?: boolean;
   onAddEvent?: (plantId: string, eventType: GrowthEventType) => void;
 }
 
-export function PlantGrowthTimeline({ plant, events = [], onAddEvent }: PlantGrowthTimelineProps) {
-  const [currentEvent, setCurrentEvent] = useState<number>(events.length > 0 ? events.length - 1 : -1);
-  const [showAddEventMenu, setShowAddEventMenu] = useState<boolean>(false);
+export function PlantGrowthTimeline({ plant, events = [], isLoading = false, onAddEvent }: PlantGrowthTimelineProps) {
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   
-  // Sort events by timestamp descending (most recent first)
-  const sortedEvents = [...events].sort((a, b) => b.timestamp - a.timestamp);
-  
-  const hasEvents = sortedEvents.length > 0;
-  const canGoForward = currentEvent > 0;
-  const canGoBack = currentEvent < sortedEvents.length - 1;
+  // Toggle event expansion
+  const toggleEventExpansion = (eventId: string) => {
+    if (expandedEventId === eventId) {
+      setExpandedEventId(null);
+    } else {
+      setExpandedEventId(eventId);
+    }
+  };
   
   // Format date for display
-  const formatDate = (timestamp: number): string => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
+  const formatDate = (timestamp: number, includeTime = false): string => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      ...(includeTime ? { hour: '2-digit', minute: '2-digit' } : {})
+    };
+    
+    return new Date(timestamp).toLocaleDateString('en-US', options);
+  };
+  
+  // Get time elapsed since a timestamp
+  const getTimeElapsed = (timestamp: number): string => {
+    const now = Date.now();
+    const diffMs = now - timestamp;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      if (diffHours === 0) {
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+        return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+      }
+      return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 30) {
+      return `${diffDays} days ago`;
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return `${months} month${months === 1 ? '' : 's'} ago`;
+    } else {
+      const years = Math.floor(diffDays / 365);
+      return `${years} year${years === 1 ? '' : 's'} ago`;
+    }
   };
   
   // Get icon for event type
   const getEventIcon = (type: GrowthEventType) => {
-    switch(type) {
+    switch (type) {
       case 'photo':
-        return <Camera className="h-5 w-5 text-blue-500" />;
+        return <Camera className="h-5 w-5" />;
       case 'measurement':
-        return <TrendingUp className="h-5 w-5 text-purple-500" />;
+        return <Ruler className="h-5 w-5" />;
       case 'watering':
-        return <Droplet className="h-5 w-5 text-blue-500" />;
+        return <Droplet className="h-5 w-5" />;
       case 'fertilizing':
-        return <Sprout className="h-5 w-5 text-green-500" />;
+        return <Flower className="h-5 w-5" />;
       case 'repotting':
-        return <Sprout className="h-5 w-5 text-brown-500" />;
+        return <Sprout className="h-5 w-5" />;
       case 'pruning':
-        return <Sprout className="h-5 w-5 text-red-500" />;
+        return <Scissors className="h-5 w-5" />;
       case 'note':
-        return <Calendar className="h-5 w-5 text-gray-500" />;
+        return <FileText className="h-5 w-5" />;
       default:
-        return <Calendar className="h-5 w-5 text-gray-500" />;
+        return <Activity className="h-5 w-5" />;
     }
   };
   
-  // Get badge color for event type
+  // Get color for event type
   const getEventColor = (type: GrowthEventType): string => {
-    switch(type) {
+    switch (type) {
       case 'photo':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300';
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
       case 'measurement':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300';
+        return 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300';
       case 'watering':
-        return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/50 dark:text-cyan-300';
+        return 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300';
       case 'fertilizing':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+        return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
       case 'repotting':
-        return 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300';
+        return 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300';
       case 'pruning':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
+        return 'bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300';
       case 'note':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
     }
   };
   
-  // Handle navigation
-  const goToPrevious = () => {
-    if (canGoBack) {
-      setCurrentEvent(currentEvent + 1);
-    }
-  };
-  
-  const goToNext = () => {
-    if (canGoForward) {
-      setCurrentEvent(currentEvent - 1);
-    }
-  };
-  
-  // Handle adding new event
+  // Handle add event button click
   const handleAddEvent = (eventType: GrowthEventType) => {
     if (onAddEvent) {
       onAddEvent(plant.id, eventType);
-      setShowAddEventMenu(false);
     }
   };
   
-  // If no events, show empty state
-  if (!hasEvents) {
+  // Render health rating stars
+  const renderHealthRating = (rating: number) => {
     return (
-      <Card className="w-full mt-4 overflow-hidden">
-        <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-            <Sprout className="h-8 w-8 text-green-500" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-800 dark:text-white">No Growth Timeline Yet</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md">
-            Track your plant's growth journey by adding photos, measurements, and care events.
-          </p>
-          <Button 
-            variant="default" 
-            className="bg-green-600 hover:bg-green-700 text-white"
-            onClick={() => setShowAddEventMenu(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add First Event
-          </Button>
-          
-          {showAddEventMenu && (
-            <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-2 w-full">
-              <Button variant="outline" size="sm" className={getEventColor('photo')} onClick={() => handleAddEvent('photo')}>
-                <Camera className="mr-2 h-4 w-4" />
-                Photo
-              </Button>
-              <Button variant="outline" size="sm" className={getEventColor('measurement')} onClick={() => handleAddEvent('measurement')}>
-                <TrendingUp className="mr-2 h-4 w-4" />
-                Measurement
-              </Button>
-              <Button variant="outline" size="sm" className={getEventColor('watering')} onClick={() => handleAddEvent('watering')}>
-                <Droplet className="mr-2 h-4 w-4" />
-                Watering
-              </Button>
-              <Button variant="outline" size="sm" className={getEventColor('fertilizing')} onClick={() => handleAddEvent('fertilizing')}>
-                <Sprout className="mr-2 h-4 w-4" />
-                Fertilizing
-              </Button>
-              <Button variant="outline" size="sm" className={getEventColor('repotting')} onClick={() => handleAddEvent('repotting')}>
-                <Sprout className="mr-2 h-4 w-4" />
-                Repotting
-              </Button>
-              <Button variant="outline" size="sm" className={getEventColor('note')} onClick={() => handleAddEvent('note')}>
-                <Calendar className="mr-2 h-4 w-4" />
-                Note
-              </Button>
-            </div>
-          )}
+      <div className="flex items-center space-x-1 mt-1">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Star 
+            key={i} 
+            className={`h-4 w-4 ${i < rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`} 
+          />
+        ))}
+      </div>
+    );
+  };
+  
+  if (isLoading) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Growth Timeline</span>
+            <Badge variant="outline" className="ml-2">Loading</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </CardContent>
       </Card>
     );
   }
   
-  // Display timeline with events
-  const currentEventData = sortedEvents[currentEvent];
-  
   return (
-    <Card className="w-full mt-4 overflow-hidden">
-      <CardContent className="p-0">
-        <div className="relative">
-          {/* Timeline Navigation */}
-          <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goToPrevious}
-              disabled={!canGoBack}
-              className={!canGoBack ? 'opacity-50 cursor-not-allowed' : ''}
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Older
-            </Button>
-            
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium">{formatDate(currentEventData.timestamp)}</span>
-              <Badge className={getEventColor(currentEventData.type)}>
-                {currentEventData.type.charAt(0).toUpperCase() + currentEventData.type.slice(1)}
-              </Badge>
-            </div>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goToNext}
-              disabled={!canGoForward}
-              className={!canGoForward ? 'opacity-50 cursor-not-allowed' : ''}
-            >
-              Newer
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
+    <Card className="w-full">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Growth Timeline</CardTitle>
           
-          {/* Event Content */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentEventData.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="p-5"
-            >
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Left column: Image if available */}
-                {currentEventData.imageUrl && (
-                  <div className="w-full md:w-1/2">
-                    <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
-                      <img 
-                        src={currentEventData.imageUrl} 
-                        alt={`Plant on ${formatDate(currentEventData.timestamp)}`}
-                        className="w-full h-64 object-cover"
-                      />
-                    </div>
-                  </div>
-                )}
-                
-                {/* Right column: Event details */}
-                <div className={`w-full ${currentEventData.imageUrl ? 'md:w-1/2' : ''}`}>
-                  <div className="flex items-start mb-4">
-                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mr-3">
-                      {getEventIcon(currentEventData.type)}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-                        {currentEventData.type.charAt(0).toUpperCase() + currentEventData.type.slice(1)} Event
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {formatDate(currentEventData.timestamp)}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Event specific details */}
-                  {currentEventData.type === 'measurement' && (
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      {currentEventData.height && (
-                        <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">Height</div>
-                          <div className="text-xl font-medium">{currentEventData.height} cm</div>
-                        </div>
-                      )}
-                      {currentEventData.width && (
-                        <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">Width</div>
-                          <div className="text-xl font-medium">{currentEventData.width} cm</div>
-                        </div>
-                      )}
-                      {currentEventData.leafCount && (
-                        <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">Leaf Count</div>
-                          <div className="text-xl font-medium">{currentEventData.leafCount}</div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Notes section */}
-                  {currentEventData.notes && (
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md border border-gray-200 dark:border-gray-700">
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
-                        {currentEventData.notes}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-          
-          {/* Timeline dots */}
-          <div className="flex items-center justify-center py-4 space-x-1">
-            {sortedEvents.map((event, index) => (
-              <button
-                key={event.id}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentEvent 
-                    ? 'bg-green-500 transform scale-150' 
-                    : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
-                }`}
-                onClick={() => setCurrentEvent(index)}
-                aria-label={`View event from ${formatDate(event.timestamp)}`}
-              />
-            ))}
-          </div>
-          
-          {/* Add new event button */}
-          <div className="flex justify-center pb-4">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setShowAddEventMenu(!showAddEventMenu)}
-              className="text-green-700 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-900/30 dark:hover:bg-green-900/20"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {showAddEventMenu ? 'Cancel' : 'Add New Event'}
-            </Button>
-          </div>
-          
-          {/* Add event menu */}
-          {showAddEventMenu && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="px-4 pb-4"
-            >
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                <Button variant="outline" size="sm" className={getEventColor('photo')} onClick={() => handleAddEvent('photo')}>
-                  <Camera className="mr-2 h-4 w-4" />
-                  Photo
+          {onAddEvent && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-8 gap-1">
+                  <Plus className="h-4 w-4" />
+                  <span>Add Event</span>
+                  <ChevronDown className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="sm" className={getEventColor('measurement')} onClick={() => handleAddEvent('measurement')}>
-                  <TrendingUp className="mr-2 h-4 w-4" />
-                  Measurement
-                </Button>
-                <Button variant="outline" size="sm" className={getEventColor('watering')} onClick={() => handleAddEvent('watering')}>
-                  <Droplet className="mr-2 h-4 w-4" />
-                  Watering
-                </Button>
-                <Button variant="outline" size="sm" className={getEventColor('fertilizing')} onClick={() => handleAddEvent('fertilizing')}>
-                  <Sprout className="mr-2 h-4 w-4" />
-                  Fertilizing
-                </Button>
-                <Button variant="outline" size="sm" className={getEventColor('repotting')} onClick={() => handleAddEvent('repotting')}>
-                  <Sprout className="mr-2 h-4 w-4" />
-                  Repotting
-                </Button>
-                <Button variant="outline" size="sm" className={getEventColor('note')} onClick={() => handleAddEvent('note')}>
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Note
-                </Button>
-              </div>
-            </motion.div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleAddEvent('photo')}>
+                  <Camera className="h-4 w-4 mr-2 text-blue-500" />
+                  <span>Add Photo</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAddEvent('measurement')}>
+                  <Ruler className="h-4 w-4 mr-2 text-purple-500" />
+                  <span>Add Measurement</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAddEvent('watering')}>
+                  <Droplet className="h-4 w-4 mr-2 text-cyan-500" />
+                  <span>Record Watering</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAddEvent('fertilizing')}>
+                  <Flower className="h-4 w-4 mr-2 text-green-500" />
+                  <span>Record Fertilizing</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAddEvent('repotting')}>
+                  <Sprout className="h-4 w-4 mr-2 text-amber-500" />
+                  <span>Record Repotting</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAddEvent('pruning')}>
+                  <Scissors className="h-4 w-4 mr-2 text-rose-500" />
+                  <span>Record Pruning</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAddEvent('note')}>
+                  <FileText className="h-4 w-4 mr-2 text-gray-500" />
+                  <span>Add Note</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
+      </CardHeader>
+      
+      <CardContent>
+        {events.length === 0 ? (
+          <div className="text-center py-12">
+            <RefreshCw className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-medium text-gray-600 dark:text-gray-300 mb-2">No Growth Events Yet</h3>
+            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+              Start tracking your plant's growth journey by adding events like photos, measurements, watering, and more.
+            </p>
+            
+            {onAddEvent && (
+              <Button
+                className="mt-6 bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => handleAddEvent('photo')}
+              >
+                <Camera className="mr-2 h-4 w-4" />
+                Add First Photo
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="relative">
+            {/* Timeline line */}
+            <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-700 ml-2"></div>
+            
+            {/* Timeline events */}
+            <div className="space-y-6">
+              {events.map((event) => (
+                <div key={event.id} className="relative pl-14">
+                  {/* Timeline dot and icon */}
+                  <div className={`absolute left-0 top-1 h-9 w-9 rounded-full flex items-center justify-center z-10 ${getEventColor(event.type)}`}>
+                    {getEventIcon(event.type)}
+                  </div>
+                  
+                  {/* Event content */}
+                  <div className="rounded-lg border dark:border-gray-700 overflow-hidden">
+                    {/* Event header */}
+                    <div 
+                      className="p-3 bg-gray-50 dark:bg-gray-800 flex items-center justify-between cursor-pointer"
+                      onClick={() => toggleEventExpansion(event.id)}
+                    >
+                      <div className="flex items-center">
+                        <Badge variant="outline" className={`mr-3 ${getEventColor(event.type)}`}>
+                          {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
+                        </Badge>
+                        
+                        <div className="flex items-center text-sm">
+                          <Calendar className="h-4 w-4 text-gray-500 mr-1" />
+                          <span>{formatDate(event.timestamp)}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">{getTimeElapsed(event.timestamp)}</span>
+                        <ChevronRight 
+                          className={`h-5 w-5 text-gray-500 transition-transform ${expandedEventId === event.id ? 'rotate-90' : ''}`} 
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Expanded content */}
+                    {expandedEventId === event.id && (
+                      <div className="p-4 border-t dark:border-gray-700">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Image if available */}
+                          {event.imageUrl && (
+                            <div className={`${event.type === 'photo' ? 'md:col-span-2' : ''}`}>
+                              <div className="aspect-square md:aspect-auto md:h-48 overflow-hidden rounded-md">
+                                <img 
+                                  src={event.imageUrl} 
+                                  alt={`${plant.name} - ${event.type}`} 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Measurements - Layout depends on if there's an image */}
+                          {event.type === 'measurement' && (
+                            <div className={`${event.imageUrl ? '' : 'md:col-span-2'}`}>
+                              <h4 className="text-sm font-medium mb-2">Measurements</h4>
+                              <div className="bg-gray-50 dark:bg-gray-800 rounded-md p-3 grid grid-cols-3 gap-3">
+                                {event.height !== undefined && (
+                                  <div>
+                                    <div className="text-xs text-gray-500">Height</div>
+                                    <div className="font-medium">{event.height} cm</div>
+                                  </div>
+                                )}
+                                
+                                {event.width !== undefined && (
+                                  <div>
+                                    <div className="text-xs text-gray-500">Width</div>
+                                    <div className="font-medium">{event.width} cm</div>
+                                  </div>
+                                )}
+                                
+                                {event.leafCount !== undefined && (
+                                  <div>
+                                    <div className="text-xs text-gray-500">Leaves</div>
+                                    <div className="font-medium">{event.leafCount}</div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Health Rating (for care events) */}
+                          {event.healthRating !== undefined && (
+                            <div className={`${event.imageUrl ? '' : 'md:col-span-2'}`}>
+                              <h4 className="text-sm font-medium mb-2">Plant Health</h4>
+                              <div className="bg-gray-50 dark:bg-gray-800 rounded-md p-3">
+                                {renderHealthRating(event.healthRating)}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Notes (if available) */}
+                          {event.notes && (
+                            <div className="md:col-span-2">
+                              <h4 className="text-sm font-medium mb-2">Notes</h4>
+                              <div className="bg-gray-50 dark:bg-gray-800 rounded-md p-3 whitespace-pre-line text-sm">
+                                {event.notes}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
