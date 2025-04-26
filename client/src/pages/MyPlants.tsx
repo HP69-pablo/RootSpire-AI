@@ -789,75 +789,133 @@ export default function MyPlants() {
           </div>
           
           {userPlants.length === 0 ? (
-            <Card className="border border-dashed border-gray-300 dark:border-gray-600 bg-transparent">
-              <CardContent className="p-8 flex flex-col items-center justify-center text-center">
-                <div className="h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-                  <Leaf className="h-8 w-8 text-gray-400" />
-                </div>
-                <h3 className="text-xl font-medium mb-2">No plants yet</h3>
-                <p className="text-gray-500 dark:text-gray-400 mb-4 max-w-md">
-                  Add your first plant to start monitoring its health and get personalized care recommendations
-                </p>
-                <Button
-                  onClick={() => setShowAddPlant(true)}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Your First Plant
-                </Button>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+              className="w-full max-w-md mx-auto"
+            >
+              <Card 
+                className="border-0 rounded-3xl shadow-xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl overflow-hidden"
+                style={{ 
+                  boxShadow: "0 20px 50px -10px rgba(0, 0, 0, 0.1), 0 10px 20px -10px rgba(0, 0, 0, 0.05)",
+                  border: "1px solid rgba(255, 255, 255, 0.12)"
+                }}
+              >
+                <div className="h-1.5 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400 dark:from-green-500 dark:via-emerald-400 dark:to-teal-300" />
+                <CardContent className="p-10 flex flex-col items-center justify-center text-center">
+                  <motion.div 
+                    className="w-24 h-24 rounded-full bg-gradient-to-br from-green-100 to-teal-50 dark:from-green-900/30 dark:to-teal-900/30 flex items-center justify-center mb-6 shadow-inner"
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2, duration: 0.5, type: "spring" }}
+                  >
+                    <Leaf className="h-12 w-12 text-green-500 dark:text-green-400" />
+                  </motion.div>
+                  
+                  <motion.h3 
+                    className="text-2xl font-semibold mb-3 tracking-tight sf-pro-display"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                  >
+                    Your Plant Collection
+                  </motion.h3>
+                  
+                  <motion.p 
+                    className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm leading-relaxed sf-pro-display"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4, duration: 0.5 }}
+                  >
+                    Add your first plant to start monitoring its health and get personalized care recommendations through our AI-powered system.
+                  </motion.p>
+                  
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5, duration: 0.4 }}
+                  >
+                    <Button
+                      onClick={() => setShowAddPlant(true)}
+                      className="bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white border-0 shadow-lg px-6 py-6 h-auto transition-all duration-300"
+                      size="lg"
+                    >
+                      <Plus className="mr-2 h-5 w-5" />
+                      <span className="font-medium">Add Your First Plant</span>
+                    </Button>
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
           ) : (
             <div className="flex justify-center">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
                 {userPlants.map((plant) => (
                   <motion.div
                     key={plant.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    whileHover={{ y: -5, scale: 1.02 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    whileHover={{ 
+                      y: -5, 
+                      scale: 1.03,
+                      boxShadow: "0 20px 30px -10px rgba(0, 0, 0, 0.1), 0 10px 20px -10px rgba(0, 0, 0, 0.04)"
+                    }}
+                    transition={{ duration: 0.4, ease: [0.19, 1.0, 0.22, 1.0] }}
+                    className="w-full aspect-square"
                   >
                     <Card 
-                      className="overflow-hidden border-0 rounded-xl shadow-lg bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm cursor-pointer group aspect-square"
+                      className="overflow-hidden border-0 rounded-2xl shadow-lg bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl cursor-pointer group w-full h-full flex flex-col"
                       onClick={() => openPlantDetails(plant)}
                       style={{
-                        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)"
+                        boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 5px 15px -5px rgba(0, 0, 0, 0.05)",
+                        background: "rgba(255, 255, 255, 0.85)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
                       }}
                     >
-                      <div className="h-2 bg-gradient-to-r from-green-400 to-emerald-500 dark:from-green-500 dark:to-emerald-400" />
+                      <div className="h-1.5 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400 dark:from-green-500 dark:via-emerald-400 dark:to-teal-300" />
                       {plant.imageUrl ? (
                         <div className="w-full h-3/5 overflow-hidden relative">
                           <img 
                             src={plant.imageUrl} 
                             alt={plant.name} 
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105" 
+                            className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" 
                           />
-                          <div className="absolute top-2 right-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium">
+                          <div 
+                            className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          />
+                          <div className="absolute top-3 right-3 bg-white/85 dark:bg-slate-800/85 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold shadow-sm border border-white/10 dark:border-slate-700/10">
                             {plant.health === 'excellent' ? '⭐ Excellent' : 
                              plant.health === 'good' ? '✓ Good' : 
                              plant.health === 'fair' ? '⚠️ Fair' : '⚠️ Poor'}
                           </div>
                         </div>
                       ) : (
-                        <div className="h-40 w-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center relative">
+                        <div className="w-full h-3/5 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex flex-col items-center justify-center relative overflow-hidden">
                           {speciesReferenceImages[plant.species] ? (
                             <div className="relative w-full h-full">
                               <img 
                                 src={speciesReferenceImages[plant.species]} 
                                 alt={plant.species} 
-                                className="w-full h-full object-cover opacity-60"
+                                className="w-full h-full object-cover opacity-70 transition-all duration-700 group-hover:scale-110 group-hover:opacity-75"
                               />
-                              <div className="absolute inset-0 bg-black bg-opacity-30 flex flex-col items-center justify-center">
-                                <p className="text-white text-sm font-medium mb-1 bg-black/50 px-2 py-1 rounded-md">Reference Image</p>
-                                <p className="text-white text-xs bg-black/50 px-2 py-1 rounded-md">Upload your own photo</p>
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/20 flex flex-col items-center justify-center backdrop-blur-[1px]">
+                                <div className="px-3 py-1.5 bg-black/60 rounded-lg mb-2 backdrop-blur-sm text-center">
+                                  <p className="text-white text-sm font-medium">Reference Image</p>
+                                </div>
+                                <div className="px-3 py-1.5 bg-green-600/70 rounded-lg backdrop-blur-sm">
+                                  <p className="text-white text-xs font-medium">Upload your own photo</p>
+                                </div>
                               </div>
                             </div>
                           ) : (
-                            <>
-                              <Camera className="h-8 w-8 text-gray-400 mb-2" />
-                              <p className="text-sm text-gray-500 dark:text-gray-400">No image yet</p>
-                            </>
+                            <div className="flex flex-col items-center justify-center text-center px-4 h-full">
+                              <div className="w-16 h-16 rounded-full bg-gray-200/70 dark:bg-gray-700/70 backdrop-blur-sm flex items-center justify-center mb-3 shadow-inner">
+                                <Camera className="h-8 w-8 text-gray-500 dark:text-gray-400" />
+                              </div>
+                              <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">No image yet</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">Upload a photo to track your plant's growth</p>
+                            </div>
                           )}
                           
                           <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-3">
