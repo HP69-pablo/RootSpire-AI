@@ -211,103 +211,178 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
   
   const colorScheme = getColorScheme();
   
-  // Modern icons for sensors with enhanced Apple-inspired animations
+  // Ultra premium icons for sensors with enhanced Apple-inspired animations
   const getModernIcon = () => {
     switch (type) {
       case "temperature":
         return (
           <motion.div 
-            className={`p-4 rounded-2xl bg-gradient-to-br ${colorScheme.gradient} shadow-md`}
-            initial={{ scale: 0.9, opacity: 0.7 }}
+            className={`p-6 rounded-3xl bg-gradient-to-br ${colorScheme.gradient} shadow-xl`}
+            style={{
+              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08), 0 5px 10px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(255, 255, 255, 0.15) inset",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)"
+            }}
+            initial={{ scale: 0.8, opacity: 0.7 }}
             animate={{ 
               scale: animated ? [1, 1.08, 1] : 1,
               opacity: 1,
-              y: status === "High" ? [0, -2, 0] : 0,
-              boxShadow: status === "Critical" ? ["0 4px 12px rgba(239, 68, 68, 0.15)", "0 4px 12px rgba(239, 68, 68, 0.35)", "0 4px 12px rgba(239, 68, 68, 0.15)"] : "0 4px 12px rgba(0, 0, 0, 0.1)"
+              y: status === "High" ? [0, -3, 0] : 0,
+              boxShadow: status === "Critical" 
+                ? ["0 10px 25px rgba(239, 68, 68, 0.15), 0 5px 10px rgba(239, 68, 68, 0.1), 0 1px 3px rgba(255, 255, 255, 0.15) inset", 
+                   "0 15px 35px rgba(239, 68, 68, 0.25), 0 5px 15px rgba(239, 68, 68, 0.2), 0 1px 3px rgba(255, 255, 255, 0.15) inset", 
+                   "0 10px 25px rgba(239, 68, 68, 0.15), 0 5px 10px rgba(239, 68, 68, 0.1), 0 1px 3px rgba(255, 255, 255, 0.15) inset"]
+                : "0 10px 25px rgba(0, 0, 0, 0.08), 0 5px 10px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(255, 255, 255, 0.15) inset"
             }}
             transition={{ 
               duration: 0.7, 
               y: { 
-                duration: 1.5, 
+                duration: 2, 
                 repeat: status === "High" ? Infinity : 0, 
                 repeatType: "reverse" 
               },
               boxShadow: {
-                duration: 1.5,
+                duration: 2,
                 repeat: status === "Critical" ? Infinity : 0,
                 repeatType: "reverse"
               }
             }}
             whileHover={{ 
-              scale: 1.1,
+              scale: 1.12,
+              y: -5,
               transition: { duration: 0.3 }
             }}
           >
-            <Thermometer className={`h-7 w-7 ${colorScheme.icon}`} />
+            <motion.div 
+              animate={
+                status === "High" 
+                ? { y: [-2, 2, -2], opacity: [0.8, 1, 0.8] } 
+                : status === "Low" 
+                ? { y: [2, -2, 2], opacity: [0.8, 1, 0.8] } 
+                : {}
+              }
+              transition={{ 
+                repeat: (status === "High" || status === "Low") ? Infinity : 0, 
+                duration: 2, 
+                repeatType: "loop" 
+              }}
+            >
+              <Thermometer className={`h-10 w-10 ${colorScheme.icon} drop-shadow-md`} />
+            </motion.div>
           </motion.div>
         );
       case "humidity":
         return (
           <motion.div 
-            className={`p-4 rounded-2xl bg-gradient-to-br ${colorScheme.gradient} shadow-md`}
-            initial={{ scale: 0.9, opacity: 0.7 }}
+            className={`p-6 rounded-3xl bg-gradient-to-br ${colorScheme.gradient} shadow-xl`}
+            style={{
+              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08), 0 5px 10px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(255, 255, 255, 0.15) inset",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)"
+            }}
+            initial={{ scale: 0.8, opacity: 0.7 }}
             animate={{ 
               scale: animated ? [1, 1.08, 1] : 1,
               opacity: 1,
               y: status !== "Low" ? [0, -3, 0] : 0,
-              boxShadow: status === "Critical" ? ["0 4px 12px rgba(59, 130, 246, 0.15)", "0 4px 12px rgba(59, 130, 246, 0.35)", "0 4px 12px rgba(59, 130, 246, 0.15)"] : "0 4px 12px rgba(0, 0, 0, 0.1)"
+              boxShadow: status === "Critical" 
+                ? ["0 10px 25px rgba(59, 130, 246, 0.15), 0 5px 10px rgba(59, 130, 246, 0.1), 0 1px 3px rgba(255, 255, 255, 0.15) inset", 
+                   "0 15px 35px rgba(59, 130, 246, 0.25), 0 5px 15px rgba(59, 130, 246, 0.2), 0 1px 3px rgba(255, 255, 255, 0.15) inset", 
+                   "0 10px 25px rgba(59, 130, 246, 0.15), 0 5px 10px rgba(59, 130, 246, 0.1), 0 1px 3px rgba(255, 255, 255, 0.15) inset"]
+                : "0 10px 25px rgba(0, 0, 0, 0.08), 0 5px 10px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(255, 255, 255, 0.15) inset"
             }}
             transition={{ 
               duration: 0.7,
               y: { 
-                duration: 2, 
+                duration: 2.5, 
                 repeat: status !== "Low" ? Infinity : 0, 
                 repeatType: "reverse" 
               },
               boxShadow: {
-                duration: 1.5,
+                duration: 2,
                 repeat: status === "Critical" ? Infinity : 0,
                 repeatType: "reverse"
               }
             }}
             whileHover={{ 
-              scale: 1.1,
+              scale: 1.12,
+              y: -5,
               transition: { duration: 0.3 }
             }}
           >
-            <Droplets className={`h-7 w-7 ${colorScheme.icon}`} />
+            <motion.div 
+              animate={
+                status === "Optimal" || status === "High"
+                ? { y: [-3, 0, -3], opacity: [0.8, 1, 0.8] } 
+                : status === "Low" || status === "Critical"
+                ? { rotate: [-5, 5, -5] } 
+                : {}
+              }
+              transition={{ 
+                repeat: Infinity, 
+                duration: 2.5, 
+                repeatType: "loop" 
+              }}
+            >
+              <Droplets className={`h-10 w-10 ${colorScheme.icon} drop-shadow-md`} />
+            </motion.div>
           </motion.div>
         );
       case "soil":
         return (
           <motion.div 
-            className={`p-4 rounded-2xl bg-gradient-to-br ${colorScheme.gradient} shadow-md`}
-            initial={{ scale: 0.9, opacity: 0.7 }}
+            className={`p-6 rounded-3xl bg-gradient-to-br ${colorScheme.gradient} shadow-xl`}
+            style={{
+              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08), 0 5px 10px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(255, 255, 255, 0.15) inset",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)"
+            }}
+            initial={{ scale: 0.8, opacity: 0.7 }}
             animate={{ 
               scale: animated ? [1, 1.08, 1] : 1,
               opacity: 1,
-              rotate: status === "Low" || status === "Critical" ? [-3, 3, -3] : 0,
-              boxShadow: status === "Critical" ? ["0 4px 12px rgba(245, 158, 11, 0.15)", "0 4px 12px rgba(245, 158, 11, 0.35)", "0 4px 12px rgba(245, 158, 11, 0.15)"] : "0 4px 12px rgba(0, 0, 0, 0.1)"
+              rotate: status === "Low" || status === "Critical" ? [-2, 2, -2] : 0,
+              boxShadow: status === "Critical" 
+                ? ["0 10px 25px rgba(245, 158, 11, 0.15), 0 5px 10px rgba(245, 158, 11, 0.1), 0 1px 3px rgba(255, 255, 255, 0.15) inset", 
+                   "0 15px 35px rgba(245, 158, 11, 0.25), 0 5px 15px rgba(245, 158, 11, 0.2), 0 1px 3px rgba(255, 255, 255, 0.15) inset", 
+                   "0 10px 25px rgba(245, 158, 11, 0.15), 0 5px 10px rgba(245, 158, 11, 0.1), 0 1px 3px rgba(255, 255, 255, 0.15) inset"]
+                : "0 10px 25px rgba(0, 0, 0, 0.08), 0 5px 10px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(255, 255, 255, 0.15) inset"
             }}
             transition={{ 
               duration: 0.7,
               rotate: { 
-                duration: 1.5, 
+                duration: 2, 
                 repeat: (status === "Low" || status === "Critical") ? Infinity : 0, 
                 repeatType: "reverse" 
               },
               boxShadow: {
-                duration: 1.5,
+                duration: 2,
                 repeat: status === "Critical" ? Infinity : 0,
                 repeatType: "reverse"
               }
             }}
             whileHover={{ 
-              scale: 1.1,
+              scale: 1.12,
+              y: -5,
               transition: { duration: 0.3 }
             }}
           >
-            <Gauge className={`h-7 w-7 ${colorScheme.icon}`} />
+            <motion.div 
+              animate={
+                status === "Low" || status === "Critical"
+                ? { rotate: [-8, 8, -8], scale: [0.95, 1, 0.95] } 
+                : status === "High"
+                ? { y: [-3, 0, -3], scale: [1, 1.05, 1] } 
+                : {}
+              }
+              transition={{ 
+                repeat: (status !== "Optimal") ? Infinity : 0, 
+                duration: 2, 
+                repeatType: "loop" 
+              }}
+            >
+              <Gauge className={`h-10 w-10 ${colorScheme.icon} drop-shadow-md`} />
+            </motion.div>
           </motion.div>
         );
     }
@@ -317,70 +392,83 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
     <motion.div 
       whileHover={{ 
         scale: 1.03,
-        boxShadow: "0 15px 30px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)" 
+        y: -5,
+        boxShadow: "0 20px 40px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(255, 255, 255, 0.1) inset" 
       }}
-      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+      transition={{ type: "spring", stiffness: 400, damping: 20 }}
       className="w-full h-full"
     >
-      <Card className="overflow-hidden p-0 border-0 backdrop-blur-xl bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg aspect-square flex flex-col">
-        <div className={`h-2 w-full bg-gradient-to-r ${colorScheme.gradient}`} />
+      <Card className="overflow-hidden p-0 border-0 backdrop-blur-xl bg-white/80 dark:bg-gray-800/80 rounded-3xl shadow-xl aspect-square flex flex-col"
+        style={{
+          boxShadow: "0 15px 30px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(255, 255, 255, 0.1) inset"
+        }}
+      >
+        {/* Top gradient line */}
+        <div className={`h-1.5 w-full bg-gradient-to-r ${colorScheme.gradient}`} />
         
-        <div className="p-6 flex flex-col justify-between flex-grow">
-          <div className="flex flex-col mb-4">
-            <div className="flex justify-between items-start mb-3">
-              <motion.div 
-                initial={{ scale: 0.9, opacity: 0.5 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.3 }}
-                className="flex-shrink-0"
-              >
-                {getModernIcon()}
-              </motion.div>
-              
-              <div className="text-right">
-                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1 sf-pro-display">{getLabel()}</h3>
-                <div className="flex items-baseline justify-end">
-                  <motion.span 
-                    key={String(value)}
-                    initial={animated ? { opacity: 0.5, y: -5 } : { opacity: 1, y: 0 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`text-4xl font-bold ${colorScheme.value} tracking-tight sf-pro-display`}
-                  >
-                    {displayValue()}
-                  </motion.span>
-                  <span className="ml-1 text-lg text-gray-600 dark:text-gray-400 font-normal sf-pro-display">{value !== "none" ? getUnit() : ""}</span>
-                </div>
-              </div>
-            </div>
+        <div className="p-5 flex flex-col justify-between flex-grow">
+          {/* Card label with minimal text */}
+          <div className="flex justify-between items-start mb-2">
+            <motion.h3 
+              className="text-xs font-medium text-gray-500 dark:text-gray-400 sf-pro-display tracking-wide uppercase"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.8 }}
+              transition={{ duration: 0.5 }}
+            >
+              {getLabel()}
+            </motion.h3>
             
             <motion.div 
-              className="w-full h-0.5 mt-1 mb-4 rounded-full overflow-hidden bg-gray-200/50 dark:bg-gray-700/50"
-              initial={{ width: "0%" }}
-              animate={{ width: "100%" }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
+              className={`px-2 py-0.5 rounded-full shadow-sm backdrop-blur-md ${colorScheme.status || getStatusClasses()} text-xs font-medium`}
+              animate={status === "Critical" ? {
+                scale: [1, 1.05, 1],
+                opacity: [0.9, 1, 0.9]
+              } : {}}
+              whileHover={{ scale: 1.05 }}
+              transition={{
+                repeat: status === "Critical" ? Infinity : 0,
+                duration: 1.5
+              }}
             >
-              <motion.div 
-                className={`h-full bg-gradient-to-r ${colorScheme.gradient}`}
-                initial={{ width: "0%" }}
-                animate={{ 
-                  width: type === "soil" 
-                    ? `${Math.min(100, Number(value) * 1.5)}%` 
-                    : type === "humidity" 
-                      ? `${Math.min(100, Number(value))}%` 
-                      : type === "temperature" 
-                        ? `${Math.min(100, (Number(value) / 40) * 100)}%`
-                        : "50%"
-                }}
-                transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-              />
+              {status}
             </motion.div>
           </div>
           
-          <div className="flex items-center justify-between mt-auto">
-            <div>
+          {/* Large Central Value and Icon Display */}
+          <motion.div 
+            className="flex flex-col items-center justify-center text-center my-auto py-2"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            {/* Animated Icon */}
+            <motion.div 
+              className="mb-3 mt-0"
+              initial={{ scale: 0.9, opacity: 0.5 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              {getModernIcon()}
+            </motion.div>
+            
+            {/* Value Display */}
+            <motion.div className="flex flex-col items-center">
+              <div className="flex items-baseline justify-center">
+                <motion.span 
+                  key={String(value)}
+                  initial={animated ? { opacity: 0.5, y: -5 } : { opacity: 1, y: 0 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`text-5xl font-bold ${colorScheme.value} tracking-tight sf-pro-display`}
+                >
+                  {displayValue()}
+                </motion.span>
+                <span className="ml-1 text-xl text-gray-600 dark:text-gray-400 font-normal sf-pro-display">{value !== "none" ? getUnit() : ""}</span>
+              </div>
+              
+              {/* Change Indicator */}
               {value !== "none" && (
                 <motion.div 
-                  className="flex items-center backdrop-blur-md bg-white/50 dark:bg-slate-800/50 rounded-full px-3 py-1.5 shadow-sm"
+                  className="flex items-center mt-2 backdrop-blur-md bg-white/50 dark:bg-slate-800/50 rounded-full px-3 py-1.5 shadow-sm"
                   animate={animated ? {
                     scale: [1, 1.05, 1]
                   } : {}}
@@ -411,27 +499,31 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
                   </span>
                 </motion.div>
               )}
-              {value === "none" && (
-                <div className="text-xs backdrop-blur-md bg-gray-100/50 dark:bg-gray-800/50 px-3 py-1.5 rounded-full shadow-sm text-gray-500 dark:text-gray-400 font-medium sf-pro-display">
-                  No sensor data
-                </div>
-              )}
-            </div>
-            <motion.div 
-              className={`px-3 py-1.5 rounded-full shadow-md backdrop-blur-md ${colorScheme.status || getStatusClasses()} text-xs font-medium`}
-              animate={status === "Critical" ? {
-                scale: [1, 1.05, 1],
-                opacity: [0.9, 1, 0.9]
-              } : {}}
-              whileHover={{ scale: 1.05 }}
-              transition={{
-                repeat: status === "Critical" ? Infinity : 0,
-                duration: 1.5
-              }}
-            >
-              {status}
             </motion.div>
-          </div>
+          </motion.div>
+          
+          {/* Value Progress Bar */}
+          <motion.div 
+            className="w-full h-1 mb-1 rounded-full overflow-hidden bg-gray-200/50 dark:bg-gray-700/30"
+            initial={{ width: "0%" }}
+            animate={{ width: "100%" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <motion.div 
+              className={`h-full bg-gradient-to-r ${colorScheme.gradient}`}
+              initial={{ width: "0%" }}
+              animate={{ 
+                width: type === "soil" 
+                  ? `${Math.min(100, Number(value) * 1.5)}%` 
+                  : type === "humidity" 
+                    ? `${Math.min(100, Number(value))}%` 
+                    : type === "temperature" 
+                      ? `${Math.min(100, (Number(value) / 40) * 100)}%`
+                      : "50%"
+              }}
+              transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+            />
+          </motion.div>
         </div>
       </Card>
     </motion.div>
