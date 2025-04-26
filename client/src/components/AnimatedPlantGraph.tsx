@@ -21,7 +21,9 @@ interface AnimatedPlantGraphProps {
     light?: number;
     soilMoisture?: number;
   }>;
-  dataType: 'temperature' | 'humidity' | 'light' | 'soilMoisture';
+  dataType?: 'temperature' | 'humidity' | 'light' | 'soilMoisture';
+  dataTypes?: ('temperature' | 'humidity' | 'light' | 'soilMoisture')[];
+  combinedView?: boolean;
   timeRange?: string;
   title?: string;
   height?: number;
@@ -66,12 +68,20 @@ const typeConfig = {
 export function AnimatedPlantGraph({
   data,
   dataType,
+  dataTypes = ['temperature', 'humidity', 'light', 'soilMoisture'],
+  combinedView = false,
   timeRange = '24h',
   title,
-  height = 300 // Increased height for better visibility
+  height = 350 // Increased height for better visibility
 }: AnimatedPlantGraphProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // Use combined view if explicitly set or if dataTypes is provided
+  const useCombinedView = combinedView || (!dataType && dataTypes && dataTypes.length > 0);
+  
+  // If not in combined view but no dataType is specified, default to temperature
+  const singleDataType = dataType || 'temperature';
   
   // Detect dark mode
   useEffect(() => {
@@ -118,34 +128,57 @@ export function AnimatedPlantGraph({
     // Sort data by timestamp
     const sortedData = [...data].sort((a, b) => a.timestamp - b.timestamp);
     
-    // Group data points by 5-minute intervals to simulate data collection every 5 minutes
-    const fiveMinIntervals: Record<string, any> = {};
+    // For combined view, we want to store data by 5-second intervals
+    // For single data type view, we group by 5-minute intervals
+    const intervals: Record<string, any> = {};
+    const intervalMs = useCombinedView ? 5000 : 300000; // 5 seconds or 5 minutes
     
     sortedData.forEach(item => {
       const timestamp = new Date(item.timestamp);
-      const minutes = timestamp.getMinutes();
-      const roundedMinutes = Math.floor(minutes / 5) * 5;
-      timestamp.setMinutes(roundedMinutes);
-      timestamp.setSeconds(0);
-      timestamp.setMilliseconds(0);
+      
+      if (useCombinedView) {
+        // For 5-second intervals
+        const seconds = timestamp.getSeconds();
+        const roundedSeconds = Math.floor(seconds / 5) * 5;
+        timestamp.setSeconds(roundedSeconds);
+        timestamp.setMilliseconds(0);
+      } else {
+        // For 5-minute intervals
+        const minutes = timestamp.getMinutes();
+        const roundedMinutes = Math.floor(minutes / 5) * 5;
+        timestamp.setMinutes(roundedMinutes);
+        timestamp.setSeconds(0);
+        timestamp.setMilliseconds(0);
+      }
       
       const key = timestamp.getTime().toString();
       
-      if (!fiveMinIntervals[key] || item.timestamp > fiveMinIntervals[key].timestamp) {
-        fiveMinIntervals[key] = {
+      if (!intervals[key] || item.timestamp > intervals[key].timestamp) {
+        intervals[key] = {
           ...item,
           roundedTimestamp: timestamp
         };
       }
     });
     
-    // Convert back to array and ensure we have a smooth dataset
-    return Object.values(fiveMinIntervals).map(item => ({
-      time: format(item.roundedTimestamp, 'HH:mm'),
-      fullTime: item.roundedTimestamp,
-      value: item[dataType] || 0
-    }));
-  }, [data, dataType]);
+    // Convert back to array and format based on view type
+    if (useCombinedView) {
+      return Object.values(intervals).map(item => ({
+        time: format(item.roundedTimestamp, 'HH:mm:ss'),
+        fullTime: item.roundedTimestamp,
+        ...dataTypes.reduce((acc, type) => {
+          acc[type] = item[type] !== undefined ? item[type] : null;
+          return acc;
+        }, {})
+      }));
+    } else {
+      return Object.values(intervals).map(item => ({
+        time: format(item.roundedTimestamp, 'HH:mm'),
+        fullTime: item.roundedTimestamp,
+        value: item[singleDataType] || 0
+      }));
+    }
+  }, [data, singleDataType, dataTypes, useCombinedView]);
   
   // Animation effect to reveal the graph
   useEffect(() => {
@@ -157,12 +190,14 @@ export function AnimatedPlantGraph({
     return () => clearTimeout(timer);
   }, []);
   
-  // Get configuration for the current data type
-  const config = typeConfig[dataType];
+  // Get configuration for the current data type (used in single-view mode)
+  const config = typeConfig[singleDataType];
   
   // Custom tooltip component with Apple-inspired design
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const time = payload[0].payload.fullTime;
+      
       return (
         <div className="backdrop-blur-xl bg-white/90 dark:bg-gray-800/90 p-4 rounded-xl shadow-lg border-0 sf-pro-display animate-scale-pulse"
           style={{ 
@@ -171,11 +206,45 @@ export function AnimatedPlantGraph({
               : '0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.04)',
           }}>
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-            {format(payload[0].payload.fullTime, 'MMM d, yyyy HH:mm')}
+            {format(time, useCombinedView ? 'MMM d, yyyy HH:mm:ss' : 'MMM d, yyyy HH:mm')}
           </p>
-          <p className="text-xl font-bold tracking-tight" style={{ color: isDarkMode ? config.darkColor : config.color }}>
-            {payload[0].value}{config.unit}
-          </p>
+          
+          {useCombinedView ? (
+            // Show all data types in the tooltip for combined view
+            <div className="space-y-1.5">
+              {payload.map((entry: any, index: number) => {
+                if (!entry.dataKey || 
+                    !(['temperature', 'humidity', 'light', 'soilMoisture'] as const).includes(entry.dataKey as any)) {
+                  return null;  
+                }
+                
+                const dataTypeKey = entry.dataKey as keyof typeof typeConfig;
+                const cfg = typeConfig[dataTypeKey];
+                
+                if (entry.value === null || entry.value === undefined) return null;
+                
+                return (
+                  <p key={index} className="text-base font-semibold flex items-center justify-between">
+                    <span className="flex items-center">
+                      <span className="h-3 w-3 mr-1.5 rounded-sm" 
+                        style={{ backgroundColor: isDarkMode ? cfg.darkColor : cfg.color }}>
+                      </span>
+                      {cfg.name}:
+                    </span>
+                    <span style={{ color: isDarkMode ? cfg.darkColor : cfg.color }}>
+                      {entry.value}{cfg.unit}
+                    </span>
+                  </p>
+                );
+              })}
+            </div>
+          ) : (
+            // Show single data type for single view
+            <p className="text-xl font-bold tracking-tight" 
+              style={{ color: isDarkMode ? config.darkColor : config.color }}>
+              {payload[0].value}{config.unit}
+            </p>
+          )}
         </div>
       );
     }
@@ -255,14 +324,17 @@ export function AnimatedPlantGraph({
                 margin={{ top: 5, right: 5, left: 0, bottom: 20 }}
               >
                 <defs>
-                  <linearGradient id={`gradient-${dataType}-light`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={config.gradient[0]} stopOpacity={0.8} />
-                    <stop offset="95%" stopColor={config.gradient[1]} stopOpacity={0.2} />
-                  </linearGradient>
-                  <linearGradient id={`gradient-${dataType}-dark`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={config.darkGradient[0]} stopOpacity={0.8} />
-                    <stop offset="95%" stopColor={config.darkGradient[1]} stopOpacity={0.3} />
-                  </linearGradient>
+                  {/* Create gradients for each data type */}
+                  {Object.entries(typeConfig).map(([key, cfg]) => [
+                    <linearGradient key={`${key}-light`} id={`gradient-${key}-light`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={cfg.gradient[0]} stopOpacity={0.8} />
+                      <stop offset="95%" stopColor={cfg.gradient[1]} stopOpacity={0.2} />
+                    </linearGradient>,
+                    <linearGradient key={`${key}-dark`} id={`gradient-${key}-dark`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={cfg.darkGradient[0]} stopOpacity={0.8} />
+                      <stop offset="95%" stopColor={cfg.darkGradient[1]} stopOpacity={0.3} />
+                    </linearGradient>
+                  ]).flat()}
                 </defs>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
@@ -302,47 +374,106 @@ export function AnimatedPlantGraph({
                     strokeDasharray: '3 3' 
                   }}
                 />
-                <Line
-                  type="monotone"
-                  connectNulls={true}
-                  dataKey="value"
-                  stroke={isDarkMode ? config.darkColor : config.color}
-                  strokeWidth={3}
-                  dot={{ 
-                    r: 4, 
-                    strokeWidth: 2, 
-                    fill: isDarkMode ? '#1e293b' : 'white', 
-                    stroke: isDarkMode ? config.darkColor : config.color 
-                  }}
-                  activeDot={{ 
-                    r: 6, 
-                    strokeWidth: 3, 
-                    fill: isDarkMode ? '#1e293b' : 'white', 
-                    stroke: isDarkMode ? config.darkColor : config.color,
-                    strokeOpacity: 0.9,
-                    className: "animate-pulse-slow"
-                  }}
-                  isAnimationActive={true}
-                  animationDuration={2000}
-                  animationEasing="ease-in-out"
-                  name={config.name}
-                  fill={`url(#gradient-${dataType}-${isDarkMode ? 'dark' : 'light'})`}
-                />
+                
+                {/* Render multiple lines for combined view or single line for single view */}
+                {useCombinedView ? (
+                  // Multiple lines for combined view
+                  dataTypes.map((type) => {
+                    const cfg = typeConfig[type];
+                    return (
+                      <Line
+                        key={type}
+                        type="monotone"
+                        connectNulls={true}
+                        dataKey={type}
+                        stroke={isDarkMode ? cfg.darkColor : cfg.color}
+                        strokeWidth={2.5}
+                        dot={{ 
+                          r: 3.5, 
+                          strokeWidth: 2, 
+                          fill: isDarkMode ? '#1e293b' : 'white', 
+                          stroke: isDarkMode ? cfg.darkColor : cfg.color 
+                        }}
+                        activeDot={{ 
+                          r: 5, 
+                          strokeWidth: 2.5, 
+                          fill: isDarkMode ? '#1e293b' : 'white', 
+                          stroke: isDarkMode ? cfg.darkColor : cfg.color,
+                          strokeOpacity: 0.9,
+                          className: "animate-pulse-slow"
+                        }}
+                        isAnimationActive={true}
+                        animationDuration={1800 + Math.random() * 400}
+                        animationEasing="ease-in-out"
+                        name={cfg.name}
+                      />
+                    );
+                  })
+                ) : (
+                  // Single line for single data type view
+                  <Line
+                    type="monotone"
+                    connectNulls={true}
+                    dataKey="value"
+                    stroke={isDarkMode ? config.darkColor : config.color}
+                    strokeWidth={3}
+                    dot={{ 
+                      r: 4, 
+                      strokeWidth: 2, 
+                      fill: isDarkMode ? '#1e293b' : 'white', 
+                      stroke: isDarkMode ? config.darkColor : config.color 
+                    }}
+                    activeDot={{ 
+                      r: 6, 
+                      strokeWidth: 3, 
+                      fill: isDarkMode ? '#1e293b' : 'white', 
+                      stroke: isDarkMode ? config.darkColor : config.color,
+                      strokeOpacity: 0.9,
+                      className: "animate-pulse-slow"
+                    }}
+                    isAnimationActive={true}
+                    animationDuration={2000}
+                    animationEasing="ease-in-out"
+                    name={config.name}
+                    fill={`url(#gradient-${singleDataType}-${isDarkMode ? 'dark' : 'light'})`}
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </motion.div>
           
           <motion.div
-            className="flex justify-between items-center px-5 pb-5 mt-4"
+            className={`px-5 pb-5 mt-4 ${useCombinedView ? 'flex flex-col space-y-2' : 'flex justify-between items-center'}`}
             variants={chartVariants}
           >
-            <span className="text-xs font-medium bg-gray-100/70 dark:bg-gray-700/40 px-3 py-1 rounded-full text-gray-500 dark:text-gray-400">
+            <span className="text-xs font-medium bg-gray-100/70 dark:bg-gray-700/40 px-3 py-1 rounded-full text-gray-500 dark:text-gray-400 self-start">
               {`${formattedData.length} data points`}
             </span>
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center">
-              <span className="h-3 w-3 mr-1.5 rounded-sm" style={{ backgroundColor: isDarkMode ? config.darkColor : config.color }}></span>
-              Values in {config.unit}
-            </span>
+            
+            {useCombinedView ? (
+              <div className="flex flex-wrap gap-2 mt-1">
+                {dataTypes.map((type) => {
+                  const cfg = typeConfig[type as keyof typeof typeConfig];
+                  return (
+                    <span key={type} className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                      <span 
+                        className="h-3 w-3 mr-1.5 rounded-sm" 
+                        style={{ backgroundColor: isDarkMode ? cfg.darkColor : cfg.color }}
+                      ></span>
+                      {cfg.name}
+                    </span>
+                  );
+                })}
+              </div>
+            ) : (
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                <span 
+                  className="h-3 w-3 mr-1.5 rounded-sm" 
+                  style={{ backgroundColor: isDarkMode ? config.darkColor : config.color }}
+                ></span>
+                Values in {config.unit}
+              </span>
+            )}
           </motion.div>
         </motion.div>
       )}

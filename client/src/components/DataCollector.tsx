@@ -15,13 +15,13 @@ export function DataCollector() {
       // Get singleton instance of DataLogger
       const dataLogger = DataLogger.getInstance();
       
-      // Configure to collect data every 5 minutes (300000ms)
-      dataLogger.startLogging('default', 300000);
+      // Configure to collect data every 5 seconds (5000ms) for high resolution graph
+      dataLogger.startLogging('default', 5000);
       
       // Log initial data point
       dataLogger.logOnce('default');
       
-      console.log('Data collector started - logging data every 5 minutes');
+      console.log('Data collector started - logging data every 5 seconds');
       
       // Clean up on unmount
       return () => {
