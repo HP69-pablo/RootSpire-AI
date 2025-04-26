@@ -23,6 +23,7 @@ import { analyzePlantPhoto, PlantAnalysisResult, fetchPlantImage } from '@/lib/g
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlantTypeSelector } from '@/components/PlantTypeSelector';
 import { PlantTypeInfo } from '@/lib/plantDatabase';
+import { PlantDetailsDialog } from '@/components/PlantDetailsDialog';
 
 export default function MyPlants() {
   const { user, profile, loading, refreshProfile } = useAuth();
