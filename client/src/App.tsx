@@ -32,7 +32,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <div className="pb-24"> {/* Add padding to bottom for floating nav bar */}
+          <div className="fitness-app-bg min-h-screen text-white pb-24"> {/* Apple Fitness style with dark bg */}
             <Router />
             <ChatBubble />
             <FloatingNavigation />

@@ -391,66 +391,38 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
   return (
     <motion.div 
       whileHover={{ 
-        scale: 1.03,
-        y: -5,
-        boxShadow: "0 20px 40px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(255, 255, 255, 0.1) inset" 
+        scale: 1.02,
+        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.15), 0 5px 15px rgba(0, 0, 0, 0.1)"
       }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
       className="w-full h-full"
     >
-      <Card className="overflow-hidden p-0 border-0 backdrop-blur-xl bg-white/80 dark:bg-gray-800/80 rounded-3xl shadow-xl aspect-square flex flex-col"
+      {/* Apple Fitness-style card */}
+      <Card className="overflow-hidden p-0 border border-gray-800/50 bg-black backdrop-blur-xl rounded-2xl shadow-md aspect-square flex flex-col"
         style={{
-          boxShadow: "0 15px 30px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(255, 255, 255, 0.1) inset"
+          boxShadow: "0 8px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)"
         }}
       >
-        {/* Top gradient line */}
-        <div className={`h-1.5 w-full bg-gradient-to-r ${colorScheme.gradient}`} />
-        
-        <div className="p-5 flex flex-col justify-between flex-grow">
-          {/* Card label with minimal text */}
-          <div className="flex justify-between items-start mb-2">
+        <div className="p-4 flex flex-col justify-between h-full">
+          {/* Card Header - Apple Fitness Style */}
+          <div className="flex justify-between items-start">
             <motion.h3 
-              className="text-xs font-medium text-gray-500 dark:text-gray-400 sf-pro-display tracking-wide uppercase"
+              className="text-sm font-medium text-gray-400 sf-pro-display tracking-tight"
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.8 }}
+              animate={{ opacity: 0.9 }}
               transition={{ duration: 0.5 }}
             >
               {getLabel()}
             </motion.h3>
-            
-            <motion.div 
-              className={`px-2 py-0.5 rounded-full shadow-sm backdrop-blur-md ${colorScheme.status || getStatusClasses()} text-xs font-medium`}
-              animate={status === "Critical" ? {
-                scale: [1, 1.05, 1],
-                opacity: [0.9, 1, 0.9]
-              } : {}}
-              whileHover={{ scale: 1.05 }}
-              transition={{
-                repeat: status === "Critical" ? Infinity : 0,
-                duration: 1.5
-              }}
-            >
-              {status}
-            </motion.div>
           </div>
           
-          {/* Large Central Value and Icon Display */}
+          {/* Central Value Display - Apple Fitness Style */}
           <motion.div 
-            className="flex flex-col items-center justify-center text-center my-auto py-2"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center text-center flex-grow"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            {/* Animated Icon */}
-            <motion.div 
-              className="mb-3 mt-0"
-              initial={{ scale: 0.9, opacity: 0.5 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.4 }}
-            >
-              {getModernIcon()}
-            </motion.div>
-            
             {/* Value Display */}
             <motion.div className="flex flex-col items-center">
               <div className="flex items-baseline justify-center">
@@ -458,46 +430,39 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
                   key={String(value)}
                   initial={animated ? { opacity: 0.5, y: -5 } : { opacity: 1, y: 0 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`text-5xl font-bold ${colorScheme.value} tracking-tight sf-pro-display`}
+                  className="text-5xl font-bold text-white tracking-tight sf-pro-display"
                 >
                   {displayValue()}
                 </motion.span>
-                <span className="ml-1 text-xl text-gray-600 dark:text-gray-400 font-normal sf-pro-display">{value !== "none" ? getUnit() : ""}</span>
+                <span className="ml-1 text-xl text-gray-400 font-normal sf-pro-display">
+                  {value !== "none" ? getUnit() : ""}
+                </span>
               </div>
               
-              {/* Change Indicator */}
+              {/* Micro Chart - Apple Fitness Style */}
               {value !== "none" && (
-                <motion.div 
-                  className="flex items-center mt-2 backdrop-blur-md bg-white/50 dark:bg-slate-800/50 rounded-full px-3 py-1.5 shadow-sm"
-                  animate={animated ? {
-                    scale: [1, 1.05, 1]
-                  } : {}}
-                  transition={{ duration: 0.5 }}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  {getChange() > 0 ? (
-                    <svg className="h-3.5 w-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                    </svg>
-                  ) : getChange() < 0 ? (
-                    <svg className="h-3.5 w-3.5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  ) : (
-                    <svg className="h-3.5 w-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
-                    </svg>
-                  )}
-                  <span className={`text-xs font-medium ml-1 sf-pro-display ${
-                    getChange() > 0 
-                      ? 'text-green-600 dark:text-green-400' 
-                      : getChange() < 0 
-                        ? 'text-orange-600 dark:text-orange-400' 
-                        : 'text-gray-500'
-                  }`}>
-                    {getChange() > 0 ? '+' : getChange() < 0 ? '' : '±'}{getChange().toFixed(type === 'temperature' ? 1 : 0)}{getUnit()}
-                  </span>
-                </motion.div>
+                <div className="fitness-metric-chart mt-4 w-full">
+                  {/* Generate 7 bars like D-S-M-T-W-T-F */}
+                  {Array.from({ length: 7 }).map((_, index) => {
+                    // Randomly generate height for demo
+                    const randomHeight = (Math.random() * 0.7 + 0.3) * 100;
+                    const isActive = index === 6; // Last day is today
+                    
+                    return (
+                      <div key={index} className="flex flex-col items-center">
+                        <motion.div 
+                          className={`fitness-chart-bar ${isActive ? 'fitness-chart-bar-active' : ''}`}
+                          initial={{ height: '0%' }}
+                          animate={{ height: `${randomHeight}%` }}
+                          transition={{ duration: 0.5, delay: index * 0.05 }}
+                        />
+                        <span className="fitness-chart-day">
+                          {['S', 'M', 'T', 'W', 'T', 'F', 'S'][index]}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </motion.div>
           </motion.div>

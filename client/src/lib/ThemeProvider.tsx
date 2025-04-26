@@ -10,18 +10,8 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    // Check for saved theme preference or use OS preference
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
-    
-    if (savedTheme) {
-      return savedTheme;
-    } else {
-      return window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-    }
-  });
+  // Always use dark mode to match Apple Fitness app
+  const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
     // Update HTML class when theme changes
