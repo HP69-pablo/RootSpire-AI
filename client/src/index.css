@@ -253,10 +253,11 @@
   border: 1px solid rgba(255, 255, 255, 0.09);
 }
 
-/* Apple Fitness specific styles */
+/* Apple Fitness specific styles - Light and Dark Mode */
 .fitness-app-bg {
-  @apply bg-black;
-  background-color: #000000;
+  @apply bg-gradient-to-b from-[#f0f9ff] to-[#e0f2fe] text-gray-900;
+  @apply dark:bg-black dark:text-white;
+  background-attachment: fixed;
 }
 
 .fitness-card-grid {
@@ -264,16 +265,22 @@
 }
 
 .fitness-metric-card {
-  @apply flex flex-col p-4 rounded-2xl overflow-hidden bg-[#1C1C1E] border border-[#2C2C2E];
+  @apply flex flex-col p-4 rounded-2xl overflow-hidden shadow-md;
+  @apply bg-white/80 border border-[#d1faee]/50 text-gray-800; 
+  @apply dark:bg-[#1C1C1E] dark:border-[#2C2C2E] dark:text-white;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .fitness-metric-title {
-  @apply text-xs text-gray-500 font-medium mb-1;
+  @apply text-xs font-medium mb-1;
+  @apply text-gray-600 dark:text-gray-500;
   letter-spacing: -0.01em;
 }
 
 .fitness-metric-value {
-  @apply text-2xl font-semibold text-white;
+  @apply text-2xl font-semibold;
+  @apply text-gray-900 dark:text-white;
   letter-spacing: -0.02em;
 }
 
@@ -396,49 +403,55 @@
 }
 
 .fitness-card {
-  background-color: #1C1C1E;
   border-radius: 18px;
-  border: 1px solid #2C2C2E;
   overflow: hidden;
   padding: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   aspect-ratio: 1 / 1;
+  /* Light mode */
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(209, 250, 229, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 150, 136, 0.1);
+  /* Dark mode */
+  @apply dark:bg-[#1C1C1E] dark:border-[#2C2C2E];
+  @apply dark:shadow-[0_4px_12px_rgba(0,0,0,0.2)];
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.fitness-card:hover {
+  transform: translateY(-4px);
+  /* Light mode */
+  box-shadow: 0 8px 20px rgba(0, 150, 136, 0.15);
+  /* Dark mode */
+  @apply dark:shadow-[0_8px_20px_rgba(0,0,0,0.3)];
 }
 
 .fitness-metric {
   position: relative;
-  background-color: #2C2C2E;
   border-radius: 12px; 
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  border: 1px solid #3C3C3E;
-}
-
-.fitness-metric-title {
-  font-size: 0.875rem;
-  color: #8E8E93;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-
-.fitness-metric-value {
-  font-size: 1.75rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1;
-  color: white;
+  /* Light mode */
+  background-color: rgba(209, 250, 229, 0.2);
+  border: 1px solid rgba(209, 250, 229, 0.4);
+  /* Dark mode */
+  @apply dark:bg-[#2C2C2E] dark:border-[#3C3C3E];
 }
 
 .fitness-chart-bar {
   height: 8px;
-  background-color: #3C3C3E;
   border-radius: 4px;
   overflow: hidden;
   position: relative;
+  /* Light mode */
+  background-color: rgba(150, 150, 150, 0.2);
+  /* Dark mode */
+  @apply dark:bg-[#3C3C3E];
 }
 
 .fitness-chart-progress {
@@ -450,23 +463,19 @@
   transition: width 1s ease-out;
 }
 
-/* App Background */
-.fitness-app-bg {
-  background-color: #000000;
-  color: white;
-  min-height: 100vh;
-}
-
-/* Progress Rings */
+/* Progress Rings - Light and Dark Mode */
 .fitness-progress-ring {
   position: relative;
   display: inline-block;
 }
 
 .fitness-progress-ring-background {
-  stroke: #2C2C2E;
   fill: none;
   stroke-width: 12;
+  /* Light mode */
+  stroke: rgba(209, 250, 229, 0.3);
+  /* Dark mode */
+  @apply dark:stroke-[#2C2C2E];
 }
 
 .fitness-progress-ring-progress {
@@ -484,7 +493,11 @@
   }
 
   body {
-    @apply font-sans antialiased bg-black text-white;
+    @apply font-sans antialiased;
+    /* Light mode */
+    @apply bg-[#f0f9ff] text-gray-900;
+    /* Dark mode */
+    @apply dark:bg-black dark:text-white;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
