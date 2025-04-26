@@ -211,54 +211,80 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
     >
-      <Card className="bg-white dark:bg-slate-800 shadow-md border-0 overflow-hidden rounded-2xl">
+      <Card className="glassmorphic-card subtle-card-shine overflow-hidden border-0">
         <motion.div 
-          className="absolute inset-0 bg-gradient-to-br from-blue-50/70 to-green-50/50 dark:from-blue-900/10 dark:to-green-900/5 z-0"
-          animate={{ opacity: [0.5, 0.7, 0.5] }}
+          className="absolute inset-0 bg-gradient-to-br from-emerald-50/40 to-blue-50/30 dark:from-emerald-900/10 dark:to-blue-900/5 z-0"
+          animate={{ 
+            opacity: [0.5, 0.7, 0.5],
+            background: [
+              "linear-gradient(120deg, rgba(209, 250, 229, 0.3), rgba(219, 234, 254, 0.2))",
+              "linear-gradient(120deg, rgba(209, 250, 229, 0.4), rgba(219, 234, 254, 0.3))",
+              "linear-gradient(120deg, rgba(209, 250, 229, 0.3), rgba(219, 234, 254, 0.2))"
+            ]
+          }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
         
-        <CardHeader className="relative z-10 border-b border-gray-100 dark:border-gray-800">
+        <CardHeader className="relative z-10 border-b border-gray-100/50 dark:border-gray-800/50">
           <CardTitle className="text-lg font-medium flex items-center gap-2">
             <motion.div
-              animate={{ rotate: [0, 5, 0, -5, 0] }}
+              animate={{ 
+                rotate: [0, 5, 0, -5, 0],
+                scale: [1, 1.05, 1, 1.05, 1]
+              }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              className="bg-gradient-to-br from-green-100 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/20 p-2 rounded-full"
             >
-              <Leaf className="h-5 w-5 text-green-600" />
+              <Leaf className="h-5 w-5 text-green-600 dark:text-green-400" />
             </motion.div>
-            Plant Environment
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-emerald-500 dark:from-green-400 dark:to-emerald-300 font-semibold">
+              Plant Environment
+            </span>
           </CardTitle>
         </CardHeader>
         
         <CardContent className="relative z-10 p-4">
           <div className="grid grid-cols-1 gap-3">
-            {/* UV Light Control - More compact */}
+            {/* UV Light Control */}
             <motion.div 
-              className="p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between"
-              whileHover={{ scale: 1.01 }}
+              className="glassmorphic p-3 rounded-xl flex items-center justify-between"
+              whileHover={{ scale: 1.02, boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)" }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <motion.div 
-                  className={`p-1.5 rounded-full ${controls.uvLight ? 'bg-yellow-100 dark:bg-yellow-900/30' : 'bg-gray-100 dark:bg-gray-800'}`}
+                  className={`p-2 rounded-full ${
+                    controls.uvLight 
+                      ? 'bg-gradient-to-br from-yellow-100 to-amber-50 dark:from-yellow-900/40 dark:to-amber-900/20' 
+                      : 'bg-gray-100 dark:bg-gray-800/60'
+                  }`}
                   animate={{ 
                     boxShadow: controls.uvLight 
-                      ? ['0 0 0 rgba(252, 211, 77, 0)', '0 0 10px rgba(252, 211, 77, 0.7)', '0 0 0 rgba(252, 211, 77, 0)'] 
+                      ? ['0 0 0 rgba(252, 211, 77, 0)', '0 0 15px rgba(252, 211, 77, 0.7)', '0 0 0 rgba(252, 211, 77, 0)'] 
                       : 'none'
                   }}
                   transition={{ duration: 2, repeat: controls.uvLight ? Infinity : 0 }}
                 >
-                  <Sun className={`h-4 w-4 ${controls.uvLight ? 'text-yellow-500' : 'text-gray-400'}`} />
+                  <Sun className={`h-5 w-5 ${
+                    controls.uvLight 
+                      ? 'text-yellow-500 dark:text-yellow-400' 
+                      : 'text-gray-400 dark:text-gray-500'
+                  }`} />
                 </motion.div>
-                <h3 className="font-medium text-sm">UV Light</h3>
+                <div>
+                  <h3 className="font-medium text-sm">UV Light</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {controls.uvLight ? 'Active' : 'Inactive'}
+                  </p>
+                </div>
               </div>
               
               <Switch 
                 checked={controls.uvLight} 
                 onCheckedChange={handleUvLightToggle} 
-                className="data-[state=checked]:bg-green-500 h-5 w-9"
+                className={`data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-400 h-6 w-11`}
               />
             </motion.div>
             
@@ -266,58 +292,166 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
             <div className="flex gap-3">
               {/* Temperature Reading */}
               <motion.div 
-                className="flex-1 p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
-                whileHover={{ scale: 1.01 }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                className="flex-1 glassmorphic rounded-xl p-0 overflow-hidden"
+                whileHover={{ 
+                  scale: 1.02, 
+                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(255, 255, 255, 0.1)" 
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <motion.div 
-                      className={`p-1.5 rounded-full ${sensorData ? getTemperatureBackground(sensorData.temperature) : 'bg-gray-100 dark:bg-gray-800'}`}
-                    >
-                      <Thermometer className={`h-4 w-4 ${sensorData ? getTemperatureColor(sensorData.temperature) : 'text-gray-400'}`} />
-                    </motion.div>
-                    <div>
-                      <h3 className="font-medium text-sm">Temperature</h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {sensorData ? getTemperatureStatus(sensorData.temperature) : 'No data'}
-                      </p>
+                <div className={`h-1 w-full ${
+                  sensorData 
+                    ? sensorData.temperature > 35 
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500' 
+                      : sensorData.temperature < 15 
+                        ? 'bg-gradient-to-r from-blue-500 to-cyan-400' 
+                        : 'bg-gradient-to-r from-green-500 to-emerald-400'
+                    : 'bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-700 dark:to-gray-600'
+                }`} />
+                
+                <div className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <motion.div 
+                        className={`p-2 rounded-full ${
+                          sensorData 
+                            ? sensorData.temperature > 30 
+                              ? 'bg-gradient-to-br from-orange-100 to-red-50 dark:from-orange-900/40 dark:to-red-900/20' 
+                              : sensorData.temperature < 15 
+                                ? 'bg-gradient-to-br from-blue-100 to-cyan-50 dark:from-blue-900/40 dark:to-cyan-900/20' 
+                                : 'bg-gradient-to-br from-green-100 to-emerald-50 dark:from-green-900/40 dark:to-emerald-900/20'
+                            : 'bg-gray-100 dark:bg-gray-800/60'
+                        }`}
+                        animate={sensorData?.temperature && sensorData.temperature > 30 ? {
+                          boxShadow: ['0 0 0 rgba(251, 146, 60, 0)', '0 0 12px rgba(251, 146, 60, 0.6)', '0 0 0 rgba(251, 146, 60, 0)'],
+                        } : {}}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        <Thermometer className={`h-5 w-5 ${
+                          sensorData 
+                            ? sensorData.temperature > 30 
+                              ? 'text-orange-500 dark:text-orange-400' 
+                              : sensorData.temperature < 15 
+                                ? 'text-blue-500 dark:text-blue-400' 
+                                : 'text-green-500 dark:text-green-400'
+                            : 'text-gray-400 dark:text-gray-500'
+                        }`} />
+                      </motion.div>
+                      <div>
+                        <div className="flex items-center">
+                          <h3 className="font-medium text-sm">Temperature</h3>
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              sensorData 
+                                ? sensorData.temperature > 30 
+                                  ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' 
+                                  : sensorData.temperature < 15 
+                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' 
+                                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                            }`}
+                          >
+                            {sensorData ? getTemperatureStatus(sensorData.temperature) : 'No data'}
+                          </motion.div>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          {sensorData ? (sensorData.temperature < 22 ? 'Too cool' : sensorData.temperature > 28 ? 'Too warm' : 'Perfect range') : 'Waiting for data...'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-lg font-semibold">
-                      {sensorData ? `${sensorData.temperature}°C` : '--'}
-                    </span>
+                    <div className="text-right">
+                      <motion.span 
+                        className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300"
+                        animate={sensorData ? { scale: [1, 1.05, 1] } : {}}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        {sensorData ? `${sensorData.temperature}°C` : '--'}
+                      </motion.span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
               
               {/* Humidity Reading */}
               <motion.div 
-                className="flex-1 p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
-                whileHover={{ scale: 1.01 }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                className="flex-1 glassmorphic rounded-xl p-0 overflow-hidden"
+                whileHover={{ 
+                  scale: 1.02, 
+                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(255, 255, 255, 0.1)" 
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <motion.div 
-                      className={`p-1.5 rounded-full ${sensorData ? getHumidityBackground(sensorData.humidity) : 'bg-gray-100 dark:bg-gray-800'}`}
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <Droplets className={`h-4 w-4 ${sensorData ? getHumidityColor(sensorData.humidity) : 'text-gray-400'}`} />
-                    </motion.div>
-                    <div>
-                      <h3 className="font-medium text-sm">Humidity</h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {sensorData ? getHumidityStatus(sensorData.humidity) : 'No data'}
-                      </p>
+                <div className={`h-1 w-full ${
+                  sensorData 
+                    ? sensorData.humidity > 70 
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-400' 
+                      : sensorData.humidity < 30 
+                        ? 'bg-gradient-to-r from-yellow-500 to-amber-400' 
+                        : 'bg-gradient-to-r from-green-500 to-emerald-400'
+                    : 'bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-700 dark:to-gray-600'
+                }`} />
+                
+                <div className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <motion.div 
+                        className={`p-2 rounded-full ${
+                          sensorData 
+                            ? sensorData.humidity > 70 
+                              ? 'bg-gradient-to-br from-blue-100 to-cyan-50 dark:from-blue-900/40 dark:to-cyan-900/20' 
+                              : sensorData.humidity < 30 
+                                ? 'bg-gradient-to-br from-yellow-100 to-amber-50 dark:from-yellow-900/40 dark:to-amber-900/20' 
+                                : 'bg-gradient-to-br from-green-100 to-emerald-50 dark:from-green-900/40 dark:to-emerald-900/20'
+                            : 'bg-gray-100 dark:bg-gray-800/60'
+                        }`}
+                        animate={{ scale: [1, 1.08, 1] }}
+                        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        <Droplets className={`h-5 w-5 ${
+                          sensorData 
+                            ? sensorData.humidity > 70 
+                              ? 'text-blue-500 dark:text-blue-400' 
+                              : sensorData.humidity < 30 
+                                ? 'text-yellow-500 dark:text-yellow-400' 
+                                : 'text-green-500 dark:text-green-400'
+                            : 'text-gray-400 dark:text-gray-500'
+                        }`} />
+                      </motion.div>
+                      <div>
+                        <div className="flex items-center">
+                          <h3 className="font-medium text-sm">Humidity</h3>
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              sensorData 
+                                ? sensorData.humidity > 70 
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' 
+                                  : sensorData.humidity < 30 
+                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' 
+                                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                            }`}
+                          >
+                            {sensorData ? getHumidityStatus(sensorData.humidity) : 'No data'}
+                          </motion.div>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          {sensorData ? (sensorData.humidity < 30 ? 'Too dry' : sensorData.humidity > 70 ? 'Too humid' : 'Perfect range') : 'Waiting for data...'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-lg font-semibold">
-                      {sensorData ? `${sensorData.humidity > 100 ? (sensorData.humidity / 1000).toFixed(1) : sensorData.humidity}%` : '--'}
-                    </span>
+                    <div className="text-right">
+                      <motion.span 
+                        className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300"
+                        animate={sensorData ? { scale: [1, 1.05, 1] } : {}}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        {sensorData ? `${sensorData.humidity > 100 ? (sensorData.humidity / 1000).toFixed(1) : sensorData.humidity}%` : '--'}
+                      </motion.span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -327,64 +461,166 @@ export function PlantControls({ onAction, sensorData }: PlantControlsProps) {
             <div className="flex gap-3">
               {/* Light Reading */}
               <motion.div 
-                className="flex-1 p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
-                whileHover={{ scale: 1.01 }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                className="flex-1 glassmorphic rounded-xl p-0 overflow-hidden"
+                whileHover={{ 
+                  scale: 1.02, 
+                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(255, 255, 255, 0.1)" 
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <motion.div 
-                      className={`p-1.5 rounded-full ${sensorData?.light ? getLightBackground(sensorData.light) : 'bg-gray-100 dark:bg-gray-800'}`}
-                      animate={{ 
-                        boxShadow: sensorData?.light && sensorData.light > 50
-                          ? ['0 0 0 rgba(252, 211, 77, 0)', '0 0 10px rgba(252, 211, 77, 0.7)', '0 0 0 rgba(252, 211, 77, 0)'] 
-                          : 'none'
-                      }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <Sun className={`h-4 w-4 ${sensorData?.light ? getLightColor(sensorData.light) : 'text-gray-400'}`} />
-                    </motion.div>
-                    <div>
-                      <h3 className="font-medium text-sm">Light Level</h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {sensorData?.light ? getLightStatus(sensorData.light) : 'No data'}
-                      </p>
+                <div className={`h-1 w-full ${
+                  sensorData?.light 
+                    ? sensorData.light > 70 
+                      ? 'bg-gradient-to-r from-yellow-500 to-amber-400' 
+                      : sensorData.light < 20 
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-400' 
+                        : 'bg-gradient-to-r from-green-500 to-emerald-400'
+                    : 'bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-700 dark:to-gray-600'
+                }`} />
+                
+                <div className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <motion.div 
+                        className={`p-2 rounded-full ${
+                          sensorData?.light 
+                            ? sensorData.light > 70 
+                              ? 'bg-gradient-to-br from-yellow-100 to-amber-50 dark:from-yellow-900/40 dark:to-amber-900/20' 
+                              : sensorData.light < 20 
+                                ? 'bg-gradient-to-br from-indigo-100 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/20' 
+                                : 'bg-gradient-to-br from-green-100 to-emerald-50 dark:from-green-900/40 dark:to-emerald-900/20'
+                            : 'bg-gray-100 dark:bg-gray-800/60'
+                        }`}
+                        animate={sensorData?.light && sensorData.light > 70 ? {
+                          boxShadow: ['0 0 0 rgba(252, 211, 77, 0)', '0 0 15px rgba(252, 211, 77, 0.7)', '0 0 0 rgba(252, 211, 77, 0)'],
+                        } : {}}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        <Sun className={`h-5 w-5 ${
+                          sensorData?.light 
+                            ? sensorData.light > 70 
+                              ? 'text-yellow-500 dark:text-yellow-400' 
+                              : sensorData.light < 20 
+                                ? 'text-indigo-500 dark:text-indigo-400' 
+                                : 'text-green-500 dark:text-green-400'
+                            : 'text-gray-400 dark:text-gray-500'
+                        }`} />
+                      </motion.div>
+                      <div>
+                        <div className="flex items-center">
+                          <h3 className="font-medium text-sm">Light Level</h3>
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              sensorData?.light 
+                                ? sensorData.light > 70 
+                                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' 
+                                  : sensorData.light < 20 
+                                    ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' 
+                                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                            }`}
+                          >
+                            {sensorData?.light ? getLightStatus(sensorData.light) : 'No data'}
+                          </motion.div>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          {sensorData?.light ? (sensorData.light < 20 ? 'Too dark' : sensorData.light > 70 ? 'Too bright' : 'Perfect range') : 'Waiting for data...'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-lg font-semibold">
-                      {sensorData && sensorData.light !== undefined ? `${sensorData.light}%` : '--'}
-                    </span>
+                    <div className="text-right">
+                      <motion.span 
+                        className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300"
+                        animate={sensorData?.light ? { scale: [1, 1.05, 1] } : {}}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        {sensorData && sensorData.light !== undefined ? `${sensorData.light}%` : '--'}
+                      </motion.span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
               
               {/* Soil Moisture Reading */}
               <motion.div 
-                className="flex-1 p-3 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
-                whileHover={{ scale: 1.01 }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                className="flex-1 glassmorphic rounded-xl p-0 overflow-hidden"
+                whileHover={{ 
+                  scale: 1.02, 
+                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(255, 255, 255, 0.1)" 
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <motion.div 
-                      className={`p-1.5 rounded-full ${sensorData?.soilMoisture ? getSoilMoistureBackground(sensorData.soilMoisture) : 'bg-gray-100 dark:bg-gray-800'}`}
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 3, repeat: Infinity }}
-                    >
-                      <Gauge className={`h-4 w-4 ${sensorData?.soilMoisture ? getSoilMoistureColor(sensorData.soilMoisture) : 'text-gray-400'}`} />
-                    </motion.div>
-                    <div>
-                      <h3 className="font-medium text-sm">Soil Moisture</h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {sensorData?.soilMoisture ? getSoilMoistureStatus(sensorData.soilMoisture) : 'No data'}
-                      </p>
+                <div className={`h-1 w-full ${
+                  sensorData?.soilMoisture 
+                    ? sensorData.soilMoisture > 75 
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-400' 
+                      : sensorData.soilMoisture < 30 
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-400' 
+                        : 'bg-gradient-to-r from-green-500 to-emerald-400'
+                    : 'bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-700 dark:to-gray-600'
+                }`} />
+                
+                <div className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <motion.div 
+                        className={`p-2 rounded-full ${
+                          sensorData?.soilMoisture 
+                            ? sensorData.soilMoisture > 75 
+                              ? 'bg-gradient-to-br from-blue-100 to-cyan-50 dark:from-blue-900/40 dark:to-cyan-900/20' 
+                              : sensorData.soilMoisture < 30 
+                                ? 'bg-gradient-to-br from-amber-100 to-orange-50 dark:from-amber-900/40 dark:to-orange-900/20' 
+                                : 'bg-gradient-to-br from-green-100 to-emerald-50 dark:from-green-900/40 dark:to-emerald-900/20'
+                            : 'bg-gray-100 dark:bg-gray-800/60'
+                        }`}
+                        animate={sensorData?.soilMoisture ? { scale: [1, 1.08, 1] } : {}}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        <Droplet className={`h-5 w-5 ${
+                          sensorData?.soilMoisture 
+                            ? sensorData.soilMoisture > 75 
+                              ? 'text-blue-500 dark:text-blue-400' 
+                              : sensorData.soilMoisture < 30 
+                                ? 'text-amber-500 dark:text-amber-400' 
+                                : 'text-green-500 dark:text-green-400'
+                            : 'text-gray-400 dark:text-gray-500'
+                        }`} />
+                      </motion.div>
+                      <div>
+                        <div className="flex items-center">
+                          <h3 className="font-medium text-sm">Soil Moisture</h3>
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              sensorData?.soilMoisture
+                                ? sensorData.soilMoisture > 75 
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' 
+                                  : sensorData.soilMoisture < 30 
+                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' 
+                                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                            }`}
+                          >
+                            {sensorData?.soilMoisture ? getSoilMoistureStatus(sensorData.soilMoisture) : 'No data'}
+                          </motion.div>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          {sensorData?.soilMoisture ? (sensorData.soilMoisture < 30 ? 'Too dry' : sensorData.soilMoisture > 75 ? 'Too wet' : 'Perfect range') : 'Waiting for data...'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-lg font-semibold">
-                      {sensorData && sensorData.soilMoisture !== undefined ? `${sensorData.soilMoisture}%` : '--'}
-                    </span>
+                    <div className="text-right">
+                      <motion.span 
+                        className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300"
+                        animate={sensorData?.soilMoisture ? { scale: [1, 1.05, 1] } : {}}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        {sensorData && sensorData.soilMoisture !== undefined ? `${sensorData.soilMoisture}%` : '--'}
+                      </motion.span>
+                    </div>
                   </div>
                 </div>
               </motion.div>

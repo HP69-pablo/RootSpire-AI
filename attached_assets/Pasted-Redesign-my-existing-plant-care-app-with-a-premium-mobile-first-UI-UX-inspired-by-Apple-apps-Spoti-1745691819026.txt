@@ -1,0 +1,12 @@
+Redesign my existing plant care app with a premium, mobile-first UI/UX inspired by Apple apps, Spotify, and Duolingo. The entire experience should feel smooth, cinematic, and joyful. Use a lot of glossy, slightly glassmorphic effects for cards, backgrounds, and navigation. Keep the app lightweight, playful yet sophisticated, and visually rewarding with subtle animations everywhere.
+
+Redesign the dashboard to be very clean, modern, and welcoming. Show quick stats at the top (e.g., number of healthy plants, watering reminders, sunlight status) using small animated cards with soft gradients and shadows. Below that, use a scrollable card layout where each plant has its own stylish card, slightly glowing or reflecting light. When tapping on a plant, it should expand in a smooth, Apple Music-like way into a detailed glossy page with plant data, care tips, and health graphs. Dashboard transitions should feel alive: bounce in, fade in, or swipe transitions. Use playful microinteractions like button presses that ripple or vibrate softly.
+
+Add Light Mode and Dark Mode with smart, beautiful designs for both. In Light Mode, use soft greens, beiges, pastel colors, and clean white spaces. In Dark Mode, use deep greens, black backgrounds with dark translucent cards, bright accent colors, and light text with no harsh whites. Both modes should switch smoothly with a soft animated fade, not an instant color switch.
+
+Add animated graphs to track each plant's health metrics like moisture, sunlight, soil health, and growth over time. Graphs should look artistic but readable, with smooth bezier curve lines and animated transitions when data changes. Graphs must pull live data from the database. Every 5 seconds, the app should auto-save the latest plant data and create a timestamped log, allowing the graphs to properly track historical data over time. Each data point should be interactive: on tap or hover, show a stylish tooltip with exact values and time.
+
+Navigation should be through a floating bottom bar with icons and labels that bounce lightly on tap. Swiping should feel fluid and page loads should be instant. Responsive design is key — everything must adapt gracefully to different screen sizes. Use bold, modern typography for headings and minimalist typography for body text.
+
+The overall vibe: emotional connection to plants, rewarding interactions, high-end design quality, joyful mobile-first experience.
+

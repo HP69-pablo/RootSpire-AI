@@ -86,5 +86,28 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [
+    require("tailwindcss-animate"), 
+    require("@tailwindcss/typography"),
+    function({ addUtilities }) {
+      const newUtilities = {
+        '.scrollbar-thin': {
+          'scrollbar-width': 'thin',
+        },
+        '.scrollbar-thumb-rounded-full': {
+          'scrollbar-color': 'rgba(156, 163, 175, 0.5) transparent',
+        },
+        '.scrollbar-track-transparent': {
+          'scrollbar-width': 'thin',
+        },
+        '.scrollbar-thumb-gray-300': {
+          'scrollbar-color': 'rgba(209, 213, 219, 0.5) transparent',
+        },
+        '.dark .scrollbar-thumb-gray-600': {
+          'scrollbar-color': 'rgba(75, 85, 99, 0.5) transparent',
+        },
+      }
+      addUtilities(newUtilities)
+    }
+  ],
 } satisfies Config;
