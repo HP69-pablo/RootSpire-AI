@@ -237,7 +237,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="fitness-app-bg min-h-screen sf-pro">
+    <div className="dark fitness-app-bg min-h-screen sf-pro">
       <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/90 dark:bg-black/80 border-b border-gray-200 dark:border-white/10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center">
