@@ -615,13 +615,13 @@ export default function MyPlants() {
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <h1 className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-emerald-500 dark:from-green-400 dark:to-emerald-300">My Plants</h1>
-              <div className="h-1 w-16 bg-gradient-to-r from-green-500 to-emerald-400 rounded-full mx-auto mt-2 mb-4"></div>
+              <h1 className="text-3xl font-bold mb-2 text-white">My Plants</h1>
+              <div className="h-1 w-16 bg-primary rounded-full mx-auto mt-2 mb-4"></div>
             </motion.div>
             
             <Dialog open={showAddPlant} onOpenChange={setShowAddPlant}>
               <DialogTrigger asChild>
-                <Button className="bg-green-600 hover:bg-green-700">
+                <Button className="bg-primary hover:bg-primary/90 text-black font-medium">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Plant
                 </Button>
@@ -778,7 +778,7 @@ export default function MyPlants() {
                   <Button
                     onClick={handleAddPlant}
                     disabled={!newPlant.name || !newPlant.species || saving}
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-primary hover:bg-primary/90 text-black font-medium"
                   >
                     {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     {saving ? "Saving..." : "Add Plant"}
@@ -796,21 +796,20 @@ export default function MyPlants() {
               className="w-full max-w-md mx-auto"
             >
               <Card 
-                className="border-0 rounded-3xl shadow-xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl overflow-hidden"
+                className="fitness-card border border-neutral-700 overflow-hidden"
                 style={{ 
-                  boxShadow: "0 20px 50px -10px rgba(0, 0, 0, 0.1), 0 10px 20px -10px rgba(0, 0, 0, 0.05)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)"
+                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.4)",
                 }}
               >
-                <div className="h-1.5 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400 dark:from-green-500 dark:via-emerald-400 dark:to-teal-300" />
+                <div className="h-1 bg-primary" />
                 <CardContent className="p-10 flex flex-col items-center justify-center text-center">
                   <motion.div 
-                    className="w-24 h-24 rounded-full bg-gradient-to-br from-green-100 to-teal-50 dark:from-green-900/30 dark:to-teal-900/30 flex items-center justify-center mb-6 shadow-inner"
+                    className="w-24 h-24 rounded-full bg-neutral-800 flex items-center justify-center mb-6 border border-neutral-700"
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.5, type: "spring" }}
                   >
-                    <Leaf className="h-12 w-12 text-green-500 dark:text-green-400" />
+                    <Leaf className="h-12 w-12 text-primary" />
                   </motion.div>
                   
                   <motion.h3 
@@ -838,7 +837,7 @@ export default function MyPlants() {
                   >
                     <Button
                       onClick={() => setShowAddPlant(true)}
-                      className="bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white border-0 shadow-lg px-6 py-6 h-auto transition-all duration-300"
+                      className="bg-primary hover:bg-primary/90 text-black border-0 shadow-lg px-6 py-6 h-auto transition-all duration-300"
                       size="lg"
                     >
                       <Plus className="mr-2 h-5 w-5" />

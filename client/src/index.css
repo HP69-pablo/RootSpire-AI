@@ -104,13 +104,21 @@
 
 /* Apple Fitness Activity Card */
 .fitness-card {
-  @apply rounded-2xl bg-black/95 backdrop-blur-md border border-gray-800/50 p-4 overflow-hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  @apply rounded-2xl bg-black backdrop-blur-md border border-neutral-700 overflow-hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
 .fitness-card-header {
   @apply text-gray-400 text-sm font-medium mb-2;
   letter-spacing: -0.01em;
+}
+
+.fitness-card .card-header {
+  @apply p-4 pb-2;
+}
+
+.fitness-card .card-content {
+  @apply p-4 pt-0;
 }
 
 /* Apple-style Buttons */
