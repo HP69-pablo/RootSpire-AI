@@ -12,6 +12,7 @@ import { ThemeProvider } from "./lib/ThemeProvider";
 import { AuthProvider } from "./lib/AuthProvider";
 import { ChatBubble } from "@/components/ChatBubble";
 import { FloatingNavigation } from "@/components/FloatingNavigation";
+import { DataCollector } from "@/components/DataCollector";
 
 function Router() {
   return (

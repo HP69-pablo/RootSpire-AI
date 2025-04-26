@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { Header } from '@/components/Header';
 import { useAuth } from '@/lib/AuthProvider';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -127,115 +128,6 @@ export default function MyPlants() {
     }
   }, [profile?.plants]);
   
-  // Get days since last watered
-  const getDaysSinceWatered = (lastWatered?: number): string => {
-    if (!lastWatered) return 'Never';
-    
-    const now = Date.now();
-    const diffMs = now - lastWatered;
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) {
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-      if (diffHours === 0) {
-        return 'Just now';
-      }
-      return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-    } else if (diffDays === 1) {
-      return 'Yesterday';
-    } else {
-      return `${diffDays} days ago`;
-    }
-  };
-  
-  // Get color for health badge
-  const getHealthColor = (health?: string): string => {
-    switch (health?.toLowerCase()) {
-      case 'excellent':
-        return 'bg-green-500 hover:bg-green-600';
-      case 'good':
-        return 'bg-green-400 hover:bg-green-500';
-      case 'fair':
-        return 'bg-yellow-400 hover:bg-yellow-500';
-      case 'poor':
-        return 'bg-red-400 hover:bg-red-500';
-      default:
-        return 'bg-gray-400 hover:bg-gray-500';
-    }
-  };
-  
-  // Handle photo upload
-  const handlePhotoUpload = async () => {
-    if (!photoFile || !selectedPlant || !user) return;
-    
-    setUploadingPhoto(true);
-    
-    try {
-      // Upload the photo to Firebase Storage
-      const downloadUrl = await uploadPlantPhoto(user.uid, selectedPlant.id, photoFile);
-      
-      // Update the plant data with the image URL
-      await updatePlantData(user.uid, selectedPlant.id, {
-        imageUrl: downloadUrl
-      });
-      
-      // Now analyze the photo with Gemini
-      setAnalyzingPhoto(true);
-      
-      // Convert the file to a base64 data URL for Gemini API
-      const reader = new FileReader();
-      reader.readAsDataURL(photoFile);
-      reader.onload = async () => {
-        try {
-          if (typeof reader.result === 'string') {
-            const analysis = await analyzePlantPhoto(reader.result);
-            setAnalysisResult(analysis);
-          }
-        } catch (error) {
-          console.error('Error analyzing plant photo:', error);
-          toast({
-            title: "Analysis failed",
-            description: "We uploaded your photo but couldn't analyze it.",
-            variant: "destructive"
-          });
-        } finally {
-          setAnalyzingPhoto(false);
-        }
-      };
-      
-      reader.onerror = () => {
-        toast({
-          title: "Error",
-          description: "Failed to process the image for analysis",
-          variant: "destructive"
-        });
-        setAnalyzingPhoto(false);
-      };
-      
-      // Refresh the profile to show updated data
-      await refreshProfile();
-      
-      toast({
-        title: "Photo uploaded",
-        description: "Your plant photo has been uploaded."
-      });
-    } catch (error) {
-      console.error('Error uploading plant photo:', error);
-      toast({
-        title: "Upload failed",
-        description: "Failed to upload your plant photo.",
-        variant: "destructive"
-      });
-    } finally {
-      setUploadingPhoto(false);
-    }
-  };
-  
-  // User plants
-  const userPlants = (profile?.plants && typeof profile.plants === 'object')
-    ? Object.values(profile.plants)
-    : [];
-    
   // Open plant details dialog
   const openPlantDetails = (plant: UserPlant) => {
     setSelectedPlant(plant);
@@ -532,62 +424,214 @@ export default function MyPlants() {
       };
       
       reader.onerror = () => {
+        setAnalyzingNewPlantPhoto(false);
         toast({
           title: "Error",
           description: "Failed to process the image for analysis",
           variant: "destructive"
         });
-        setAnalyzingNewPlantPhoto(false);
       };
     } catch (error) {
-      console.error('Error analyzing plant photo:', error);
-      toast({
-        title: "Analysis failed",
-        description: "We couldn't analyze your plant photo. Please try again.",
-        variant: "destructive"
-      });
+      console.error('Error processing plant photo:', error);
       setAnalyzingNewPlantPhoto(false);
     }
   };
-
-  // Handle login prompt
-  const handleLoginPrompt = () => {
-    setLocation('/auth');
+  
+  // Handle plant deletion
+  const handleDeletePlant = async (plantId: string) => {
+    if (!user) return;
+    
+    if (!confirm("Are you sure you want to delete this plant?")) return;
+    
+    try {
+      // Create an updated plants object without the deleted plant
+      if (profile && profile.plants) {
+        // Create a new object without the deleted plant
+        const updatedPlants: Record<string, UserPlant> = {};
+        
+        // Copy all plants except the one to delete
+        Object.entries(profile.plants).forEach(([id, plant]) => {
+          if (id !== plantId) {
+            updatedPlants[id] = plant;
+          }
+        });
+        
+        // Update Firebase with the new plants object
+        const userRef = ref(getDatabase(), `users/${user.uid}/plants`);
+        await set(userRef, updatedPlants);
+        
+        // Refresh the profile
+        await refreshProfile();
+        
+        toast({
+          title: "Plant deleted",
+          description: "The plant has been removed from your collection",
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting plant:', error);
+      toast({
+        title: "Delete failed",
+        description: "Failed to delete the plant. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Handle photo upload and analysis
+  const handlePhotoUpload = async () => {
+    if (!user || !selectedPlant || !photoFile) return;
+    
+    try {
+      setUploadingPhoto(true);
+      
+      // Upload the photo to Firebase Storage
+      const downloadUrl = await uploadPlantPhoto(user.uid, selectedPlant.id, photoFile);
+      
+      // Update the plant data with the image URL
+      await updatePlantData(user.uid, selectedPlant.id, {
+        imageUrl: downloadUrl
+      });
+      
+      toast({
+        title: "Photo uploaded",
+        description: "Your plant photo has been successfully uploaded.",
+      });
+      
+      // Now analyze the photo with Gemini
+      setAnalyzingPhoto(true);
+      
+      // Convert the file to a base64 data URL for Gemini API
+      const reader = new FileReader();
+      reader.readAsDataURL(photoFile);
+      reader.onload = async () => {
+        try {
+          if (typeof reader.result === 'string') {
+            const analysis = await analyzePlantPhoto(reader.result);
+            setAnalysisResult(analysis);
+            
+            // If the confidence is medium or high, update the plant species
+            if (analysis.confidence !== 'low') {
+              await updatePlantData(user.uid, selectedPlant.id, {
+                species: analysis.species,
+                notes: selectedPlant.notes 
+                  ? `${selectedPlant.notes}\n\nAI Analysis: ${analysis.careInstructions}`
+                  : `AI Analysis: ${analysis.careInstructions}`,
+                health: analysis.healthAssessment.toLowerCase().includes('good') 
+                  ? 'good' 
+                  : analysis.healthAssessment.toLowerCase().includes('excellent') 
+                    ? 'excellent'
+                    : analysis.healthAssessment.toLowerCase().includes('poor')
+                      ? 'poor'
+                      : 'fair'
+              });
+              
+              toast({
+                title: "Plant identified",
+                description: `Your plant was identified as ${analysis.commonName} (${analysis.species})`,
+              });
+              
+              // Refresh the profile to show updated data
+              await refreshProfile();
+            }
+          }
+        } catch (error) {
+          console.error('Error analyzing plant photo:', error);
+          toast({
+            title: "Analysis failed",
+            description: "We couldn't analyze your plant photo. Please try again.",
+            variant: "destructive"
+          });
+        } finally {
+          setAnalyzingPhoto(false);
+        }
+      };
+      
+      reader.onerror = () => {
+        toast({
+          title: "Error",
+          description: "Failed to process the image for analysis",
+          variant: "destructive"
+        });
+        setAnalyzingPhoto(false);
+      };
+      
+    } catch (error) {
+      console.error('Error uploading plant photo:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload your plant photo. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingPhoto(false);
+    }
   };
 
-  // If user is not logged in, show a prompt to log in
-  if (!loading && !user) {
+  // Calculate days since last watered
+  const getDaysSinceWatered = (lastWatered?: number) => {
+    if (!lastWatered) return 'Never';
+    const days = Math.floor((Date.now() - lastWatered) / (1000 * 60 * 60 * 24));
+    return days === 0 ? 'Today' : `${days} days ago`;
+  };
+
+  // Get health badge color based on plant health
+  const getHealthColor = (health?: string) => {
+    switch (health) {
+      case 'excellent':
+        return 'bg-green-500';
+      case 'good':
+        return 'bg-green-400';
+      case 'fair':
+        return 'bg-yellow-500';
+      case 'poor':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen font-sans transition-colors duration-300 ease-out bg-gradient-to-br from-slate-50 to-white text-slate-900 dark:from-slate-900 dark:to-slate-800 dark:text-white flex items-center justify-center">
-        <Card className="max-w-md w-full mx-4">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Login Required</CardTitle>
-            <CardDescription>
-              You need to be logged in to view and manage your plants
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <div className="h-24 w-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-                  <Leaf className="h-12 w-12 text-green-500 dark:text-green-400" />
-                </div>
-              </div>
-              <p className="text-center">
-                Please log in to access your plant collection and monitoring tools
-              </p>
-              <Button 
-                className="w-full bg-green-600 hover:bg-green-700 mt-4"
-                onClick={handleLoginPrompt}
-              >
-                Go to Login
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen font-sans transition-colors duration-300 ease-out bg-gradient-to-br from-slate-50 to-white text-slate-900 dark:from-slate-900 dark:to-slate-800 dark:text-white">
+        <Header />
+        <div className="container mx-auto p-4 flex items-center justify-center h-[80vh]">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin mx-auto text-green-500" />
+            <h3 className="mt-4 text-xl">Loading your plants...</h3>
+          </div>
+        </div>
       </div>
     );
   }
+  
+  // Show a login prompt if user is not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen font-sans transition-colors duration-300 ease-out bg-gradient-to-br from-slate-50 to-white text-slate-900 dark:from-slate-900 dark:to-slate-800 dark:text-white">
+        <Header />
+        <div className="container mx-auto p-4 flex items-center justify-center h-[80vh]">
+          <div className="max-w-md bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden md:max-w-2xl p-8 text-center">
+            <div className="mb-6">
+              <Leaf className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold mb-3">Please Log In</h1>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                You need to log in to check your plants' health and manage your collection.
+              </p>
+            </div>
+            <Button 
+              onClick={() => setLocation('/login')}
+              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg"
+            >
+              Go to Login
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const userPlants = profile?.plants ? Object.values(profile.plants) : [];
 
   return (
     <div className="min-h-screen font-sans transition-colors duration-300 ease-out bg-gradient-to-br from-slate-50 to-white text-slate-900 dark:from-slate-900 dark:to-slate-800 dark:text-white">
@@ -838,35 +882,15 @@ export default function MyPlants() {
                              plant.health === 'good' ? '✓ Good' : 
                              plant.health === 'fair' ? '⚠️ Fair' : '⚠️ Poor'}
                           </div>
-                        </div>
-                      ) : (
-                        <div className="h-40 w-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center relative">
-                          {speciesReferenceImages[plant.species] ? (
-                            <div className="relative w-full h-full">
-                              <img 
-                                src={speciesReferenceImages[plant.species]} 
-                                alt={plant.species} 
-                                className="w-full h-full object-cover opacity-60"
-                              />
-                              <div className="absolute inset-0 bg-black bg-opacity-30 flex flex-col items-center justify-center">
-                                <p className="text-white text-sm font-medium mb-1 bg-black/50 px-2 py-1 rounded-md">Reference Image</p>
-                                <p className="text-white text-xs bg-black/50 px-2 py-1 rounded-md">Upload your own photo</p>
-                              </div>
-                            </div>
-                          ) : (
-                            <>
-                              <Camera className="h-8 w-8 text-gray-400 mb-2" />
-                              <p className="text-sm text-gray-500 dark:text-gray-400">No image yet</p>
-                            </>
-                          )}
-                          
-                          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-3">
+                        {/* Quick camera/upload buttons - shown on hover */}
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <div className="flex gap-2">
                             <Button 
                               size="sm"
-                              variant="outline" 
-                              className="bg-white/90 dark:bg-slate-800/90"
+                              variant="secondary"
+                              className="bg-white text-black dark:bg-slate-800 dark:text-white h-10 w-10 rounded-full p-0 shadow-lg"
                               onClick={(e) => {
-                                e.stopPropagation(); // Prevent opening details
+                                e.stopPropagation(); // Prevent opening details modal
                                 if (fileInputRef.current) {
                                   setSelectedPlant(plant);
                                   fileInputRef.current.removeAttribute('capture');
@@ -874,15 +898,14 @@ export default function MyPlants() {
                                 }
                               }}
                             >
-                              <Upload className="h-3.5 w-3.5 mr-1" />
-                              Gallery
+                              <Upload className="h-5 w-5" />
                             </Button>
                             <Button 
                               size="sm"
-                              variant="outline" 
-                              className="bg-white/90 dark:bg-slate-800/90"
+                              variant="secondary" 
+                              className="bg-white text-black dark:bg-slate-800 dark:text-white h-10 w-10 rounded-full p-0 shadow-lg"
                               onClick={(e) => {
-                                e.stopPropagation(); // Prevent opening details
+                                e.stopPropagation(); // Prevent opening details modal
                                 if (fileInputRef.current) {
                                   setSelectedPlant(plant);
                                   fileInputRef.current.setAttribute('capture', 'environment');
@@ -890,147 +913,214 @@ export default function MyPlants() {
                                 }
                               }}
                             >
-                              <Camera className="h-3.5 w-3.5 mr-1" />
-                              Camera
+                              <Camera className="h-5 w-5" />
                             </Button>
                           </div>
                         </div>
-                      )}
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
-                          <CardTitle className="text-xl">{plant.name}</CardTitle>
-                          <Badge className={getHealthColor(plant.health)}>
-                            {plant.health || 'Unknown'}
-                          </Badge>
-                        </div>
-                        <CardDescription>{plant.species}</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex items-center text-sm">
-                            <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                            <span>Added {new Date(plant.addedAt).toLocaleDateString()}</span>
-                          </div>
-                          
-                          <div className="flex items-center text-sm">
-                            <Droplet className="h-4 w-4 mr-2 text-blue-500" />
-                            <span>Last watered: {getDaysSinceWatered(plant.lastWatered)}</span>
-                          </div>
-                          
-                          {plant.notes && (
-                            <div 
-                              className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md text-sm mt-3 cursor-pointer relative overflow-hidden" 
-                              style={{ maxHeight: '60px' }}
-                              onClick={(e) => {
-                                const target = e.currentTarget;
-                                if (target.style.maxHeight === '60px') {
-                                  target.style.maxHeight = '1000px';
-                                } else {
-                                  target.style.maxHeight = '60px';
-                                }
-                              }}
-                            >
-                              <div className="relative">
-                                {plant.notes}
-                                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-50 to-transparent dark:from-gray-700/50"></div>
-                              </div>
-                              <div className="flex justify-center mt-1">
-                                <span className="text-xs text-gray-500 dark:text-gray-400">Click to expand</span>
-                              </div>
+                      </div>
+                    ) : (
+                      <div className="h-40 w-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center relative">
+                        {speciesReferenceImages[plant.species] ? (
+                          <div className="relative w-full h-full">
+                            <img 
+                              src={speciesReferenceImages[plant.species]} 
+                              alt={plant.species} 
+                              className="w-full h-full object-cover opacity-60"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-30 flex flex-col items-center justify-center">
+                              <p className="text-white text-sm font-medium mb-1 bg-black/50 px-2 py-1 rounded-md">Reference Image</p>
+                              <p className="text-white text-xs bg-black/50 px-2 py-1 rounded-md">Upload your own photo</p>
                             </div>
-                          )}
-                          
-                          <div className="pt-2 flex gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900 dark:hover:bg-blue-900/20"
-                              disabled={wateringDisabled}
-                              onClick={(e) => {
-                                e.stopPropagation(); // Prevent opening details modal
-                                
-                                // First, activate the watering system in Firebase
-                                if (user && plant) {
-                                  setWateringDisabled(true);
-                                  
-                                  // Activate the watering system
-                                  setWateringActive(true)
-                                    .then(() => {
-                                      toast({
-                                        title: "Watering...",
-                                        description: `Watering system activated for ${plant.name}.`
-                                      });
-                                      
-                                      // After 3 seconds, turn off the watering system
-                                      setTimeout(() => {
-                                        setWateringActive(false)
-                                          .then(() => {
-                                            console.log('Watering system deactivated');
-                                            
-                                            // Now update the plant's last watered timestamp
-                                            return updatePlantData(user.uid, plant.id, {
-                                              lastWatered: Date.now()
-                                            });
-                                          })
-                                          .then(() => {
-                                            refreshProfile();
-                                            toast({
-                                              title: "Plant watered",
-                                              description: `${plant.name} has been marked as watered.`
-                                            });
-                                            
-                                            // Add a cooldown to prevent button spamming
-                                            setTimeout(() => {
-                                              setWateringDisabled(false);
-                                            }, 5000);
-                                          })
-                                          .catch((error) => {
-                                            console.error('Error updating plant watering status:', error);
-                                            setWateringDisabled(false);
-                                          });
-                                      }, 3000);
-                                    })
-                                    .catch((error) => {
-                                      console.error('Error activating watering system:', error);
-                                      toast({
-                                        title: "Error",
-                                        description: "Couldn't activate watering system. Please try again.",
-                                        variant: "destructive"
-                                      });
-                                      setWateringDisabled(false);
-                                    });
-                                }
-                              }}
-                            >
-                              {wateringDisabled ? (
-                                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                              ) : (
-                                <Droplet className="h-3.5 w-3.5 mr-1" />
-                              )}
-                              Water
-                            </Button>
-                            
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="flex-1"
-                              onClick={(e) => {
-                                e.stopPropagation(); // Prevent opening details modal
-                                openPhotoDialog(plant);
-                              }}
-                            >
-                              <Camera className="h-3.5 w-3.5 mr-1" />
-                              Photo
-                            </Button>
                           </div>
+                        ) : (
+                          <>
+                            <Camera className="h-8 w-8 text-gray-400 mb-2" />
+                            <p className="text-sm text-gray-500 dark:text-gray-400">No image yet</p>
+                          </>
+                        )}
+                        
+                        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-3">
+                          <Button 
+                            size="sm"
+                            variant="outline" 
+                            className="bg-white/90 dark:bg-slate-800/90"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening details
+                              if (fileInputRef.current) {
+                                setSelectedPlant(plant);
+                                fileInputRef.current.removeAttribute('capture');
+                                fileInputRef.current.click();
+                              }
+                            }}
+                          >
+                            <Upload className="h-3.5 w-3.5 mr-1" />
+                            Gallery
+                          </Button>
+                          <Button 
+                            size="sm"
+                            variant="outline" 
+                            className="bg-white/90 dark:bg-slate-800/90"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening details
+                              if (fileInputRef.current) {
+                                setSelectedPlant(plant);
+                                fileInputRef.current.setAttribute('capture', 'environment');
+                                fileInputRef.current.click();
+                              }
+                            }}
+                          >
+                            <Camera className="h-3.5 w-3.5 mr-1" />
+                            Camera
+                          </Button>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
+                      </div>
+                    )}
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-xl">{plant.name}</CardTitle>
+                        <Badge className={getHealthColor(plant.health)}>
+                          {plant.health || 'Unknown'}
+                        </Badge>
+                      </div>
+                      <CardDescription>{plant.species}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center text-sm">
+                          <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                          <span>Added {new Date(plant.addedAt).toLocaleDateString()}</span>
+                        </div>
+                        
+                        <div className="flex items-center text-sm">
+                          <Droplet className="h-4 w-4 mr-2 text-blue-500" />
+                          <span>Last watered: {getDaysSinceWatered(plant.lastWatered)}</span>
+                        </div>
+                        
+                        {plant.notes && (
+                          <div 
+                            className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md text-sm mt-3 cursor-pointer relative overflow-hidden" 
+                            style={{ maxHeight: '60px' }}
+                            onClick={(e) => {
+                              const target = e.currentTarget;
+                              if (target.style.maxHeight === '60px') {
+                                target.style.maxHeight = '1000px';
+                              } else {
+                                target.style.maxHeight = '60px';
+                              }
+                            }}
+                          >
+                            <div className="relative">
+                              {plant.notes}
+                              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-50 to-transparent dark:from-gray-700/50"></div>
+                            </div>
+                            <div className="flex justify-center mt-1">
+                              <span className="text-xs text-gray-500 dark:text-gray-400">Click to expand</span>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="pt-2 flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900 dark:hover:bg-blue-900/20"
+                            disabled={wateringDisabled}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening details modal
+                              
+                              // First, activate the watering system in Firebase
+                              if (user && plant) {
+                                setWateringDisabled(true);
+                                
+                                // Activate the watering system
+                                setWateringActive(true)
+                                  .then(() => {
+                                    toast({
+                                      title: "Watering...",
+                                      description: `Watering system activated for ${plant.name}.`
+                                    });
+                                    
+                                    // After 3 seconds, turn off the watering system
+                                    setTimeout(() => {
+                                      setWateringActive(false)
+                                        .then(() => {
+                                          console.log('Watering system deactivated');
+                                          
+                                          // Now update the plant's last watered timestamp
+                                          return updatePlantData(user.uid, plant.id, {
+                                            lastWatered: Date.now()
+                                          });
+                                        })
+                                        .then(() => {
+                                          refreshProfile();
+                                          toast({
+                                            title: "Plant watered",
+                                            description: `${plant.name} has been marked as watered.`
+                                          });
+                                          
+                                          // Add a cooldown to prevent button spamming
+                                          setTimeout(() => {
+                                            setWateringDisabled(false);
+                                          }, 5000);
+                                        })
+                                        .catch(error => {
+                                          console.error('Error during watering process:', error);
+                                          setWateringDisabled(false);
+                                          toast({
+                                            title: "Watering failed",
+                                            description: "There was an error with the watering system.",
+                                            variant: "destructive"
+                                          });
+                                        });
+                                    }, 3000);
+                                  })
+                                  .catch(error => {
+                                    console.error('Failed to activate watering system:', error);
+                                    setWateringDisabled(false);
+                                    toast({
+                                      title: "Watering failed",
+                                      description: "Could not activate the watering system.",
+                                      variant: "destructive"
+                                    });
+                                  });
+                              }
+                            }}
+                          >
+                            <Droplet className="h-3.5 w-3.5 mr-1" />
+                            Water
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="flex-1 dark:text-gray-300"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening details modal
+                              openPhotoDialog(plant);
+                            }}
+                          >
+                            <Camera className="h-3.5 w-3.5 mr-1" />
+                            Photo
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/30 dark:hover:bg-red-900/20 px-1"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening details modal
+                              handleDeletePlant(plant.id);
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
             </div>
           )}
+          </div>
         </motion.div>
       </main>
       
@@ -1275,6 +1365,17 @@ export default function MyPlants() {
                               <div className="font-medium">{sensorData.temperature}°C</div>
                             </div>
                           </div>
+                          <Badge 
+                            className={
+                              sensorData.temperature > 30 ? "bg-red-500" : 
+                              sensorData.temperature < 10 ? "bg-blue-500" : 
+                              "bg-green-500"
+                            }
+                          >
+                            {sensorData.temperature > 30 ? "High" : 
+                             sensorData.temperature < 10 ? "Low" : 
+                             "Optimal"}
+                          </Badge>
                         </div>
                         
                         {/* Humidity */}
@@ -1282,8 +1383,7 @@ export default function MyPlants() {
                           <div className="flex items-center">
                             <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-3">
                               <svg className="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z" />
-                                <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97" />
+                                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
                               </svg>
                             </div>
                             <div>
@@ -1291,136 +1391,198 @@ export default function MyPlants() {
                               <div className="font-medium">{sensorData.humidity}%</div>
                             </div>
                           </div>
+                          <Badge 
+                            className={
+                              sensorData.humidity > 70 ? "bg-blue-500" : 
+                              sensorData.humidity < 30 ? "bg-yellow-500" : 
+                              "bg-green-500"
+                            }
+                          >
+                            {sensorData.humidity > 70 ? "High" : 
+                             sensorData.humidity < 30 ? "Low" : 
+                             "Optimal"}
+                          </Badge>
                         </div>
                         
                         {/* Light */}
+                        {sensorData.light !== undefined && (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mr-3">
+                                <svg className="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="5" />
+                                  <line x1="12" y1="1" x2="12" y2="3" />
+                                  <line x1="12" y1="21" x2="12" y2="23" />
+                                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                                  <line x1="1" y1="12" x2="3" y2="12" />
+                                  <line x1="21" y1="12" x2="23" y2="12" />
+                                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                                </svg>
+                              </div>
+                              <div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">Light</div>
+                                <div className="font-medium">{sensorData.light}%</div>
+                              </div>
+                            </div>
+                            <Badge 
+                              className={
+                                sensorData.light > 80 ? "bg-orange-500" : 
+                                sensorData.light < 30 ? "bg-indigo-500" : 
+                                "bg-green-500"
+                              }
+                            >
+                              {sensorData.light > 80 ? "Bright" : 
+                               sensorData.light < 30 ? "Low" : 
+                               "Good"}
+                            </Badge>
+                          </div>
+                        )}
+                        
+                        {/* Water Status */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
-                            <div className="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mr-3">
-                              <svg className="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="12" cy="12" r="5" />
-                                <line x1="12" y1="1" x2="12" y2="3" />
-                                <line x1="12" y1="21" x2="12" y2="23" />
-                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                                <line x1="1" y1="12" x2="3" y2="12" />
-                                <line x1="21" y1="12" x2="23" y2="12" />
-                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                              </svg>
+                            <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-3">
+                              <Droplet className="h-5 w-5 text-blue-500" />
                             </div>
                             <div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400">Light</div>
-                              <div className="font-medium">{sensorData.light || 'N/A'} lux</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">Last Watered</div>
+                              <div className="font-medium">{getDaysSinceWatered(selectedPlant.lastWatered)}</div>
                             </div>
                           </div>
+                          <Badge 
+                            className={
+                              !selectedPlant.lastWatered ? "bg-red-500" :
+                              (Date.now() - selectedPlant.lastWatered) > (1000 * 60 * 60 * 24 * 5) ? "bg-yellow-500" : 
+                              "bg-green-500"
+                            }
+                          >
+                            {!selectedPlant.lastWatered ? "Never Watered" :
+                             (Date.now() - selectedPlant.lastWatered) > (1000 * 60 * 60 * 24 * 5) ? "Needs Water" : 
+                             "Good"}
+                          </Badge>
                         </div>
                         
-                        {/* Soil Moisture */}
+                        {/* NPK Levels (simulated for demo) */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-3">
-                              <svg className="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M8 16a5 5 0 0 1 10 0" />
-                                <line x1="2" y1="16" x2="22" y2="16" />
-                                <line x1="2" y1="20" x2="22" y2="20" />
-                              </svg>
+                              <Leaf className="h-5 w-5 text-green-500" />
                             </div>
                             <div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400">Soil Moisture</div>
-                              <div className="font-medium">{sensorData.soilMoisture || 'N/A'}%</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">Nutrient Levels</div>
+                              <div className="font-medium">N: Medium, P: High, K: Low</div>
                             </div>
                           </div>
+                          <Badge className="bg-yellow-500">
+                            Needs Potassium
+                          </Badge>
                         </div>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center py-6">
-                        <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-2" />
-                        <p className="text-gray-500 dark:text-gray-400">Loading sensor data...</p>
+                      <div className="flex justify-center items-center h-40">
+                        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
                       </div>
                     )}
                   </div>
                   
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => openPhotoDialog(selectedPlant)}
-                    >
-                      <Camera className="mr-2 h-4 w-4" />
-                      Update Photo
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 text-red-500 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/20"
-                      onClick={async () => {
-                        if (!user || !selectedPlant) return;
-                        
-                        try {
-                          // Remove plant from user profile 
-                          // We're just setting it to null in the database, which Firebase will interpret as a delete
-                          const db = getDatabase();
-                          const plantRef = ref(db, `users/${user.uid}/plants/${selectedPlant.id}`);
-                          await set(plantRef, null);
+                  {/* Health Assessment */}
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <h3 className="text-lg font-medium mb-1">AI Health Assessment</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      Based on current environmental conditions
+                    </p>
+                    
+                    <div className="text-sm mt-2">
+                      {sensorData ? (
+                        <div>
+                          {sensorData.temperature > 30 && (
+                            <div className="flex items-start mb-2">
+                              <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>Temperature is too high, consider moving to a cooler location.</p>
+                            </div>
+                          )}
+                          {sensorData.temperature < 10 && (
+                            <div className="flex items-start mb-2">
+                              <AlertCircle className="h-4 w-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>Temperature is too low, consider moving to a warmer location.</p>
+                            </div>
+                          )}
+                          {sensorData.humidity < 30 && (
+                            <div className="flex items-start mb-2">
+                              <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>Humidity is too low, consider misting the plant or using a humidifier.</p>
+                            </div>
+                          )}
+                          {sensorData.humidity > 70 && (
+                            <div className="flex items-start mb-2">
+                              <AlertCircle className="h-4 w-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>Humidity is high, ensure good air circulation to prevent fungal issues.</p>
+                            </div>
+                          )}
+                          {sensorData.light !== undefined && sensorData.light < 30 && (
+                            <div className="flex items-start mb-2">
+                              <AlertCircle className="h-4 w-4 text-indigo-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>Light levels are low, consider moving to a brighter location.</p>
+                            </div>
+                          )}
+                          {selectedPlant.lastWatered && (Date.now() - selectedPlant.lastWatered) > (1000 * 60 * 60 * 24 * 5) && (
+                            <div className="flex items-start mb-2">
+                              <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>Plant hasn't been watered in over 5 days, consider watering soon.</p>
+                            </div>
+                          )}
                           
-                          toast({
-                            title: "Plant removed",
-                            description: `${selectedPlant.name} has been removed from your collection`,
-                          });
-                          
-                          // Refresh profile and close the dialog
-                          await refreshProfile();
-                          setPlantDetailsOpen(false);
-                        } catch (error) {
-                          console.error('Error deleting plant:', error);
-                          toast({
-                            title: "Error",
-                            description: "Failed to remove plant from your collection",
-                            variant: "destructive"
-                          });
-                        }
-                      }}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Remove Plant
-                    </Button>
+                          {/* If everything is optimal */}
+                          {sensorData.temperature >= 10 && sensorData.temperature <= 30 &&
+                           sensorData.humidity >= 30 && sensorData.humidity <= 70 &&
+                           (sensorData.light === undefined || sensorData.light >= 30) &&
+                           (selectedPlant.lastWatered && (Date.now() - selectedPlant.lastWatered) <= (1000 * 60 * 60 * 24 * 5)) && (
+                            <div className="flex items-start mb-2">
+                              <Check className="h-4 w-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
+                              <p>All metrics are within optimal ranges. Your plant is healthy!</p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex justify-center items-center h-20">
+                          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
               
-              <div className="mt-4">
-                <h3 className="text-lg font-medium mb-3">Notes</h3>
-                {selectedPlant.notes ? (
-                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg whitespace-pre-line">
-                    {selectedPlant.notes}
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg text-gray-500 dark:text-gray-400 text-center">
-                    No notes added for this plant
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex justify-end gap-2 mt-4">
-                <Button
-                  variant="outline"
+              <DialogFooter className="mt-4">
+                <Button 
+                  variant="outline" 
                   onClick={() => setPlantDetailsOpen(false)}
                 >
                   Close
                 </Button>
                 <Button
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-green-600 hover:bg-green-700"
                   onClick={() => {
-                    // Close the dialog and navigate to Analytics page when implemented
-                    toast({
-                      title: "Coming Soon",
-                      description: "Detailed analytics view is under development"
-                    });
+                    // Mark as watered
+                    if (user && selectedPlant) {
+                      updatePlantData(user.uid, selectedPlant.id, {
+                        lastWatered: Date.now()
+                      }).then(() => {
+                        refreshProfile();
+                        toast({
+                          title: "Plant watered",
+                          description: `${selectedPlant.name} has been marked as watered.`
+                        });
+                      });
+                    }
                   }}
                 >
-                  View Detailed Analytics
+                  <Droplet className="mr-2 h-4 w-4" />
+                  Mark as Watered
                 </Button>
-              </div>
+              </DialogFooter>
             </>
           )}
         </DialogContent>

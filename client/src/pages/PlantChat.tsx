@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { Header } from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -172,20 +171,25 @@ Would you like any specific information about this plant?
 
   return (
     <>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white font-sans transition-colors duration-200 ease-in-out">
-        <Header />
-        
-        <main className="container px-4 py-6 mx-auto">
-          <Card className="mx-auto max-w-3xl border dark:border-slate-700">
-            <CardHeader className="border-b dark:border-slate-700">
-              <div className="flex items-center gap-2">
-                <Flower2 className="h-5 w-5 text-green-600" />
-                <CardTitle>Plant Care Assistant</CardTitle>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 text-slate-900 dark:text-white font-sans transition-colors duration-200 ease-in-out">
+        <main className="container px-4 py-10 md:py-16 mx-auto">
+          <div className="flex justify-center">
+            <div className="text-center mb-6">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Flower2 className="h-7 w-7 text-green-600" />
+                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-emerald-500 dark:from-green-400 dark:to-emerald-300">Plant Care Assistant</h1>
               </div>
-              <CardDescription>
-                Ask questions about plant care, gardening, and agricultural tips
-              </CardDescription>
-            </CardHeader>
+              <div className="h-1 w-16 bg-gradient-to-r from-green-500 to-emerald-400 rounded-full mx-auto mb-2"></div>
+              <p className="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
+                Your personal AI plant expert. Ask questions about plant care, gardening, and agricultural tips
+              </p>
+            </div>
+          </div>
+          
+          <Card className="mx-auto max-w-3xl border-0 shadow-lg bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl overflow-hidden"
+                style={{
+                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)"
+                }}>
             
             <CardContent className="p-0">
               {/* Chat Messages Area */}
