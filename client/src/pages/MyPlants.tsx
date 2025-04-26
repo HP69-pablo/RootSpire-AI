@@ -849,21 +849,22 @@ export default function MyPlants() {
             </motion.div>
           ) : (
             <div className="flex justify-center">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
                 {userPlants.map((plant) => (
                   <motion.div
                     key={plant.id}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     whileHover={{ 
-                      scale: 1.02,
-                      boxShadow: "0 10px 30px rgba(0, 0, 0, 0.2)"
+                      scale: 1.03,
+                      boxShadow: "0 15px 35px rgba(0, 150, 136, 0.15), 0 5px 15px rgba(0, 0, 0, 0.05)",
+                      y: -5
                     }}
                     transition={{ duration: 0.4, ease: [0.19, 1.0, 0.22, 1.0] }}
-                    className="w-full aspect-square"
+                    className="w-full aspect-[0.8]"
                   >
                     <Card 
-                      className="overflow-hidden fitness-card cursor-pointer group w-full h-full flex flex-col border border-neutral-700"
+                      className="overflow-hidden fitness-card cursor-pointer group w-full h-full flex flex-col border-white/10 dark:border-neutral-700 shadow-lg bg-white dark:bg-gray-800"
                       onClick={() => openPlantDetails(plant)}
                     >
                       {plant.imageUrl ? (
@@ -871,12 +872,16 @@ export default function MyPlants() {
                           <img 
                             src={plant.imageUrl} 
                             alt={plant.name} 
-                            className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" 
+                            className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 transform-gpu" 
                           />
                           <div 
-                            className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                            className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-50 group-hover:opacity-70 transition-opacity duration-300"
                           />
-                          <div className="absolute top-3 right-3 bg-white/85 dark:bg-slate-800/85 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold shadow-sm border border-white/10 dark:border-slate-700/10">
+                          <div className="absolute bottom-4 left-4 right-4">
+                            <h3 className="font-bold text-xl text-white drop-shadow-md mb-1 truncate">{plant.name}</h3>
+                            <p className="text-white/90 text-sm truncate drop-shadow-md">{plant.species}</p>
+                          </div>
+                          <div className="absolute top-3 right-3 bg-white/85 dark:bg-slate-800/85 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold shadow-md border border-white/10 dark:border-slate-700/10">
                             {plant.health === 'excellent' ? '⭐ Excellent' : 
                              plant.health === 'good' ? '✓ Good' : 
                              plant.health === 'fair' ? '⚠️ Fair' : '⚠️ Poor'}
@@ -948,28 +953,28 @@ export default function MyPlants() {
                       )}
                       <CardHeader className="p-4 pb-2">
                         <div className="flex justify-between items-start">
-                          <CardTitle className="text-xl font-semibold text-white">{plant.name}</CardTitle>
+                          <CardTitle className="text-xl font-semibold text-gray-800 dark:text-white">{plant.name}</CardTitle>
                           <Badge className={getHealthColor(plant.health)}>
                             {plant.health || 'Unknown'}
                           </Badge>
                         </div>
-                        <CardDescription className="text-neutral-400">{plant.species}</CardDescription>
+                        <CardDescription className="text-gray-600 dark:text-gray-300">{plant.species}</CardDescription>
                       </CardHeader>
                       <CardContent className="p-4 pt-0">
                         <div className="space-y-3">
-                          <div className="flex items-center text-sm">
-                            <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                          <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                            <Calendar className="h-4 w-4 mr-2 text-emerald-600 dark:text-emerald-400" />
                             <span>Added {new Date(plant.addedAt).toLocaleDateString()}</span>
                           </div>
                           
-                          <div className="flex items-center text-sm">
-                            <Droplet className="h-4 w-4 mr-2 text-blue-500" />
+                          <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                            <Droplet className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
                             <span>Last watered: {getDaysSinceWatered(plant.lastWatered)}</span>
                           </div>
                           
                           {plant.notes && (
                             <div 
-                              className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md text-sm mt-3 cursor-pointer relative overflow-hidden" 
+                              className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-md text-sm mt-3 cursor-pointer relative overflow-hidden border border-emerald-100 dark:border-emerald-800/30 shadow-sm" 
                               style={{ maxHeight: '60px' }}
                               onClick={(e) => {
                                 const target = e.currentTarget;
@@ -980,12 +985,12 @@ export default function MyPlants() {
                                 }
                               }}
                             >
-                              <div className="relative">
+                              <div className="relative text-gray-700 dark:text-gray-200">
                                 {plant.notes}
-                                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-50 to-transparent dark:from-gray-700/50"></div>
+                                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-emerald-50 to-transparent dark:from-emerald-900/20"></div>
                               </div>
                               <div className="flex justify-center mt-1">
-                                <span className="text-xs text-gray-500 dark:text-gray-400">Click to expand</span>
+                                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Click to expand</span>
                               </div>
                             </div>
                           )}
