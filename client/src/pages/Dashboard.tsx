@@ -636,8 +636,8 @@ export default function Dashboard() {
         </div>
       </main>
 
-      <footer className="border-t border-white/10 mt-6 py-6 backdrop-blur-md bg-black/30">
-        <div className="container mx-auto px-4 text-center text-sm text-gray-500">
+      <footer className="border-t border-gray-200 dark:border-white/10 mt-6 py-6 backdrop-blur-md bg-white/50 dark:bg-black/30">
+        <div className="container mx-auto px-4 text-center text-sm text-gray-600 dark:text-gray-400">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

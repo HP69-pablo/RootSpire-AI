@@ -132,7 +132,6 @@ export function FloatingNavigation() {
   const navItems = [
     { path: '/', icon: Home, label: 'Home' },
     { path: '/my-plants', icon: Leaf, label: 'My Plants' },
-    { path: '/analytics', icon: BarChart2, label: 'Analytics' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/settings', icon: Settings, label: 'Settings' }
   ];
@@ -242,11 +241,11 @@ export function FloatingNavigation() {
             )}
           </AnimatePresence>
           
-          {/* Apple Fitness navigation bar with dark background and subtle borders */}
+          {/* Apple Fitness navigation bar with support for both light and dark mode */}
           <motion.div
-            className="bg-black border border-gray-800 backdrop-blur-2xl rounded-full shadow-xl mx-4 pointer-events-auto"
+            className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 backdrop-blur-2xl rounded-full shadow-xl mx-4 pointer-events-auto"
             style={{
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               width: 'calc(100% - 2rem)',
@@ -254,9 +253,9 @@ export function FloatingNavigation() {
             }}
             animate={{
               boxShadow: [
-                '0 10px 30px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(255, 255, 255, 0.1) inset, 0 0 0 0.5px rgba(255, 255, 255, 0.2)',
-                '0 10px 30px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(255, 255, 255, 0.1) inset, 0 0 0 0.5px rgba(255, 255, 255, 0.25)',
-                '0 10px 30px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(255, 255, 255, 0.1) inset, 0 0 0 0.5px rgba(255, 255, 255, 0.2)'
+                '0 10px 30px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05) inset, 0 0 0 0.5px rgba(0, 0, 0, 0.05)',
+                '0 10px 30px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1) inset, 0 0 0 0.5px rgba(0, 0, 0, 0.1)',
+                '0 10px 30px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05) inset, 0 0 0 0.5px rgba(0, 0, 0, 0.05)'
               ]
             }}
             transition={{
@@ -274,8 +273,8 @@ export function FloatingNavigation() {
                     <motion.div
                       className={`flex flex-col items-center justify-center py-2 px-2.5 rounded-full ${
                         active 
-                          ? 'bg-gray-800/90 shadow-lg' 
-                          : 'text-gray-500 hover:bg-gray-800/50 transition-all'
+                          ? 'bg-gray-100/90 dark:bg-gray-800/90 shadow-lg' 
+                          : 'text-gray-600 dark:text-gray-500 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all'
                       } cursor-pointer`}
                       whileTap="tap"
                       variants={iconVariants}
@@ -297,7 +296,7 @@ export function FloatingNavigation() {
                         className={`flex items-center justify-center p-2 rounded-full ${
                           active 
                             ? 'text-primary' 
-                            : 'text-gray-400'
+                            : 'text-gray-600 dark:text-gray-400'
                         }`}
                         animate={active ? {
                           scale: [1, 1.03, 1],
@@ -314,7 +313,7 @@ export function FloatingNavigation() {
                       </motion.div>
                       
                       <span className={`text-xs mt-1.5 font-medium sf-pro-display tracking-tight ${
-                        active ? 'text-primary' : 'text-gray-400'
+                        active ? 'text-primary' : 'text-gray-600 dark:text-gray-400'
                       }`}>
                         {item.label}
                       </span>
