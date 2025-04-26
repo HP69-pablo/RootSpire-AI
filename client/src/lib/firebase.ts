@@ -27,7 +27,7 @@ import { getApp, getApps } from 'firebase/app';
 
 // Use these variables to store our Firebase instances
 let app: any;
-let database: any;
+export let database: any;
 let storage: any;
 let firebaseInitialized = false;
 
@@ -206,6 +206,19 @@ export interface SensorHistory {
     light?: number;
     soilMoisture?: number;
   };
+}
+
+export interface MetricHistoryPoint {
+  timestamp: number;
+  value: number;
+}
+
+export interface PlantHistoryData {
+  timestamp: number;
+  temperature?: number;
+  humidity?: number;
+  light?: number;
+  soilMoisture?: number;
 }
 
 // Subscribe to real-time sensor data using the specific paths provided:

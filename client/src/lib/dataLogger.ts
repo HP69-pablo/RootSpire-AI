@@ -1,5 +1,5 @@
 import { ref, set, push, serverTimestamp } from 'firebase/database';
-import { db } from './firebase';
+import { database } from './firebase';
 import { SensorData } from './firebase';
 
 /**
@@ -68,10 +68,10 @@ export class DataLogger {
   private async logCurrentData(): Promise<void> {
     try {
       // Get reference to the current data
-      const currentDataRef = ref(db, 'sensorData/current');
+      const currentDataRef = ref(database, 'sensorData/current');
       
       // Get reference to the history data
-      const historyRef = ref(db, `sensorData/history/${this.plantId}`);
+      const historyRef = ref(database, `sensorData/history/${this.plantId}`);
       
       // Create a new entry in the history with an auto-generated ID
       const newHistoryRef = push(historyRef);
@@ -87,10 +87,10 @@ export class DataLogger {
       };
       
       // Fetch the current temperature from Firebase
-      const temperatureRef = ref(db, 'sensorData/current/temperature');
-      const humidityRef = ref(db, 'sensorData/current/humidity');
-      const lightRef = ref(db, 'sensorData/current/light');
-      const soilMoistureRef = ref(db, 'sensorData/current/soilMoisture');
+      const temperatureRef = ref(database, 'sensorData/current/temperature');
+      const humidityRef = ref(database, 'sensorData/current/humidity');
+      const lightRef = ref(database, 'sensorData/current/Light'); // Capital L as in the API
+      const soilMoistureRef = ref(database, 'sensorData/current/soilMoister'); // 'soilMoister' as in the API
       
       // Use dynamic imports to avoid circular dependencies
       const { onValue } = await import('firebase/database');
