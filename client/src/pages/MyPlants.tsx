@@ -863,7 +863,7 @@ export default function MyPlants() {
                     className="w-full aspect-square"
                   >
                     <Card 
-                      className="overflow-hidden fitness-card cursor-pointer group w-full h-full flex flex-col"
+                      className="overflow-hidden fitness-card cursor-pointer group w-full h-full flex flex-col border border-neutral-700"
                       onClick={() => openPlantDetails(plant)}
                     >
                       {plant.imageUrl ? (
@@ -946,16 +946,16 @@ export default function MyPlants() {
                           </div>
                         </div>
                       )}
-                      <CardHeader className="pb-2">
+                      <CardHeader className="p-4 pb-2">
                         <div className="flex justify-between items-start">
-                          <CardTitle className="text-xl">{plant.name}</CardTitle>
+                          <CardTitle className="text-xl font-semibold text-white">{plant.name}</CardTitle>
                           <Badge className={getHealthColor(plant.health)}>
                             {plant.health || 'Unknown'}
                           </Badge>
                         </div>
-                        <CardDescription>{plant.species}</CardDescription>
+                        <CardDescription className="text-neutral-400">{plant.species}</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="p-4 pt-0">
                         <div className="space-y-3">
                           <div className="flex items-center text-sm">
                             <Calendar className="h-4 w-4 mr-2 text-gray-500" />
@@ -994,7 +994,7 @@ export default function MyPlants() {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900 dark:hover:bg-blue-900/20"
+                              className="flex-1 text-primary border-neutral-700 bg-neutral-800 hover:bg-neutral-700"
                               disabled={wateringDisabled}
                               onClick={(e) => {
                                 e.stopPropagation(); // Prevent opening details modal
@@ -1063,7 +1063,7 @@ export default function MyPlants() {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              className="flex-1"
+                              className="flex-1 text-primary border-neutral-700 bg-neutral-800 hover:bg-neutral-700"
                               onClick={(e) => {
                                 e.stopPropagation(); // Prevent opening details modal
                                 openPhotoDialog(plant);
