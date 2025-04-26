@@ -5,20 +5,26 @@ type Theme = "light" | "dark";
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
+  setTheme: (theme: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Always use dark mode to match Apple Fitness app
-  const [theme, setTheme] = useState<Theme>("dark");
+  // Initialize theme from localStorage or default to light mode (per app UI requirements)
+  const [theme, setThemeState] = useState<Theme>(() => {
+    const savedTheme = localStorage.getItem("theme");
+    return (savedTheme === "light" || savedTheme === "dark") ? savedTheme : "light";
+  });
 
   useEffect(() => {
-    // Update HTML class when theme changes
+    // Update HTML class and document theme when theme changes
     if (theme === "dark") {
       document.documentElement.classList.add("dark");
+      document.documentElement.style.colorScheme = "dark";
     } else {
       document.documentElement.classList.remove("dark");
+      document.documentElement.style.colorScheme = "light";
     }
     
     // Save theme preference
@@ -26,11 +32,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prevTheme => (prevTheme === "light" ? "dark" : "light"));
+    setThemeState(prevTheme => (prevTheme === "light" ? "dark" : "light"));
+  };
+  
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );
