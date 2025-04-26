@@ -27,29 +27,37 @@ interface AnimatedPlantGraphProps {
   height?: number;
 }
 
-// Mapping for the data types, their colors, gradients and units
+// Mapping for the data types with colors for dark and light mode
 const typeConfig = {
   temperature: {
     color: '#FF5C5C',
+    darkColor: '#FF7878',
     gradient: ['#FF6666', '#FFCCCC'],
+    darkGradient: ['#FF6666', '#AA4444'],
     unit: '°C',
     name: 'Temperature'
   },
   humidity: {
     color: '#5C9CFF',
+    darkColor: '#7CAFFF',
     gradient: ['#66A3FF', '#CCE0FF'],
+    darkGradient: ['#66A3FF', '#3067B3'],
     unit: '%',
     name: 'Humidity'
   },
   light: {
     color: '#FFD15C',
+    darkColor: '#FFDC7D',
     gradient: ['#FFD966', '#FFECC4'],
+    darkGradient: ['#FFD966', '#BD9C3F'],
     unit: '%',
     name: 'Light'
   },
   soilMoisture: {
     color: '#5CBF6A',
+    darkColor: '#6BDF7A',
     gradient: ['#66CC72', '#CCE8D0'],
+    darkGradient: ['#66CC72', '#3D7F45'],
     unit: '%',
     name: 'Soil Moisture'
   }
@@ -60,9 +68,48 @@ export function AnimatedPlantGraph({
   dataType,
   timeRange = '24h',
   title,
-  height = 250
+  height = 300 // Increased height for better visibility
 }: AnimatedPlantGraphProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // Detect dark mode
+  useEffect(() => {
+    // Check if dark mode is already set via media query
+    const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDarkMode(isDark);
+    
+    // Listen for changes in color scheme
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsDarkMode(e.matches);
+    };
+    
+    // Add event listener
+    mediaQuery.addEventListener('change', handleChange);
+    
+    // Also check for dark class on html element for theme toggle support
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          const htmlElement = document.documentElement;
+          if (htmlElement.classList.contains('dark')) {
+            setIsDarkMode(true);
+          } else {
+            setIsDarkMode(false);
+          }
+        }
+      });
+    });
+    
+    observer.observe(document.documentElement, { attributes: true });
+    
+    // Clean up
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+      observer.disconnect();
+    };
+  }, []);
   
   // Format the data for the chart
   const formattedData = useMemo(() => {
@@ -71,9 +118,31 @@ export function AnimatedPlantGraph({
     // Sort data by timestamp
     const sortedData = [...data].sort((a, b) => a.timestamp - b.timestamp);
     
-    return sortedData.map(item => ({
-      time: format(new Date(item.timestamp), 'HH:mm'),
-      fullTime: new Date(item.timestamp),
+    // Group data points by 5-minute intervals to simulate data collection every 5 minutes
+    const fiveMinIntervals: Record<string, any> = {};
+    
+    sortedData.forEach(item => {
+      const timestamp = new Date(item.timestamp);
+      const minutes = timestamp.getMinutes();
+      const roundedMinutes = Math.floor(minutes / 5) * 5;
+      timestamp.setMinutes(roundedMinutes);
+      timestamp.setSeconds(0);
+      timestamp.setMilliseconds(0);
+      
+      const key = timestamp.getTime().toString();
+      
+      if (!fiveMinIntervals[key] || item.timestamp > fiveMinIntervals[key].timestamp) {
+        fiveMinIntervals[key] = {
+          ...item,
+          roundedTimestamp: timestamp
+        };
+      }
+    });
+    
+    // Convert back to array and ensure we have a smooth dataset
+    return Object.values(fiveMinIntervals).map(item => ({
+      time: format(item.roundedTimestamp, 'HH:mm'),
+      fullTime: item.roundedTimestamp,
       value: item[dataType] || 0
     }));
   }, [data, dataType]);

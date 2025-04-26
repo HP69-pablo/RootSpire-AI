@@ -211,51 +211,103 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
   
   const colorScheme = getColorScheme();
   
-  // Modern icons for sensors
+  // Modern icons for sensors with enhanced Apple-inspired animations
   const getModernIcon = () => {
     switch (type) {
       case "temperature":
         return (
           <motion.div 
-            className={`p-3 rounded-full bg-gradient-to-br ${colorScheme.gradient}`}
+            className={`p-4 rounded-2xl bg-gradient-to-br ${colorScheme.gradient} shadow-md`}
+            initial={{ scale: 0.9, opacity: 0.7 }}
             animate={{ 
-              scale: animated ? [1, 1.05, 1] : 1,
+              scale: animated ? [1, 1.08, 1] : 1,
+              opacity: 1,
+              y: status === "High" ? [0, -2, 0] : 0,
+              boxShadow: status === "Critical" ? ["0 4px 12px rgba(239, 68, 68, 0.15)", "0 4px 12px rgba(239, 68, 68, 0.35)", "0 4px 12px rgba(239, 68, 68, 0.15)"] : "0 4px 12px rgba(0, 0, 0, 0.1)"
             }}
-            transition={{ duration: 0.5 }}
+            transition={{ 
+              duration: 0.7, 
+              y: { 
+                duration: 1.5, 
+                repeat: status === "High" ? Infinity : 0, 
+                repeatType: "reverse" 
+              },
+              boxShadow: {
+                duration: 1.5,
+                repeat: status === "Critical" ? Infinity : 0,
+                repeatType: "reverse"
+              }
+            }}
+            whileHover={{ 
+              scale: 1.1,
+              transition: { duration: 0.3 }
+            }}
           >
-            <Thermometer className={`h-6 w-6 ${colorScheme.icon}`} />
+            <Thermometer className={`h-7 w-7 ${colorScheme.icon}`} />
           </motion.div>
         );
       case "humidity":
         return (
           <motion.div 
-            className={`p-3 rounded-full bg-gradient-to-br ${colorScheme.gradient}`}
+            className={`p-4 rounded-2xl bg-gradient-to-br ${colorScheme.gradient} shadow-md`}
+            initial={{ scale: 0.9, opacity: 0.7 }}
             animate={{ 
-              scale: animated ? [1, 1.05, 1] : 1,
-              y: status === "Low" ? 0 : [0, -2, 0]
+              scale: animated ? [1, 1.08, 1] : 1,
+              opacity: 1,
+              y: status !== "Low" ? [0, -3, 0] : 0,
+              boxShadow: status === "Critical" ? ["0 4px 12px rgba(59, 130, 246, 0.15)", "0 4px 12px rgba(59, 130, 246, 0.35)", "0 4px 12px rgba(59, 130, 246, 0.15)"] : "0 4px 12px rgba(0, 0, 0, 0.1)"
             }}
             transition={{ 
-              scale: { duration: 0.5 },
-              y: { duration: 2, repeat: status !== "Low" ? Infinity : 0, repeatType: "reverse" }
+              duration: 0.7,
+              y: { 
+                duration: 2, 
+                repeat: status !== "Low" ? Infinity : 0, 
+                repeatType: "reverse" 
+              },
+              boxShadow: {
+                duration: 1.5,
+                repeat: status === "Critical" ? Infinity : 0,
+                repeatType: "reverse"
+              }
+            }}
+            whileHover={{ 
+              scale: 1.1,
+              transition: { duration: 0.3 }
             }}
           >
-            <Droplets className={`h-6 w-6 ${colorScheme.icon}`} />
+            <Droplets className={`h-7 w-7 ${colorScheme.icon}`} />
           </motion.div>
         );
       case "soil":
         return (
           <motion.div 
-            className={`p-3 rounded-full bg-gradient-to-br ${colorScheme.gradient}`}
+            className={`p-4 rounded-2xl bg-gradient-to-br ${colorScheme.gradient} shadow-md`}
+            initial={{ scale: 0.9, opacity: 0.7 }}
             animate={{ 
-              scale: animated ? [1, 1.05, 1] : 1,
-              rotate: status === "Low" ? [-5, 5, -5] : 0
+              scale: animated ? [1, 1.08, 1] : 1,
+              opacity: 1,
+              rotate: status === "Low" || status === "Critical" ? [-3, 3, -3] : 0,
+              boxShadow: status === "Critical" ? ["0 4px 12px rgba(245, 158, 11, 0.15)", "0 4px 12px rgba(245, 158, 11, 0.35)", "0 4px 12px rgba(245, 158, 11, 0.15)"] : "0 4px 12px rgba(0, 0, 0, 0.1)"
             }}
             transition={{ 
-              scale: { duration: 0.5 },
-              rotate: { duration: 2, repeat: status === "Low" ? Infinity : 0, repeatType: "mirror" }
+              duration: 0.7,
+              rotate: { 
+                duration: 1.5, 
+                repeat: (status === "Low" || status === "Critical") ? Infinity : 0, 
+                repeatType: "reverse" 
+              },
+              boxShadow: {
+                duration: 1.5,
+                repeat: status === "Critical" ? Infinity : 0,
+                repeatType: "reverse"
+              }
+            }}
+            whileHover={{ 
+              scale: 1.1,
+              transition: { duration: 0.3 }
             }}
           >
-            <Gauge className={`h-6 w-6 ${colorScheme.icon}`} />
+            <Gauge className={`h-7 w-7 ${colorScheme.icon}`} />
           </motion.div>
         );
     }
@@ -264,44 +316,76 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
   return (
     <motion.div 
       whileHover={{ 
-        scale: 1.02,
-        boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(255, 255, 255, 0.1)" 
+        scale: 1.03,
+        boxShadow: "0 15px 30px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)" 
       }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
+      className="w-full h-full"
     >
-      <Card className="overflow-hidden p-0 border-0 backdrop-blur-md bg-white/80 dark:bg-gray-800/80 rounded-xl shadow-lg">
-        <div className={`h-1.5 w-full bg-gradient-to-r ${colorScheme.gradient}`} />
+      <Card className="overflow-hidden p-0 border-0 backdrop-blur-xl bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg aspect-square flex flex-col">
+        <div className={`h-2 w-full bg-gradient-to-r ${colorScheme.gradient}`} />
         
-        <div className="p-5">
-          <div className="flex justify-between items-center mb-4">
-            {getModernIcon()}
-            
-            <div className="text-right">
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">{getLabel()}</h3>
-              <div className="flex items-baseline justify-end">
-                <motion.span 
-                  key={String(value)}
-                  initial={animated ? { opacity: 0.5, y: -5 } : { opacity: 1, y: 0 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`text-3xl font-bold ${colorScheme.value} tracking-tight`}
-                  style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
-                >
-                  {displayValue()}
-                </motion.span>
-                <span className="ml-1 text-lg text-gray-600 dark:text-gray-400 font-normal">{value !== "none" ? getUnit() : ""}</span>
+        <div className="p-6 flex flex-col justify-between flex-grow">
+          <div className="flex flex-col mb-4">
+            <div className="flex justify-between items-start mb-3">
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0.5 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="flex-shrink-0"
+              >
+                {getModernIcon()}
+              </motion.div>
+              
+              <div className="text-right">
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1 sf-pro-display">{getLabel()}</h3>
+                <div className="flex items-baseline justify-end">
+                  <motion.span 
+                    key={String(value)}
+                    initial={animated ? { opacity: 0.5, y: -5 } : { opacity: 1, y: 0 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`text-4xl font-bold ${colorScheme.value} tracking-tight sf-pro-display`}
+                  >
+                    {displayValue()}
+                  </motion.span>
+                  <span className="ml-1 text-lg text-gray-600 dark:text-gray-400 font-normal sf-pro-display">{value !== "none" ? getUnit() : ""}</span>
+                </div>
               </div>
             </div>
+            
+            <motion.div 
+              className="w-full h-0.5 mt-1 mb-4 rounded-full overflow-hidden bg-gray-200/50 dark:bg-gray-700/50"
+              initial={{ width: "0%" }}
+              animate={{ width: "100%" }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            >
+              <motion.div 
+                className={`h-full bg-gradient-to-r ${colorScheme.gradient}`}
+                initial={{ width: "0%" }}
+                animate={{ 
+                  width: type === "soil" 
+                    ? `${Math.min(100, Number(value) * 1.5)}%` 
+                    : type === "humidity" 
+                      ? `${Math.min(100, Number(value))}%` 
+                      : type === "temperature" 
+                        ? `${Math.min(100, (Number(value) / 40) * 100)}%`
+                        : "50%"
+                }}
+                transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+              />
+            </motion.div>
           </div>
           
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center justify-between mt-auto">
             <div>
               {value !== "none" && (
                 <motion.div 
-                  className="flex items-center bg-white/70 dark:bg-slate-800/70 rounded-full px-3 py-1 shadow-sm"
+                  className="flex items-center backdrop-blur-md bg-white/50 dark:bg-slate-800/50 rounded-full px-3 py-1.5 shadow-sm"
                   animate={animated ? {
                     scale: [1, 1.05, 1]
                   } : {}}
                   transition={{ duration: 0.5 }}
+                  whileHover={{ scale: 1.05 }}
                 >
                   {getChange() > 0 ? (
                     <svg className="h-3.5 w-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -316,7 +400,7 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
                     </svg>
                   )}
-                  <span className={`text-xs font-medium ml-1 ${
+                  <span className={`text-xs font-medium ml-1 sf-pro-display ${
                     getChange() > 0 
                       ? 'text-green-600 dark:text-green-400' 
                       : getChange() < 0 
@@ -328,17 +412,18 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
                 </motion.div>
               )}
               {value === "none" && (
-                <div className="text-xs bg-gray-100/70 dark:bg-gray-800/70 px-3 py-1 rounded-full shadow-sm text-gray-500 dark:text-gray-400 font-medium">
+                <div className="text-xs backdrop-blur-md bg-gray-100/50 dark:bg-gray-800/50 px-3 py-1.5 rounded-full shadow-sm text-gray-500 dark:text-gray-400 font-medium sf-pro-display">
                   No sensor data
                 </div>
               )}
             </div>
             <motion.div 
-              className={`px-3 py-1 rounded-full shadow-sm ${colorScheme.status || getStatusClasses()} text-xs font-medium`}
+              className={`px-3 py-1.5 rounded-full shadow-md backdrop-blur-md ${colorScheme.status || getStatusClasses()} text-xs font-medium`}
               animate={status === "Critical" ? {
                 scale: [1, 1.05, 1],
                 opacity: [0.9, 1, 0.9]
               } : {}}
+              whileHover={{ scale: 1.05 }}
               transition={{
                 repeat: status === "Critical" ? Infinity : 0,
                 duration: 1.5
