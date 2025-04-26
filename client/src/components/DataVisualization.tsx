@@ -17,7 +17,7 @@ interface DataVisualizationProps {
 type TimeFrame = '1h' | '6h' | '12h' | '24h' | 'custom';
 
 export function DataVisualization({ historyData, currentData }: DataVisualizationProps) {
-  const [activeMetric, setActiveMetric] = useState<'temperature' | 'humidity' | 'light' | 'soilMoisture'>('temperature');
+  const [activeMetric, setActiveMetric] = useState<'temperature' | 'humidity' | 'light' | 'soilMoisture' | 'combined'>('combined');
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('24h');
   
   // Convert history data object to array
@@ -144,9 +144,15 @@ export function DataVisualization({ historyData, currentData }: DataVisualizatio
           </motion.p>
         </div>
         
-        <Tabs defaultValue="temperature" className="w-full" onValueChange={(value) => setActiveMetric(value as any)}>
+        <Tabs defaultValue="combined" className="w-full" onValueChange={(value) => setActiveMetric(value as any)}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-5">
-            <TabsList className="grid grid-cols-4 bg-gray-100/60 dark:bg-gray-800/40 p-1.5 rounded-xl backdrop-blur-md border border-white/30 dark:border-gray-700/30 shadow-sm">
+            <TabsList className="grid grid-cols-5 bg-gray-100/60 dark:bg-gray-800/40 p-1.5 rounded-xl backdrop-blur-md border border-white/30 dark:border-gray-700/30 shadow-sm">
+              <TabsTrigger 
+                value="combined" 
+                className="rounded-lg sf-pro-display text-xs sm:text-sm font-medium data-[state=active]:bg-white/90 dark:data-[state=active]:bg-gray-700/90 data-[state=active]:shadow-sm data-[state=active]:backdrop-blur-md transition-all duration-300"
+              >
+                All Sensors
+              </TabsTrigger>
               <TabsTrigger 
                 value="temperature" 
                 className="rounded-lg sf-pro-display text-xs sm:text-sm font-medium data-[state=active]:bg-white/90 dark:data-[state=active]:bg-gray-700/90 data-[state=active]:shadow-sm data-[state=active]:backdrop-blur-md transition-all duration-300"
@@ -237,6 +243,16 @@ export function DataVisualization({ historyData, currentData }: DataVisualizatio
               dataType="soilMoisture"
               timeRange={timeRangeText}
               title="Soil Moisture History"
+            />
+          </TabsContent>
+          
+          <TabsContent value="combined">
+            <AnimatedPlantGraph
+              data={historyArray}
+              dataTypes={['temperature', 'humidity', 'light', 'soilMoisture']}
+              combinedView={true}
+              timeRange={timeRangeText}
+              title="All Sensor Data"
             />
           </TabsContent>
         </Tabs>
