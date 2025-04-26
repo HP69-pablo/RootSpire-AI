@@ -110,53 +110,98 @@ export function DataVisualization({ historyData, currentData }: DataVisualizatio
   
   return (
     <motion.div
-      className="w-full p-5 sm:p-6 rounded-2xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg shadow-lg border border-gray-100 dark:border-gray-700"
+      className="w-full p-5 sm:p-6 rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-xl border border-white/20 dark:border-gray-700/30"
       style={{
-        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.05), 0 1px 8px rgba(0, 0, 0, 0.06)"
+        boxShadow: "0 15px 40px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(255, 255, 255, 0.1) inset",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)"
       }}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
+      transition={{ duration: 0.6, ease: "easeOut" }}
     >
       <motion.div
-        className="flex flex-col space-y-4"
+        className="flex flex-col space-y-5"
         variants={itemVariants}
       >
         <div className="flex flex-col space-y-2 mb-6">
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white tracking-tight sf-pro-display">
+          <motion.h2 
+            className="text-3xl font-bold text-gray-800 dark:text-white tracking-tight sf-pro-display"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
             Plant Health
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 sf-pro-display text-sm">
+          </motion.h2>
+          <motion.p 
+            className="text-gray-500 dark:text-gray-400 sf-pro-display text-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
             Monitor and track your plant's environmental patterns over time
-          </p>
+          </motion.p>
         </div>
         
         <Tabs defaultValue="temperature" className="w-full" onValueChange={(value) => setActiveMetric(value as any)}>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-            <TabsList className="grid grid-cols-4 bg-gray-100/80 dark:bg-gray-800/50 p-1 rounded-xl">
-              <TabsTrigger value="temperature" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm">Temperature</TabsTrigger>
-              <TabsTrigger value="humidity" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm">Humidity</TabsTrigger>
-              <TabsTrigger value="light" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm">Light</TabsTrigger>
-              <TabsTrigger value="soilMoisture" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm">Soil</TabsTrigger>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-5">
+            <TabsList className="grid grid-cols-4 bg-gray-100/60 dark:bg-gray-800/40 p-1.5 rounded-xl backdrop-blur-md border border-white/30 dark:border-gray-700/30 shadow-sm">
+              <TabsTrigger 
+                value="temperature" 
+                className="rounded-lg sf-pro-display text-xs sm:text-sm font-medium data-[state=active]:bg-white/90 dark:data-[state=active]:bg-gray-700/90 data-[state=active]:shadow-sm data-[state=active]:backdrop-blur-md transition-all duration-300"
+              >
+                Temperature
+              </TabsTrigger>
+              <TabsTrigger 
+                value="humidity" 
+                className="rounded-lg sf-pro-display text-xs sm:text-sm font-medium data-[state=active]:bg-white/90 dark:data-[state=active]:bg-gray-700/90 data-[state=active]:shadow-sm data-[state=active]:backdrop-blur-md transition-all duration-300"
+              >
+                Humidity
+              </TabsTrigger>
+              <TabsTrigger 
+                value="light" 
+                className="rounded-lg sf-pro-display text-xs sm:text-sm font-medium data-[state=active]:bg-white/90 dark:data-[state=active]:bg-gray-700/90 data-[state=active]:shadow-sm data-[state=active]:backdrop-blur-md transition-all duration-300"
+              >
+                Light
+              </TabsTrigger>
+              <TabsTrigger 
+                value="soilMoisture" 
+                className="rounded-lg sf-pro-display text-xs sm:text-sm font-medium data-[state=active]:bg-white/90 dark:data-[state=active]:bg-gray-700/90 data-[state=active]:shadow-sm data-[state=active]:backdrop-blur-md transition-all duration-300"
+              >
+                Soil
+              </TabsTrigger>
             </TabsList>
             
-            <div className="flex justify-end space-x-2">
-              {['1h', '6h', '12h', '24h'].map((tf) => (
+            <motion.div 
+              className="flex justify-end space-x-2 border border-white/20 dark:border-gray-700/30 bg-gray-50/40 dark:bg-gray-800/30 p-1.5 rounded-xl backdrop-blur-sm shadow-sm"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+            >
+              {['1h', '6h', '12h', '24h'].map((tf, index) => (
                 <motion.button
                   key={tf}
                   onClick={() => setTimeFrame(tf as TimeFrame)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
+                  className={`px-3 py-1.5 text-xs font-medium sf-pro-display rounded-lg transition-all ${
                     timeFrame === tf 
-                      ? 'bg-primary text-white shadow-md' 
-                      : 'bg-gray-100/90 dark:bg-gray-800/80 text-gray-600 dark:text-gray-400'
+                      ? 'bg-gradient-to-br from-primary to-primary-dark text-white shadow-md border border-white/10' 
+                      : 'bg-gray-100/70 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 hover:bg-gray-200/80 dark:hover:bg-gray-600/60'
                   }`}
-                  whileTap={{ scale: 0.95 }}
-                  whileHover={timeFrame !== tf ? { scale: 1.05 } : {}}
+                  whileTap={{ scale: 0.92 }}
+                  whileHover={timeFrame !== tf ? { 
+                    scale: 1.05,
+                    y: -1,
+                    transition: { duration: 0.2 }
+                  } : {}}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 + (index * 0.05), duration: 0.3 }}
                 >
                   {tf}
                 </motion.button>
               ))}
-            </div>
+            </motion.div>
           </div>
           
           <TabsContent value="temperature">
@@ -196,20 +241,60 @@ export function DataVisualization({ historyData, currentData }: DataVisualizatio
           </TabsContent>
         </Tabs>
         
-        <div className="flex justify-center items-center mt-3 mb-2 space-x-2">
-          <div className="px-3 py-1 bg-gray-100/70 dark:bg-gray-800/50 rounded-full">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 sf-pro-display">
+        <motion.div 
+          className="flex flex-wrap justify-center items-center gap-3 mt-5 mb-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.4 }}
+        >
+          <motion.div 
+            className="px-4 py-1.5 bg-gray-100/60 dark:bg-gray-800/40 rounded-full border border-white/20 dark:border-gray-700/30 shadow-sm backdrop-blur-sm"
+            whileHover={{ scale: 1.05, y: -1 }}
+          >
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-300 sf-pro-display">
               {historyArray.length} data points collected
             </span>
-          </div>
-          <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></div>
-          <div className="flex items-center">
-            <span className="animate-pulse w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 sf-pro-display">
+          </motion.div>
+          
+          <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600 hidden sm:block"></div>
+          
+          <motion.div 
+            className="flex items-center px-4 py-1.5 bg-gray-100/60 dark:bg-gray-800/40 rounded-full border border-white/20 dark:border-gray-700/30 shadow-sm backdrop-blur-sm"
+            whileHover={{ scale: 1.05, y: -1 }}
+          >
+            <motion.span 
+              className="w-2.5 h-2.5 rounded-full bg-green-500 mr-2"
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [1, 0.7, 1],
+                boxShadow: [
+                  '0 0 0 0 rgba(52, 211, 153, 0.7)', 
+                  '0 0 0 4px rgba(52, 211, 153, 0.3)', 
+                  '0 0 0 0 rgba(52, 211, 153, 0.7)'
+                ]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "loop"
+              }}
+            />
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-300 sf-pro-display">
               Last updated {new Date().toLocaleTimeString()}
             </span>
-          </div>
-        </div>
+          </motion.div>
+          
+          <motion.button
+            className="flex items-center px-4 py-1.5 bg-gradient-to-br from-primary/90 to-primary-dark text-white rounded-full text-xs font-medium sf-pro-display shadow-md border border-white/10"
+            whileHover={{ scale: 1.05, y: -1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <svg className="w-3.5 h-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh data
+          </motion.button>
+        </motion.div>
       </motion.div>
     </motion.div>
   );
