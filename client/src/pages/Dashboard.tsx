@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Header } from "@/components/Header";
 import { AlertBanner } from "@/components/AlertBanner";
 import { DataVisualization } from "@/components/DataVisualization";
 import { PlantConfig, PlantConfigValues } from "@/components/PlantConfig";
@@ -228,10 +227,8 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen font-sans transition-colors duration-300 ease-out bg-gradient-to-br from-slate-50 to-white text-slate-900 dark:from-slate-900 dark:to-slate-800 dark:text-white overflow-hidden">
-      <Header />
-
-      <main className="container mx-auto px-4 py-6 md:py-10">
+    <div className="min-h-screen font-sans transition-colors duration-300 ease-out bg-gradient-to-br from-slate-50 via-slate-50/90 to-white text-slate-900 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-800 dark:text-white overflow-hidden">
+      <main className="container mx-auto px-4 py-6 md:py-10 pb-24">
         {/* Alert Banner */}
         {alert.show && (
           <motion.div
