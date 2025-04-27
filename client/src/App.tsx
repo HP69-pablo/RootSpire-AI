@@ -13,6 +13,7 @@ import { AuthProvider } from "./lib/AuthProvider";
 import { ChatBubble } from "@/components/ChatBubble";
 import { FloatingNavigation } from "@/components/FloatingNavigation";
 import { DataCollector } from "@/components/DataCollector";
+import { TimestampDataCollector } from "@/components/TimestampDataCollector";
 
 function Router() {
   return (
@@ -38,8 +39,9 @@ function App() {
             <ChatBubble />
             <FloatingNavigation />
             <Toaster />
-            {/* Data collector runs in the background with no UI */}
+            {/* Data collectors run in the background with no UI */}
             <DataCollector />
+            <TimestampDataCollector />
           </div>
         </AuthProvider>
       </ThemeProvider>
