@@ -287,6 +287,48 @@ export async function getAllMetricsHistory(
   }
   
   try {
+    // First, try to get data from the timestamps folder
+    const timestampsRef = ref(database, 'timestamps');
+    
+    // Get snapshot of timestamps data
+    const timestampsSnapshot = await get(timestampsRef);
+    
+    if (timestampsSnapshot.exists()) {
+      console.log('Found data in timestamps folder, using that for metrics history');
+      const timestampsData = timestampsSnapshot.val();
+      
+      // Calculate time range
+      const endTime = Date.now();
+      const startTime = endTime - (days * 24 * 60 * 60 * 1000);
+      
+      // Process and filter data
+      const result: PlantHistoryData[] = [];
+      
+      // Convert to array and sort
+      Object.keys(timestampsData)
+        .map(ts => parseInt(ts))
+        .filter(ts => ts >= startTime && ts <= endTime)
+        .sort((a, b) => a - b)
+        .forEach(ts => {
+          const entry = timestampsData[ts];
+          if (entry) {
+            result.push({
+              timestamp: ts,
+              temperature: entry.temperature,
+              humidity: entry.humidity,
+              light: entry.light,
+              soilMoisture: entry.soilMoisture
+            });
+          }
+        });
+      
+      console.log(`Retrieved ${result.length} data points from timestamps folder`);
+      return result;
+    }
+    
+    // If no timestamps data found, fallback to the old history data
+    console.log('No data found in timestamps folder, falling back to history data');
+    
     // Get reference to history data
     const historyRef = ref(database, 'sensorData/history');
     
@@ -548,39 +590,26 @@ export function getSensorHistory(days: number, callback: (data: SensorHistory) =
   // Calculate time range
   const endTime = Date.now();
   const startTime = endTime - (days * 24 * 60 * 60 * 1000);
-  console.log(`Setting up subscription to history data at path: sensorData/history (for ${days} days)`);
   
-  // Check if history exists, if not generate it
-  const historyRef = ref(database, 'sensorData/history');
+  // Set up real-time listener for sensor data in the timestamps folder
+  console.log(`Setting up subscription to timestamps data for the last ${days} days`);
+  const timestampsRef = ref(database, 'timestamps');
   
-  // First check if history data exists
-  get(historyRef).then(snapshot => {
-    if (!snapshot.exists() || Object.keys(snapshot.val()).length === 0) {
-      console.log('No history data found, generating sample data...');
-      generateSensorHistory()
-        .then(() => console.log('History data generation completed'))
-        .catch(err => console.error('Failed to generate history data:', err));
-    }
-  }).catch(error => {
-    console.error('Error checking history data:', error);
-  });
-  
-  // Set up real-time listener for history data
-  const unsubscribe = onValue(historyRef, (snapshot: DataSnapshot) => {
-    console.log('Got history data update, snapshot exists:', snapshot.exists());
-    
+  const unsubscribe = onValue(timestampsRef, (snapshot: DataSnapshot) => {
     if (snapshot.exists()) {
-      const historyData = snapshot.val();
-      console.log('Raw history data:', typeof historyData);
+      // Process timestamp data
+      const timestampsData = snapshot.val();
+      console.log('Found timestamp data, using for visualization');
       
       // Process the data according to the database structure
       const processedData: SensorHistory = {};
       
-      // If historyData is an object with timestamp keys
-      if (typeof historyData === 'object' && historyData !== null) {
-        const entries = Object.entries(historyData);
-        console.log(`Found ${entries.length} history entries to process`);
+      // If timestampsData is an object with timestamp keys
+      if (typeof timestampsData === 'object' && timestampsData !== null) {
+        const entries = Object.entries(timestampsData);
+        console.log(`Found ${entries.length} timestamp entries to process`);
         
+        // Process each timestamp entry
         for (const [key, value] of entries) {
           // Try to parse the key as a timestamp
           const timestamp = parseInt(key);
@@ -590,54 +619,114 @@ export function getSensorHistory(days: number, callback: (data: SensorHistory) =
             continue;
           }
           
-          // Extract data based on structure (might be nested or flat)
+          // Extract data from entry
           const entry = value as any;
-          let temperature, humidity, light, soilMoisture;
           
-          if (entry.temperature !== undefined) {
-            // Direct properties on the entry
-            temperature = entry.temperature;
-            humidity = entry.humidity;
-            light = entry.light;
-            soilMoisture = entry.soilMoisture;
-          } else if (entry.data && typeof entry.data === 'object') {
-            // Nested under a 'data' property
-            temperature = entry.data.temperature;
-            humidity = entry.data.humidity;
-            light = entry.data.light;
-            soilMoisture = entry.data.soilMoisture;
-          }
-          
-          // Only add valid entries
-          if (typeof temperature === 'number' || typeof humidity === 'number') {
+          // Only add valid entries with at least temperature or humidity
+          if (typeof entry.temperature === 'number' || typeof entry.humidity === 'number') {
             processedData[timestamp] = {
-              temperature: typeof temperature === 'number' ? temperature : 0,
-              humidity: typeof humidity === 'number' ? humidity : 0,
+              temperature: typeof entry.temperature === 'number' ? entry.temperature : 0,
+              humidity: typeof entry.humidity === 'number' ? entry.humidity : 0,
             };
             
             // Add light if available
-            if (typeof light === 'number') {
-              processedData[timestamp].light = light;
+            if (typeof entry.light === 'number') {
+              processedData[timestamp].light = entry.light;
             }
             
             // Add soil moisture if available
-            if (typeof soilMoisture === 'number') {
-              processedData[timestamp].soilMoisture = soilMoisture;
+            if (typeof entry.soilMoisture === 'number') {
+              processedData[timestamp].soilMoisture = entry.soilMoisture;
             }
           }
         }
+        
+        console.log(`Processed timestamps data with ${Object.keys(processedData).length} valid entries`);
+        callback(processedData);
+      } else {
+        console.warn('Timestamps data has unexpected format');
+        callback({});
       }
-      
-      console.log('Processed history data with', Object.keys(processedData).length, 'valid entries');
-      callback(processedData);
     } else {
-      console.log('No history data available in snapshot');
-      callback({});
+      // Fallback to checking history data
+      console.log('No timestamps data found, falling back to history data');
+      const historyRef = ref(database, 'sensorData/history');
+      
+      // Check if history data exists
+      get(historyRef).then(historySnapshot => {
+        if (!historySnapshot.exists() || Object.keys(historySnapshot.val()).length === 0) {
+          console.log('No history data found, generating sample data...');
+          generateSensorHistory()
+            .then(() => console.log('History data generation completed'))
+            .catch(err => console.error('Failed to generate history data:', err));
+        }
+        
+        // Get history data
+        onValue(historyRef, (historySnap: DataSnapshot) => {
+          if (historySnap.exists()) {
+            const historyData = historySnap.val();
+            console.log('Raw history data:', typeof historyData);
+            
+            // Process the data according to the database structure
+            const processedData: SensorHistory = {};
+            
+            // If historyData is an object with timestamp keys
+            if (typeof historyData === 'object' && historyData !== null) {
+              const entries = Object.entries(historyData);
+              console.log(`Found ${entries.length} history entries to process`);
+              
+              for (const [key, value] of entries) {
+                // Try to parse the key as a timestamp
+                const timestamp = parseInt(key);
+                
+                // Skip invalid timestamps and entries outside the time range
+                if (isNaN(timestamp) || timestamp < startTime || timestamp > endTime) {
+                  continue;
+                }
+                
+                // Extract data based on structure
+                const entry = value as any;
+                
+                // Only add valid entries with at least temperature or humidity
+                if (typeof entry.temperature === 'number' || typeof entry.humidity === 'number') {
+                  processedData[timestamp] = {
+                    temperature: typeof entry.temperature === 'number' ? entry.temperature : 0,
+                    humidity: typeof entry.humidity === 'number' ? entry.humidity : 0,
+                  };
+                  
+                  // Add light if available
+                  if (typeof entry.light === 'number') {
+                    processedData[timestamp].light = entry.light;
+                  }
+                  
+                  // Add soil moisture if available
+                  if (typeof entry.soilMoisture === 'number') {
+                    processedData[timestamp].soilMoisture = entry.soilMoisture;
+                  }
+                }
+              }
+              
+              console.log(`Processed history data with ${Object.keys(processedData).length} valid entries`);
+              callback(processedData);
+            } else {
+              console.log('History data has unexpected format');
+              callback({});
+            }
+          } else {
+            console.log('No history data available');
+            callback({});
+          }
+        });
+      }).catch(error => {
+        console.error('Error checking history data:', error);
+        callback({});
+      });
     }
   }, (error) => {
     console.error('Error getting sensor history:', error);
+    callback({});
   });
-
+  
   return unsubscribe;
 }
 
