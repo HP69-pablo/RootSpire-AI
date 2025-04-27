@@ -259,8 +259,8 @@
 .fitness-app-bg {
   /* Light mode - soft gradient with pastel beige tones */
   @apply bg-gradient-to-b from-[#f7f3e9] to-[#f2efe6] text-gray-800;
-  /* Dark mode - deep gradient with subtle color */
-  @apply dark:bg-gradient-to-b dark:from-[#0c0f12] dark:to-[#141a1f] dark:text-white;
+  /* Dark mode - deep gradient with subtle green hue */
+  @apply dark:bg-gradient-to-b dark:from-[#0c0f12] dark:to-[#101714] dark:text-white;
   background-attachment: fixed;
 }
 
@@ -274,7 +274,7 @@
   @apply bg-white/60 backdrop-blur-xl border border-amber-100/40 text-gray-800; 
   @apply shadow-[0_8px_20px_rgba(180,150,100,0.07)];
   /* Dark mode - subtle dark card with glassy effect */
-  @apply dark:bg-[#1A1C20]/70 dark:backdrop-blur-xl dark:border-[#2C3038] dark:text-white;
+  @apply dark:bg-[#151918]/70 dark:backdrop-blur-xl dark:border-[#273229]/50 dark:text-white;
   @apply dark:shadow-[0_8px_20px_rgba(0,0,0,0.15)];
   transition: all 0.3s ease;
   
@@ -453,14 +453,16 @@
   border: 2px dashed rgba(100, 100, 100, 0.3);
   border-radius: 1rem;
   background-color: rgba(200, 200, 200, 0.1);
+  @apply dark:border-[#273229]/70 dark:bg-[#273229]/10;
   margin: 0.5rem;
 }
 
 .widget-drop-indicator {
   position: absolute;
-  border: 2px dashed rgba(0, 150, 136, 0.5);
+  border: 2px dashed rgba(34, 197, 94, 0.5);
   border-radius: 1rem;
-  background-color: rgba(0, 150, 136, 0.1);
+  background-color: rgba(34, 197, 94, 0.1);
+  @apply dark:border-[#22c55e]/50 dark:bg-[#22c55e]/10;
   z-index: 5;
 }
 
@@ -482,11 +484,11 @@
   flex-direction: column;
   aspect-ratio: 1 / 1;
   /* Light mode */
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(209, 250, 229, 0.3);
-  box-shadow: 0 4px 12px rgba(0, 150, 136, 0.1);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
   /* Dark mode */
-  @apply dark:bg-[#1C1C1E] dark:border-[#2C2C2E];
+  @apply dark:bg-[#151918]/80 dark:border-[#273229]/50;
   @apply dark:shadow-[0_4px_12px_rgba(0,0,0,0.2)];
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -496,9 +498,9 @@
 .fitness-card:hover {
   transform: translateY(-4px);
   /* Light mode */
-  box-shadow: 0 8px 20px rgba(0, 150, 136, 0.15);
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.15);
   /* Dark mode */
-  @apply dark:shadow-[0_8px_20px_rgba(0,0,0,0.3)];
+  @apply dark:shadow-[0_8px_20px_rgba(34,197,94,0.1)];
 }
 
 .fitness-metric {
@@ -512,7 +514,7 @@
   background-color: rgba(209, 250, 229, 0.2);
   border: 1px solid rgba(209, 250, 229, 0.4);
   /* Dark mode */
-  @apply dark:bg-[#2C2C2E] dark:border-[#3C3C3E];
+  @apply dark:bg-[#1E2520] dark:border-[#273229];
 }
 
 .fitness-chart-bar {
@@ -523,7 +525,7 @@
   /* Light mode */
   background-color: rgba(150, 150, 150, 0.2);
   /* Dark mode */
-  @apply dark:bg-[#3C3C3E];
+  @apply dark:bg-[#273229];
 }
 
 .fitness-chart-progress {
@@ -547,7 +549,7 @@
   /* Light mode */
   stroke: rgba(209, 250, 229, 0.3);
   /* Dark mode */
-  @apply dark:stroke-[#2C2C2E];
+  @apply dark:stroke-[#273229];
 }
 
 .fitness-progress-ring-progress {
@@ -568,8 +570,8 @@
     @apply font-sans antialiased;
     /* Light mode - soft pastel beige background */
     @apply bg-gradient-to-b from-[#f7f3e9] to-[#f2efe6] text-gray-800;
-    /* Dark mode - deep background with subtle gradient */
-    @apply dark:bg-gradient-to-b dark:from-[#0c0f12] dark:to-[#141a1f] dark:text-white;
+    /* Dark mode - deep background with subtle green hue */
+    @apply dark:bg-gradient-to-b dark:from-[#0c0f12] dark:to-[#101714] dark:text-white;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
