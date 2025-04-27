@@ -25,7 +25,9 @@ export function DraggableWidgetList({ widgets: initialWidgets, onReorder, classN
     items.splice(result.destination.index, 0, reorderedItem);
     
     setWidgets(items);
-    onReorder?.(items);
+    if (onReorder) {
+      onReorder(items);
+    }
     
     // Could save the new order to localStorage here
     localStorage.setItem('dashboardWidgets', JSON.stringify(items.map(w => ({ id: w.id, type: w.type }))));
