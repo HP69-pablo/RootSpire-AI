@@ -507,9 +507,9 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="fitness-metric-card h-full p-6">
+            <div className="fitness-metric-card h-full p-6 bg-amber-50/40 dark:bg-[#151918]/70">
               <h2 className="text-xl font-semibold tracking-tight mb-4 flex items-center text-gray-900 dark:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-primary">
                   <line x1="18" y1="20" x2="18" y2="10"></line>
                   <line x1="12" y1="20" x2="12" y2="4"></line>
                   <line x1="6" y1="20" x2="6" y2="14"></line>
@@ -543,7 +543,7 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <div className="fitness-metric-card p-6 bg-gradient-to-br from-red-100/30 to-red-200/30 dark:from-red-900/30 dark:to-red-950/80">
+            <div className="fitness-metric-card p-6 bg-gradient-to-br from-amber-50/50 to-red-50/40 dark:from-red-900/30 dark:to-red-950/80">
               <h2 className="text-xl font-semibold tracking-tight mb-3 flex items-center text-gray-900 dark:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-red-500">
                   <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
@@ -552,7 +552,7 @@ export default function Dashboard() {
                 </svg>
                 Plant Emergency SOS
               </h2>
-              <p className="text-gray-300 text-sm mb-4">
+              <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
                 Is your plant showing signs of distress? Get instant AI-powered
                 advice to help diagnose and treat common plant issues.
               </p>
@@ -596,9 +596,9 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <div className="fitness-metric-card p-6 bg-gradient-to-br from-green-100/30 to-emerald-200/30 dark:from-green-900/30 dark:to-emerald-950/80">
+            <div className="fitness-metric-card p-6 bg-gradient-to-br from-amber-50/50 to-green-50/40 dark:from-green-900/30 dark:to-emerald-950/80">
               <h2 className="text-xl font-semibold tracking-tight mb-3 flex items-center text-gray-900 dark:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-green-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-primary">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                   <circle cx="8.5" cy="8.5" r="1.5"></circle>
                   <polyline points="21 15 16 10 5 21"></polyline>

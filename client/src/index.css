@@ -511,8 +511,8 @@
   flex-direction: column;
   gap: 0.5rem;
   /* Light mode */
-  background-color: rgba(209, 250, 229, 0.2);
-  border: 1px solid rgba(209, 250, 229, 0.4);
+  background-color: rgba(243, 235, 219, 0.4);
+  border: 1px solid rgba(240, 230, 210, 0.5);
   /* Dark mode */
   @apply dark:bg-[#1E2520] dark:border-[#273229];
 }
@@ -547,7 +547,7 @@
   fill: none;
   stroke-width: 12;
   /* Light mode */
-  stroke: rgba(209, 250, 229, 0.3);
+  stroke: rgba(240, 230, 210, 0.4);
   /* Dark mode */
   @apply dark:stroke-[#273229];
 }
