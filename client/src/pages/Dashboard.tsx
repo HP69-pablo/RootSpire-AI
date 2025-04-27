@@ -168,8 +168,9 @@ export default function Dashboard() {
         newWidget = {
           id: `widget-${Date.now()}`,
           type: widgetTemplate.type,
+          size: widgetTemplate.size,
           content: (
-            <div className={`widget-${widgetTemplate.size} apple-widget p-4`}>
+            <div className="p-4">
               <h3 className="font-medium text-lg mb-3">{widgetTemplate.name}</h3>
               <p>{widgetTemplate.description}</p>
             </div>
@@ -178,10 +179,10 @@ export default function Dashboard() {
     }
     
     // Add the new widget to the list
-    setWidgets(prevWidgets => [...prevWidgets, newWidget]);
+    const updatedWidgets = [...widgets, newWidget];
+    setWidgets(updatedWidgets);
     
     // Save updated widget list to localStorage
-    const updatedWidgets = [...widgets, newWidget];
     saveWidgetsToLocalStorage(updatedWidgets);
     
     toast({
@@ -190,11 +191,26 @@ export default function Dashboard() {
     });
   };
   
+  // Handle removing a widget
+  const handleRemoveWidget = (widgetId: string) => {
+    const updatedWidgets = widgets.filter(widget => widget.id !== widgetId);
+    setWidgets(updatedWidgets);
+    
+    // Save updated widget list to localStorage
+    saveWidgetsToLocalStorage(updatedWidgets);
+    
+    toast({
+      title: "Widget Removed",
+      description: "Widget has been removed from your dashboard.",
+    });
+  };
+  
   // Save widgets configuration to localStorage
   const saveWidgetsToLocalStorage = (widgetsToSave: Widget[]) => {
     const layoutToSave = widgetsToSave.map(widget => ({
       id: widget.id,
-      type: widget.type
+      type: widget.type,
+      size: widget.size
     }));
     
     localStorage.setItem('dashboardWidgets', JSON.stringify(layoutToSave));
@@ -205,6 +221,7 @@ export default function Dashboard() {
     return {
       id: `temperature-${Date.now()}`,
       type: 'temperature-widget',
+      size: 'small',
       content: (
         <SensorWidget
           title="Temperature"
@@ -236,6 +253,7 @@ export default function Dashboard() {
     return {
       id: `humidity-${Date.now()}`,
       type: 'humidity-widget',
+      size: 'small',
       content: (
         <SensorWidget
           title="Humidity"

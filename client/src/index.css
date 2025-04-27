@@ -480,27 +480,49 @@
 
 /* Widget Sizes */
 .widget-small {
-  @apply apple-widget w-full h-48;
-  grid-column: span 1;
+  @apply apple-widget h-48;
+  width: calc(50% - 0.5rem);
+  margin: 0.25rem;
 }
 
 .widget-medium {
-  @apply apple-widget w-full h-64;
-  grid-column: span 2;
+  @apply apple-widget h-64;
+  width: calc(100% - 0.5rem);
+  margin: 0.25rem;
 }
 
 .widget-large {
-  @apply apple-widget w-full h-96;
-  grid-column: span 2;
-  grid-row: span 2;
+  @apply apple-widget h-96;
+  width: calc(100% - 0.5rem);
+  margin: 0.25rem;
 }
 
 /* Apple-style Widget Grid Layout */
 .widget-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
   width: 100%;
+}
+
+.widget-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+/* Widget remove button */
+.widget-remove-btn {
+  @apply absolute top-2 right-2 z-10 bg-gray-100 dark:bg-gray-800 rounded-full w-6 h-6 
+  flex items-center justify-center opacity-0 transition-opacity duration-200;
+}
+
+.apple-widget:hover .widget-remove-btn {
+  @apply opacity-100;
 }
 
 /* Apple Fitness-style Activity Rings */

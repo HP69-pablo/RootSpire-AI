@@ -1,14 +1,24 @@
 import { ReactNode } from 'react';
 import { Draggable } from 'react-beautiful-dnd';
+import { X } from 'lucide-react';
 
 export interface DraggableWidgetProps {
   id: string;
   index: number;
   children: ReactNode;
   className?: string;
+  size?: 'small' | 'medium' | 'large';
+  onRemove?: (id: string) => void;
 }
 
-export function DraggableWidget({ id, index, children, className = '' }: DraggableWidgetProps) {
+export function DraggableWidget({ 
+  id, 
+  index, 
+  children, 
+  className = '',
+  size = 'medium',
+  onRemove
+}: DraggableWidgetProps) {
   return (
     <Draggable draggableId={id} index={index}>
       {(provided, snapshot) => (
@@ -16,13 +26,14 @@ export function DraggableWidget({ id, index, children, className = '' }: Draggab
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`draggable-widget ${snapshot.isDragging ? 'dragging' : ''} ${className}`}
+          className={`draggable-widget ${snapshot.isDragging ? 'dragging' : ''} widget-${size} ${className}`}
           style={{
             ...provided.draggableProps.style,
           }}
         >
           <div className="relative group">
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            {/* Drag handle indicator */}
+            <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               <div className="flex gap-1">
                 <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center">
                   <svg 
@@ -45,6 +56,21 @@ export function DraggableWidget({ id, index, children, className = '' }: Draggab
                 </div>
               </div>
             </div>
+            
+            {/* Remove widget button */}
+            {onRemove && (
+              <button
+                className="widget-remove-btn" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(id);
+                }}
+                aria-label="Remove widget"
+              >
+                <X size={14} />
+              </button>
+            )}
+            
             {children}
           </div>
         </div>
