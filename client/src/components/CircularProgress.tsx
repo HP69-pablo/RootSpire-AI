@@ -21,8 +21,11 @@ export function CircularProgress({
   showValue = true,
   className = ''
 }: CircularProgressProps) {
+  // Ensure value is a valid number
+  const safeValue = isNaN(value) ? 0 : value;
+  
   // Calculate percentage
-  const percentage = Math.min(100, Math.max(0, (value / max) * 100));
+  const percentage = Math.min(100, Math.max(0, (safeValue / max) * 100));
   
   // Calculate the radius (size minus twice the thickness for padding)
   const radius = (size - thickness * 2) / 2;
@@ -54,8 +57,8 @@ export function CircularProgress({
           strokeWidth={thickness}
           style={{
             stroke: color,
-            strokeDasharray: circumference,
-            strokeDashoffset: dashOffset
+            strokeDasharray: `${circumference}px`,
+            strokeDashoffset: `${dashOffset}px`
           }}
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
@@ -64,7 +67,7 @@ export function CircularProgress({
       {/* Center text */}
       {showValue && (
         <div className="circular-progress-text">
-          {value}
+          {safeValue}
           {label && <div className="text-xs text-gray-500 font-normal">{label}</div>}
         </div>
       )}

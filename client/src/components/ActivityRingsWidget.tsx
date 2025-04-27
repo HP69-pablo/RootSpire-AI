@@ -7,7 +7,7 @@ interface ActivityRingsWidgetProps {
   data: {
     temperature: { value: number, min: number, max: number };
     humidity: { value: number, min: number, max: number };
-    light?: { value: number, min: number, max: number };
+    light: { value: number, min: number, max: number };
     soilMoisture: { value: number, min: number, max: number };
   }
 }
@@ -59,16 +59,16 @@ export function ActivityRingsWidget({
     data.soilMoisture.max
   );
 
-  const lightPercentage = data.light ? calculatePercentage(
+  const lightPercentage = calculatePercentage(
     data.light.value, 
     data.light.min, 
     data.light.max
-  ) : null;
+  );
 
   // Calculate overall health percentage
-  const metrics = lightPercentage !== null ? 4 : 3;
+  const metrics = 4; // All 4 metrics are always present
   const overallHealth = Math.round(
-    (temperaturePercentage + humidityPercentage + soilMoisturePercentage + (lightPercentage || 0)) / metrics
+    (temperaturePercentage + humidityPercentage + soilMoisturePercentage + lightPercentage) / metrics
   );
 
   return (
@@ -142,20 +142,18 @@ export function ActivityRingsWidget({
           <div className="text-xs text-gray-500">{data.soilMoisture.value}%</div>
         </div>
 
-        {lightPercentage !== null && data.light && (
-          <div className="text-center">
-            <CircularProgress 
-              value={lightPercentage} 
-              max={100} 
-              size={70} 
-              thickness={7}
-              color="#FFCC00" // Apple Fitness yellow
-              showValue={false}
-            />
-            <div className="mt-2 text-sm font-medium">Light</div>
-            <div className="text-xs text-gray-500">{data.light.value}%</div>
-          </div>
-        )}
+        <div className="text-center">
+          <CircularProgress 
+            value={lightPercentage} 
+            max={100} 
+            size={70} 
+            thickness={7}
+            color="#FFCC00" // Apple Fitness yellow
+            showValue={false}
+          />
+          <div className="mt-2 text-sm font-medium">Light</div>
+          <div className="text-xs text-gray-500">{data.light.value}%</div>
+        </div>
       </div>
     </motion.div>
   );

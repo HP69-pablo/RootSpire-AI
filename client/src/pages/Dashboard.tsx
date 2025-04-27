@@ -447,12 +447,12 @@ export default function Dashboard() {
               max: plantConfig.humidityMax
             },
             light: {
-              value: sensorData.light,
+              value: sensorData.light || 0,
               min: 10,
               max: 90
             },
             soilMoisture: {
-              value: sensorData.soilMoisture,
+              value: sensorData.soilMoisture || 0,
               min: plantConfig.soilMoistureMin,
               max: plantConfig.soilMoistureMax
             }

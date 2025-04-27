@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Switch } from 'lucide-react';
 
 interface ControlWidgetProps {
   title: string;
