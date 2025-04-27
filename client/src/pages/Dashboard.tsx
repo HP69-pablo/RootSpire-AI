@@ -636,17 +636,7 @@ export default function Dashboard() {
         </div>
       </main>
 
-      <footer className="border-t border-gray-200/50 dark:border-[#2C3038]/30 mt-6 py-6 backdrop-blur-md bg-white/50 dark:bg-[#0c0f12]/30">
-        <div className="container mx-auto px-4 text-center text-sm text-gray-600 dark:text-gray-400">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.5 }}
-          >
-            Smart Plant Monitoring System © {new Date().getFullYear()}
-          </motion.div>
-        </div>
-      </footer>
+      {/* Footer Removed */}
     </div>
   );
 }

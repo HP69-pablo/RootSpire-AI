@@ -4,34 +4,34 @@
 
 @layer base {
   :root {
-    /* Light mode - inspired by Apple's pastel colors */
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    /* Light mode - soft pastel beige colors */
+    --background: 40 30% 96%;
+    --foreground: 20 10% 20%;
     
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card: 40 30% 98%;
+    --card-foreground: 20 10% 20%;
     
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 40 30% 98%;
+    --popover-foreground: 20 10% 20%;
     
-    --primary: 142 71% 45%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 142 50% 45%;
+    --primary-foreground: 40 30% 98%;
     
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 40 30% 94%;
+    --secondary-foreground: 20 10% 20%;
     
-    --muted: 210 40% 95%;
-    --muted-foreground: 215 16% 45%;
+    --muted: 40 20% 92%;
+    --muted-foreground: 20 10% 40%;
     
-    --accent: 142 71% 45%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 142 40% 45%;
+    --accent-foreground: 40 30% 98%;
     
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 70% 60%;
+    --destructive-foreground: 40 30% 98%;
     
-    --border: 214 32% 90%;
-    --input: 214 32% 90%;
-    --ring: 142 71% 45%;
+    --border: 40 20% 85%;
+    --input: 40 20% 85%;
+    --ring: 142 50% 45%;
     
     --radius: 1.0rem;
   }
@@ -257,8 +257,8 @@
 
 /* Apple Fitness specific styles - Light and Dark Mode */
 .fitness-app-bg {
-  /* Light mode - soft gradient with blue tones */
-  @apply bg-gradient-to-b from-[#eef6ff] to-[#e6f7f2] text-gray-900;
+  /* Light mode - soft gradient with pastel beige tones */
+  @apply bg-gradient-to-b from-[#f7f3e9] to-[#f2efe6] text-gray-800;
   /* Dark mode - deep gradient with subtle color */
   @apply dark:bg-gradient-to-b dark:from-[#0c0f12] dark:to-[#141a1f] dark:text-white;
   background-attachment: fixed;
@@ -270,15 +270,40 @@
 
 .fitness-metric-card {
   @apply flex flex-col p-4 rounded-2xl overflow-hidden;
-  /* Light mode - soft white with subtle shadow and green border */
-  @apply bg-white/90 border border-primary/10 text-gray-800 shadow-sm; 
-  @apply shadow-[0_8px_20px_rgba(20,150,100,0.07)];
+  /* Light mode - glassy effect with pastel beige tones */
+  @apply bg-white/60 backdrop-blur-xl border border-amber-100/40 text-gray-800; 
+  @apply shadow-[0_8px_20px_rgba(180,150,100,0.07)];
   /* Dark mode - subtle dark card with glassy effect */
-  @apply dark:bg-[#1A1C20] dark:border-[#2C3038] dark:text-white;
+  @apply dark:bg-[#1A1C20]/70 dark:backdrop-blur-xl dark:border-[#2C3038] dark:text-white;
   @apply dark:shadow-[0_8px_20px_rgba(0,0,0,0.15)];
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   transition: all 0.3s ease;
+  
+  /* Glass effect enhancement */
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Add subtle shine effect to cards */
+.fitness-metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  z-index: -1;
+  transition: 0.5s;
+}
+
+.fitness-metric-card:hover::before {
+  left: 100%;
 }
 
 .fitness-metric-title {
@@ -401,6 +426,44 @@
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+/* Draggable widget styles */
+.draggable-widget {
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.draggable-widget:active {
+  cursor: grabbing;
+  z-index: 10;
+}
+
+.draggable-widget.dragging {
+  opacity: 0.8;
+  transform: scale(1.02);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
+}
+
+.widget-container {
+  position: relative;
+  min-height: 100px;
+}
+
+.widget-placeholder {
+  border: 2px dashed rgba(100, 100, 100, 0.3);
+  border-radius: 1rem;
+  background-color: rgba(200, 200, 200, 0.1);
+  margin: 0.5rem;
+}
+
+.widget-drop-indicator {
+  position: absolute;
+  border: 2px dashed rgba(0, 150, 136, 0.5);
+  border-radius: 1rem;
+  background-color: rgba(0, 150, 136, 0.1);
+  z-index: 5;
+}
+
 /* Apple Fitness Inspired UI Components */
 .fitness-card-grid {
   display: grid;
@@ -503,8 +566,8 @@
 
   body {
     @apply font-sans antialiased;
-    /* Light mode - soft blue-white background */
-    @apply bg-gradient-to-b from-[#eef6ff] to-[#e6f7f2] text-gray-900;
+    /* Light mode - soft pastel beige background */
+    @apply bg-gradient-to-b from-[#f7f3e9] to-[#f2efe6] text-gray-800;
     /* Dark mode - deep background with subtle gradient */
     @apply dark:bg-gradient-to-b dark:from-[#0c0f12] dark:to-[#141a1f] dark:text-white;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
