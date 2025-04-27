@@ -565,7 +565,7 @@ export default function Dashboard() {
         const savedOrder = JSON.parse(savedWidgetConfig);
         const restoredWidgets: Widget[] = [];
         
-        savedOrder.forEach((item: { id: string, type: string, size?: 'small' | 'medium' | 'large' }) => {
+        savedOrder.forEach((item: { id: string, type: string, size: 'small' | 'medium' | 'large' }) => {
           switch (item.type) {
             case 'temperature-widget':
               restoredWidgets.push(createTemperatureWidget());
