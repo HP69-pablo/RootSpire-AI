@@ -797,7 +797,7 @@ export default function MyPlants() {
               className="w-full max-w-md mx-auto"
             >
               <Card 
-                className="fitness-card border border-neutral-700 overflow-hidden"
+                className="fitness-card border-amber-100/40 dark:border-neutral-700 overflow-hidden bg-amber-50/40 dark:bg-[#151918]/70"
                 style={{ 
                   boxShadow: "0 10px 30px rgba(0, 0, 0, 0.4)",
                 }}
@@ -865,7 +865,7 @@ export default function MyPlants() {
                     className="w-full aspect-[0.8]"
                   >
                     <Card 
-                      className="overflow-hidden fitness-card cursor-pointer group w-full h-full flex flex-col border-white/10 dark:border-neutral-700 shadow-lg bg-white dark:bg-gray-800"
+                      className="overflow-hidden fitness-card cursor-pointer group w-full h-full flex flex-col border-amber-100/40 dark:border-neutral-700 shadow-lg bg-amber-50/40 dark:bg-[#151918]/80"
                       onClick={() => openPlantDetails(plant)}
                     >
                       {plant.imageUrl ? (
@@ -975,7 +975,7 @@ export default function MyPlants() {
                           
                           {plant.notes && (
                             <div 
-                              className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-md text-sm mt-3 cursor-pointer relative overflow-hidden border border-emerald-100 dark:border-emerald-800/30 shadow-sm" 
+                              className="bg-amber-50/70 dark:bg-emerald-900/20 p-3 rounded-md text-sm mt-3 cursor-pointer relative overflow-hidden border border-amber-100/60 dark:border-emerald-800/30 shadow-sm" 
                               style={{ maxHeight: '60px' }}
                               onClick={(e) => {
                                 const target = e.currentTarget;
@@ -988,10 +988,10 @@ export default function MyPlants() {
                             >
                               <div className="relative text-gray-700 dark:text-gray-200">
                                 {plant.notes}
-                                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-emerald-50 to-transparent dark:from-emerald-900/20"></div>
+                                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-amber-50/70 to-transparent dark:from-emerald-900/20"></div>
                               </div>
                               <div className="flex justify-center mt-1">
-                                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Click to expand</span>
+                                <span className="text-xs text-amber-600 dark:text-emerald-400 font-medium">Click to expand</span>
                               </div>
                             </div>
                           )}
