@@ -285,6 +285,7 @@ export default function Dashboard() {
     return {
       id: `soil-moisture-${Date.now()}`,
       type: 'soil-moisture-widget',
+      size: 'small',
       content: (
         <SensorWidget
           title="Soil Moisture"
@@ -320,6 +321,7 @@ export default function Dashboard() {
     return {
       id: `light-${Date.now()}`,
       type: 'light-widget',
+      size: 'small',
       content: (
         <SensorWidget
           title="Light Level"
@@ -357,6 +359,7 @@ export default function Dashboard() {
     return {
       id: `uv-control-${Date.now()}`,
       type: 'uv-control-widget',
+      size: 'small',
       content: (
         <ControlWidget
           title="UV Light"
@@ -386,6 +389,7 @@ export default function Dashboard() {
     return {
       id: `watering-control-${Date.now()}`,
       type: 'watering-control-widget',
+      size: 'small',
       content: (
         <ControlWidget
           title="Watering"
@@ -411,6 +415,7 @@ export default function Dashboard() {
     return {
       id: `environment-history-${Date.now()}`,
       type: 'environment-history-widget',
+      size: 'large',
       content: (
         <div className="widget-large apple-widget p-4">
           <div className="flex items-center justify-between mb-4">
@@ -435,6 +440,7 @@ export default function Dashboard() {
       return {
         id: `activity-rings-${Date.now()}`,
         type: 'activity-rings-widget',
+        size: 'medium',
         content: (
           <div className="widget-medium apple-widget p-4">
             <div className="flex items-center justify-between mb-4">
@@ -451,6 +457,7 @@ export default function Dashboard() {
     return {
       id: `activity-rings-${Date.now()}`,
       type: 'activity-rings-widget',
+      size: 'medium',
       content: (
         <ActivityRingsWidget 
           data={{
@@ -558,7 +565,7 @@ export default function Dashboard() {
         const savedOrder = JSON.parse(savedWidgetConfig);
         const restoredWidgets: Widget[] = [];
         
-        savedOrder.forEach((item: { id: string, type: string }) => {
+        savedOrder.forEach((item: { id: string, type: string, size?: 'small' | 'medium' | 'large' }) => {
           switch (item.type) {
             case 'temperature-widget':
               restoredWidgets.push(createTemperatureWidget());
