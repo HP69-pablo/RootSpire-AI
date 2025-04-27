@@ -464,6 +464,106 @@
   z-index: 5;
 }
 
+/* Apple-style Widget Styles */
+.apple-widget {
+  @apply rounded-2xl overflow-hidden backdrop-blur-md shadow-lg border transition-all duration-200;
+  /* Light Mode - Beige Backgrounds */
+  @apply bg-[#F5F2EA]/90 border-amber-100/40 text-gray-800;
+  /* Dark Mode */
+  @apply dark:bg-[#1A1C20]/70 dark:border-[#2C3038] dark:text-white;
+}
+
+.apple-widget:hover {
+  transform: translateY(-2px);
+  @apply shadow-xl;
+}
+
+/* Widget Sizes */
+.widget-small {
+  @apply apple-widget w-full h-48;
+  grid-column: span 1;
+}
+
+.widget-medium {
+  @apply apple-widget w-full h-64;
+  grid-column: span 2;
+}
+
+.widget-large {
+  @apply apple-widget w-full h-96;
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+/* Apple-style Widget Grid Layout */
+.widget-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Apple Fitness-style Activity Rings */
+.circular-progress {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.circular-progress-ring {
+  transform: rotate(-90deg);
+  transform-origin: center;
+  transition: all 0.5s ease;
+}
+
+.circular-progress-background {
+  fill: none;
+  stroke-width: 10;
+  stroke: rgba(0, 0, 0, 0.1);
+  @apply dark:stroke-[#3C3C3E];
+}
+
+.circular-progress-value {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s ease;
+}
+
+.circular-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.75rem;
+  font-weight: bold;
+  @apply text-gray-900 dark:text-white;
+}
+
+/* Widget Add Button */
+.widget-add-button {
+  @apply fixed top-4 right-4 z-50 bg-white dark:bg-[#2C2C2E] rounded-full p-3 shadow-lg;
+  @apply text-primary hover:bg-gray-50 dark:hover:bg-[#3C3C3E] transition-all duration-200;
+}
+
+/* Widget Gallery */
+.widget-gallery {
+  @apply fixed inset-0 z-50 bg-black/50 backdrop-blur-md flex items-center justify-center;
+}
+
+.widget-gallery-container {
+  @apply bg-[#F5F2EA] dark:bg-[#1A1C20] rounded-2xl overflow-hidden w-4/5 max-w-4xl h-4/5;
+  @apply border border-amber-100/40 dark:border-[#2C3038] shadow-2xl;
+}
+
+.widget-gallery-header {
+  @apply p-4 border-b border-amber-100/40 dark:border-[#2C3038] flex items-center justify-between;
+}
+
+.widget-gallery-grid {
+  @apply grid grid-cols-2 md:grid-cols-3 gap-4 p-4 overflow-auto h-[calc(100%-4rem)];
+}
+
 /* Apple Fitness Inspired UI Components */
 .fitness-card-grid {
   display: grid;

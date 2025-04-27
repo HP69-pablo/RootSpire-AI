@@ -6,8 +6,11 @@ import {
   NotificationSettings,
   NotificationSettingsValues,
 } from "@/components/NotificationSettings";
-import { PlantControls } from "@/components/PlantControls";
 import { DraggableWidgetList, Widget } from "@/components/DraggableWidgetList";
+import { WidgetGallery, WidgetTemplate } from "@/components/WidgetGallery";
+import { SensorWidget } from "@/components/SensorWidget";
+import { ControlWidget } from "@/components/ControlWidget";
+import { ActivityRingsWidget } from "@/components/ActivityRingsWidget";
 import {
   initializeFirebase,
   subscribeSensorData,
@@ -21,6 +24,7 @@ import {
 } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { Plus } from "lucide-react";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -64,6 +68,9 @@ export default function Dashboard() {
   
   // State for draggable widgets
   const [widgets, setWidgets] = useState<Widget[]>([]);
+  
+  // Widget gallery visibility
+  const [isWidgetGalleryOpen, setIsWidgetGalleryOpen] = useState(false);
 
   // Handle functions first to avoid reference errors
   const handleSaveConfig = (config: PlantConfigValues) => {
@@ -127,192 +134,269 @@ export default function Dashboard() {
     }
   };
   
-  // Widget creation methods
-  const createStatusWidget = (): Widget => {
-    return {
-      id: 'status-widget',
-      type: 'status',
-      content: (
-        <div className="fitness-metric-card p-6 shadow-md">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">Plant Status</h2>
-            <div className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full text-sm text-gray-800 dark:text-gray-200">
-              {sensorData ? new Date(sensorData.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'}
+  // Handle adding a new widget from the gallery
+  const handleAddWidget = (widgetTemplate: WidgetTemplate) => {
+    let newWidget: Widget;
+    
+    switch (widgetTemplate.type) {
+      case 'temperature-widget':
+        newWidget = createTemperatureWidget();
+        break;
+      case 'humidity-widget':
+        newWidget = createHumidityWidget();
+        break;
+      case 'soil-moisture-widget':
+        newWidget = createSoilMoistureWidget();
+        break;
+      case 'light-widget':
+        newWidget = createLightWidget();
+        break;
+      case 'uv-control-widget':
+        newWidget = createUvControlWidget();
+        break;
+      case 'watering-control-widget':
+        newWidget = createWateringControlWidget();
+        break;
+      case 'environment-history-widget':
+        newWidget = createEnvironmentHistoryWidget();
+        break;
+      case 'activity-rings-widget':
+        newWidget = createActivityRingsWidget();
+        break;
+      default:
+        // Default to a template widget if type not recognized
+        newWidget = {
+          id: `widget-${Date.now()}`,
+          type: widgetTemplate.type,
+          content: (
+            <div className={`widget-${widgetTemplate.size} apple-widget p-4`}>
+              <h3 className="font-medium text-lg mb-3">{widgetTemplate.name}</h3>
+              <p>{widgetTemplate.description}</p>
             </div>
-          </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {/* Temperature */}
-            <motion.div 
-              className="sensor-stat group"
-              whileHover={{ scale: 1.03 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1
-                ${sensorData?.temperature && sensorData.temperature > plantConfig.tempMax 
-                  ? 'bg-red-500/30 text-red-500' 
-                  : sensorData?.temperature && sensorData.temperature < plantConfig.tempMin 
-                    ? 'bg-blue-500/30 text-blue-500' 
-                    : 'bg-green-500/30 text-green-500'}`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
-                </svg>
-              </div>
-              <div className="text-2xl font-bold mt-2">
-                {sensorData ? `${sensorData.temperature.toFixed(1)}°` : '--°'}
-              </div>
-              <div className="text-xs text-gray-400">Temperature</div>
-              <div className={`mt-1 text-xs px-2 py-0.5 rounded-full 
-                ${sensorData?.temperature && sensorData.temperature > plantConfig.tempMax 
-                  ? 'bg-red-500/20 text-red-500' 
-                  : sensorData?.temperature && sensorData.temperature < plantConfig.tempMin 
-                    ? 'bg-blue-500/20 text-blue-500' 
-                    : 'bg-green-500/20 text-green-500'}`}
-              >
-                {sensorData?.temperature && sensorData.temperature > plantConfig.tempMax 
-                  ? 'Too Hot' 
-                  : sensorData?.temperature && sensorData.temperature < plantConfig.tempMin 
-                    ? 'Too Cold' 
-                    : 'Optimal'}
-              </div>
-            </motion.div>
-            
-            {/* Humidity */}
-            <motion.div 
-              className="sensor-stat group"
-              whileHover={{ scale: 1.03 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1
-                ${sensorData?.humidity && sensorData.humidity > plantConfig.humidityMax 
-                  ? 'bg-blue-500/30 text-blue-500' 
-                  : sensorData?.humidity && sensorData.humidity < plantConfig.humidityMin 
-                    ? 'bg-yellow-500/30 text-yellow-500' 
-                    : 'bg-green-500/30 text-green-500'}`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
-                </svg>
-              </div>
-              <div className="text-2xl font-bold mt-2">
-                {sensorData ? `${sensorData.humidity}%` : '--%'}
-              </div>
-              <div className="text-xs text-gray-400">Humidity</div>
-              <div className={`mt-1 text-xs px-2 py-0.5 rounded-full 
-                ${sensorData?.humidity && sensorData.humidity > plantConfig.humidityMax 
-                  ? 'bg-blue-500/20 text-blue-500' 
-                  : sensorData?.humidity && sensorData.humidity < plantConfig.humidityMin 
-                    ? 'bg-yellow-500/20 text-yellow-500' 
-                    : 'bg-green-500/20 text-green-500'}`}
-              >
-                {sensorData?.humidity && sensorData.humidity > plantConfig.humidityMax 
-                  ? 'Too Humid' 
-                  : sensorData?.humidity && sensorData.humidity < plantConfig.humidityMin 
-                    ? 'Too Dry' 
-                    : 'Optimal'}
-              </div>
-            </motion.div>
-            
-            {/* Light */}
-            <motion.div 
-              className="sensor-stat group"
-              whileHover={{ scale: 1.03 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-1 bg-amber-500/30 text-amber-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="5"></circle>
-                  <line x1="12" y1="1" x2="12" y2="3"></line>
-                  <line x1="12" y1="21" x2="12" y2="23"></line>
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                  <line x1="1" y1="12" x2="3" y2="12"></line>
-                  <line x1="21" y1="12" x2="23" y2="12"></line>
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
-              </div>
-              <div className="text-2xl font-bold mt-2">
-                {sensorData?.light ? `${sensorData.light}%` : '--%'}
-              </div>
-              <div className="text-xs text-gray-400">Light</div>
-              <div className="mt-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500">
-                {sensorData?.light && sensorData.light < 10 ? 'Low' : sensorData?.light && sensorData.light > 50 ? 'Bright' : 'Medium'}
-              </div>
-            </motion.div>
-            
-            {/* Soil Moisture */}
-            <motion.div 
-              className="sensor-stat group"
-              whileHover={{ scale: 1.03 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1
-                ${sensorData?.soilMoisture && sensorData.soilMoisture > plantConfig.soilMoistureMax 
-                  ? 'bg-blue-500/30 text-blue-500' 
-                  : sensorData?.soilMoisture && sensorData.soilMoisture < plantConfig.soilMoistureMin 
-                    ? 'bg-yellow-500/30 text-yellow-500' 
-                    : 'bg-green-500/30 text-green-500'}`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 16a4 4 0 0 1-2.65-1"></path>
-                  <path d="M6 12a4 4 0 0 1 6.33-3.24"></path>
-                  <path d="M20.8 18.4 16 12l-2 4 1 2"></path>
-                  <path d="m20.8 18.4.9 1.6H10l5-9 5.8 7.8Z"></path>
-                  <path d="m8 10 1.735 3.37"></path>
-                </svg>
-              </div>
-              <div className="text-2xl font-bold mt-2">
-                {sensorData?.soilMoisture ? `${sensorData.soilMoisture}%` : '--%'}
-              </div>
-              <div className="text-xs text-gray-400">Soil Moisture</div>
-              <div className={`mt-1 text-xs px-2 py-0.5 rounded-full 
-                ${sensorData?.soilMoisture && sensorData.soilMoisture > plantConfig.soilMoistureMax 
-                  ? 'bg-blue-500/20 text-blue-500' 
-                  : sensorData?.soilMoisture && sensorData.soilMoisture < plantConfig.soilMoistureMin 
-                    ? 'bg-yellow-500/20 text-yellow-500' 
-                    : 'bg-green-500/20 text-green-500'}`}
-              >
-                {sensorData?.soilMoisture && sensorData.soilMoisture > plantConfig.soilMoistureMax 
-                  ? 'Too Wet' 
-                  : sensorData?.soilMoisture && sensorData.soilMoisture < plantConfig.soilMoistureMin 
-                    ? 'Too Dry' 
-                    : 'Optimal'}
-              </div>
-            </motion.div>
-          </div>
-        </div>
+          )
+        };
+    }
+    
+    // Add the new widget to the list
+    setWidgets(prevWidgets => [...prevWidgets, newWidget]);
+    
+    // Save updated widget list to localStorage
+    const updatedWidgets = [...widgets, newWidget];
+    saveWidgetsToLocalStorage(updatedWidgets);
+    
+    toast({
+      title: "Widget Added",
+      description: `${widgetTemplate.name} widget has been added to your dashboard.`,
+    });
+  };
+  
+  // Save widgets configuration to localStorage
+  const saveWidgetsToLocalStorage = (widgetsToSave: Widget[]) => {
+    const layoutToSave = widgetsToSave.map(widget => ({
+      id: widget.id,
+      type: widget.type
+    }));
+    
+    localStorage.setItem('dashboardWidgets', JSON.stringify(layoutToSave));
+  };
+  
+  // Widget creation methods
+  const createTemperatureWidget = (): Widget => {
+    return {
+      id: `temperature-${Date.now()}`,
+      type: 'temperature-widget',
+      content: (
+        <SensorWidget
+          title="Temperature"
+          value={sensorData?.temperature || null}
+          unit="°C"
+          min={plantConfig.tempMin}
+          max={plantConfig.tempMax}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+            </svg>
+          }
+          color="#FF2D55"
+          status={
+            sensorData?.temperature 
+              ? sensorData.temperature > plantConfig.tempMax 
+                ? 'High' 
+                : sensorData.temperature < plantConfig.tempMin 
+                  ? 'Low' 
+                  : 'Optimal'
+              : 'Optimal'
+          }
+        />
       )
     };
   };
   
-  const createControlsWidget = (): Widget => {
+  const createHumidityWidget = (): Widget => {
     return {
-      id: 'controls-widget',
-      type: 'controls',
+      id: `humidity-${Date.now()}`,
+      type: 'humidity-widget',
       content: (
-        <div className="fitness-metric-card p-6 shadow-md">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">Controls</h2>
-          </div>
-          <PlantControls 
-            onAction={handlePlantControlAction} 
-            sensorData={sensorData}
-          />
-        </div>
+        <SensorWidget
+          title="Humidity"
+          value={sensorData?.humidity || null}
+          unit="%"
+          min={plantConfig.humidityMin}
+          max={plantConfig.humidityMax}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+            </svg>
+          }
+          color="#5AC8FA"
+          status={
+            sensorData?.humidity 
+              ? sensorData.humidity > plantConfig.humidityMax 
+                ? 'High' 
+                : sensorData.humidity < plantConfig.humidityMin 
+                  ? 'Low' 
+                  : 'Optimal'
+              : 'Optimal'
+          }
+        />
+      )
+    };
+  };
+  
+  const createSoilMoistureWidget = (): Widget => {
+    return {
+      id: `soil-moisture-${Date.now()}`,
+      type: 'soil-moisture-widget',
+      content: (
+        <SensorWidget
+          title="Soil Moisture"
+          value={sensorData?.soilMoisture || null}
+          unit="%"
+          min={plantConfig.soilMoistureMin}
+          max={plantConfig.soilMoistureMax}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 16a4 4 0 0 1-2.65-1"></path>
+              <path d="M6 12a4 4 0 0 1 6.33-3.24"></path>
+              <path d="M20.8 18.4 16 12l-2 4 1 2"></path>
+              <path d="m20.8 18.4.9 1.6H10l5-9 5.8 7.8Z"></path>
+              <path d="m8 10 1.735 3.37"></path>
+            </svg>
+          }
+          color="#34C759"
+          status={
+            sensorData?.soilMoisture 
+              ? sensorData.soilMoisture > plantConfig.soilMoistureMax 
+                ? 'High' 
+                : sensorData.soilMoisture < plantConfig.soilMoistureMin 
+                  ? 'Low' 
+                  : 'Optimal'
+              : 'Optimal'
+          }
+        />
+      )
+    };
+  };
+  
+  const createLightWidget = (): Widget => {
+    return {
+      id: `light-${Date.now()}`,
+      type: 'light-widget',
+      content: (
+        <SensorWidget
+          title="Light Level"
+          value={sensorData?.light || null}
+          unit="%"
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          }
+          color="#FFCC00"
+          status={
+            sensorData?.light 
+              ? sensorData.light > 50 
+                ? 'High' 
+                : sensorData.light < 10 
+                  ? 'Low' 
+                  : 'Optimal'
+              : 'Optimal'
+          }
+        />
+      )
+    };
+  };
+  
+  const createUvControlWidget = (): Widget => {
+    return {
+      id: `uv-control-${Date.now()}`,
+      type: 'uv-control-widget',
+      content: (
+        <ControlWidget
+          title="UV Light"
+          isActive={plantControls.uvLight}
+          onToggle={(state) => handlePlantControlAction('uvLight', state)}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          }
+          color="#FFCC00"
+          description="Controls supplemental UV lighting for your plant. Use during low natural light periods."
+        />
+      )
+    };
+  };
+  
+  const createWateringControlWidget = (): Widget => {
+    return {
+      id: `watering-control-${Date.now()}`,
+      type: 'watering-control-widget',
+      content: (
+        <ControlWidget
+          title="Watering"
+          isActive={plantControls.wateringActive}
+          onToggle={(state) => handlePlantControlAction('watering', state)}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2v6"></path>
+              <path d="M5 10c-1.7 1-3 2.9-3 5 0 3.3 2.7 6 6 6 1 0 1.9-.2 2.8-.7"></path>
+              <path d="M5 10c1-1.7 2.9-3 5-3 3.3 0 6 2.7 6 6 0 1-.2 1.9-.7 2.8"></path>
+              <path d="M20 16.2c1.2.8 2 2.2 2 3.8 0 2.5-2 4.5-4.5 4.5-.9 0-1.8-.3-2.5-.7"></path>
+              <path d="M20 16.2c-.8-1.2-2.2-2-3.8-2-2.5 0-4.5 2-4.5 4.5 0 .9.3 1.8.7 2.5"></path>
+            </svg>
+          }
+          color="#5AC8FA"
+          description="Controls the automatic watering system. Activates water pump when soil moisture is too low."
+        />
       )
     };
   };
   
   const createEnvironmentHistoryWidget = (): Widget => {
     return {
-      id: 'environment-history-widget',
-      type: 'environment-history',
+      id: `environment-history-${Date.now()}`,
+      type: 'environment-history-widget',
       content: (
-        <div className="fitness-metric-card p-6 shadow-md">
+        <div className="widget-large apple-widget p-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">Environment History</h2>
+            <h3 className="font-medium text-lg">Environment History</h3>
           </div>
           <DataVisualization 
             historyData={historyData} 
@@ -328,32 +412,52 @@ export default function Dashboard() {
     };
   };
   
-  const createConfigWidget = (): Widget => {
-    return {
-      id: 'config-widget',
-      type: 'config',
-      content: (
-        <div className="fitness-metric-card p-6 shadow-md">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">Plant Configuration</h2>
+  const createActivityRingsWidget = (): Widget => {
+    if (!sensorData) {
+      return {
+        id: `activity-rings-${Date.now()}`,
+        type: 'activity-rings-widget',
+        content: (
+          <div className="widget-medium apple-widget p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium text-lg">Plant Vitals</h3>
+            </div>
+            <div className="flex items-center justify-center h-[180px]">
+              <p className="text-gray-500">Waiting for sensor data...</p>
+            </div>
           </div>
-          <PlantConfig onSave={handleSaveConfig} />
-        </div>
-      )
-    };
-  };
-  
-  const createNotificationsWidget = (): Widget => {
+        )
+      };
+    }
+    
     return {
-      id: 'notifications-widget',
-      type: 'notifications',
+      id: `activity-rings-${Date.now()}`,
+      type: 'activity-rings-widget',
       content: (
-        <div className="fitness-metric-card p-6 shadow-md">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">Notification Settings</h2>
-          </div>
-          <NotificationSettings onSave={handleSaveNotifications} />
-        </div>
+        <ActivityRingsWidget 
+          data={{
+            temperature: {
+              value: sensorData.temperature,
+              min: plantConfig.tempMin,
+              max: plantConfig.tempMax
+            },
+            humidity: {
+              value: sensorData.humidity,
+              min: plantConfig.humidityMin,
+              max: plantConfig.humidityMax
+            },
+            light: {
+              value: sensorData.light,
+              min: 10,
+              max: 90
+            },
+            soilMoisture: {
+              value: sensorData.soilMoisture,
+              min: plantConfig.soilMoistureMin,
+              max: plantConfig.soilMoistureMax
+            }
+          }}
+        />
       )
     };
   };
@@ -363,12 +467,7 @@ export default function Dashboard() {
     setWidgets(reorderedWidgets);
     
     // Save the widget order to localStorage
-    const layoutToSave = reorderedWidgets.map(widget => ({
-      id: widget.id,
-      type: widget.type
-    }));
-    
-    localStorage.setItem('dashboardWidgets', JSON.stringify(layoutToSave));
+    saveWidgetsToLocalStorage(reorderedWidgets);
     
     toast({
       title: "Dashboard Layout Saved",
@@ -443,20 +542,29 @@ export default function Dashboard() {
         
         savedOrder.forEach((item: { id: string, type: string }) => {
           switch (item.type) {
-            case 'status':
-              restoredWidgets.push(createStatusWidget());
+            case 'temperature-widget':
+              restoredWidgets.push(createTemperatureWidget());
               break;
-            case 'controls':
-              restoredWidgets.push(createControlsWidget());
+            case 'humidity-widget':
+              restoredWidgets.push(createHumidityWidget());
               break; 
-            case 'environment-history':
+            case 'soil-moisture-widget':
+              restoredWidgets.push(createSoilMoistureWidget());
+              break;
+            case 'light-widget':
+              restoredWidgets.push(createLightWidget());
+              break;
+            case 'uv-control-widget':
+              restoredWidgets.push(createUvControlWidget());
+              break;
+            case 'watering-control-widget':
+              restoredWidgets.push(createWateringControlWidget());
+              break;
+            case 'environment-history-widget':
               restoredWidgets.push(createEnvironmentHistoryWidget());
               break;
-            case 'config':
-              restoredWidgets.push(createConfigWidget());
-              break;
-            case 'notifications':
-              restoredWidgets.push(createNotificationsWidget());
+            case 'activity-rings-widget':
+              restoredWidgets.push(createActivityRingsWidget());
               break;
           }
         });
@@ -473,13 +581,16 @@ export default function Dashboard() {
     
     // Default widget layout if no saved configuration
     setWidgets([
-      createStatusWidget(),
-      createControlsWidget(),
-      createEnvironmentHistoryWidget(),
-      createConfigWidget(),
-      createNotificationsWidget()
+      createTemperatureWidget(),
+      createHumidityWidget(),
+      createSoilMoistureWidget(),
+      createLightWidget(),
+      createActivityRingsWidget(),
+      createUvControlWidget(),
+      createWateringControlWidget(),
+      createEnvironmentHistoryWidget()
     ]);
-  }, [sensorData, historyData, plantConfig]);
+  }, [sensorData, historyData, plantConfig, plantControls]);
 
   const checkForAlerts = () => {
     // If we don't have sensor data yet, no alerts to check
@@ -545,7 +656,7 @@ export default function Dashboard() {
 
   return (
     <div className="dark fitness-app-bg min-h-screen sf-pro">
-      <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/90 dark:bg-[#0c0f12]/90 border-b border-gray-200/50 dark:border-[#2C3038]/30">
+      <header className="sticky top-0 z-40 backdrop-blur-lg bg-white/90 dark:bg-[#0c0f12]/90 border-b border-gray-200/50 dark:border-[#2C3038]/30">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center">
             <motion.div 
@@ -585,6 +696,19 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Widget Add Button */}
+      <motion.button
+        className="widget-add-button z-50"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setIsWidgetGalleryOpen(true)}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.5, type: "spring" }}
+      >
+        <Plus size={24} />
+      </motion.button>
+
       <main className="container mx-auto px-4 py-6 md:py-8 pb-24">
         {/* Alert Banner */}
         {alert.show && (
@@ -595,7 +719,7 @@ export default function Dashboard() {
             transition={{ duration: 0.3 }}
             className="mb-4"
           >
-            <div className="fitness-metric-card overflow-hidden p-1">
+            <div className="apple-widget overflow-hidden p-1">
               <AlertBanner
                 title={alert.title}
                 message={alert.message}
@@ -605,59 +729,41 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {/* Draggable Widget List */}
-        {widgets.length > 0 ? (
-          <DraggableWidgetList 
-            widgets={widgets} 
-            onReorder={handleWidgetReorder} 
-            className="space-y-6"
-          />
-        ) : (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center justify-center min-h-[400px]"
-          >
-            <div className="text-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-4 text-gray-400">
-                <rect width="8" height="8" x="3" y="3" rx="2"/>
-                <rect width="8" height="8" x="13" y="3" rx="2"/>
-                <rect width="8" height="8" x="3" y="13" rx="2"/>
-                <rect width="8" height="8" x="13" y="13" rx="2"/>
-              </svg>
-              <h3 className="text-xl font-semibold mb-2">Loading Widgets...</h3>
-              <p className="text-gray-500">Please wait while we fetch your plant data.</p>
-            </div>
-          </motion.div>
-        )}
-
-        <div className="mt-8 flex items-center justify-center">
-          <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-full px-6 py-3 font-medium flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300"
-            onClick={() => {
-              toast({
-                title: "Visiting Plants",
-                description: "Redirecting to your plant collection...",
-              });
-              // In a real implementation, this would take the user to the My Plants page
-              window.location.href = "/plants";
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-            View My Plants
-          </motion.button>
+        {/* Draggable Widget Grid */}
+        <div className="widget-grid">
+          {widgets.length > 0 ? (
+            <DraggableWidgetList
+              widgets={widgets}
+              onReorder={handleWidgetReorder}
+              className="space-y-6"
+            />
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center justify-center min-h-[400px] col-span-full"
+            >
+              <div className="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-4 text-gray-400">
+                  <rect width="8" height="8" x="3" y="3" rx="2"/>
+                  <rect width="8" height="8" x="13" y="3" rx="2"/>
+                  <rect width="8" height="8" x="3" y="13" rx="2"/>
+                  <rect width="8" height="8" x="13" y="13" rx="2"/>
+                </svg>
+                <h3 className="text-xl font-semibold mb-2">Loading Widgets...</h3>
+                <p className="text-gray-500">Please wait while we fetch your plant data.</p>
+              </div>
+            </motion.div>
+          )}
         </div>
-      </main>
 
-      {/* Footer Removed */}
+        {/* Widget Gallery Modal */}
+        <WidgetGallery
+          isOpen={isWidgetGalleryOpen}
+          onClose={() => setIsWidgetGalleryOpen(false)}
+          onSelectWidget={handleAddWidget}
+        />
+      </main>
     </div>
   );
 }
