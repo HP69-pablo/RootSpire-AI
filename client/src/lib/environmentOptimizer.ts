@@ -27,10 +27,9 @@ export interface OptimalEnvironmentValues {
 // Get AI recommendations for optimal environment values
 export async function getOptimalEnvironmentValues(plantName: string): Promise<OptimalEnvironmentValues> {
   try {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('Gemini API key is missing');
-    }
+    // Import API key from file-based config
+    const { getGeminiApiKey } = await import('../config/api-keys');
+    const apiKey = getGeminiApiKey();
 
     // Construct the API endpoint
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;

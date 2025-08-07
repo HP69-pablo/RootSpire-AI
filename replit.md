@@ -55,9 +55,12 @@ Preferred communication style: Simple, everyday language.
 
 ### AI Integration
 - **Google Gemini AI** for plant identification, care advice, and photo analysis
-- **Contextual chat assistance** with plant care expertise
+- **File-based API key management** stored in `/client/src/config/api-keys.ts`
+- **Real-time sensor integration** - chatbot reads current plant data when asked about "current plant state"
+- **Contextual chat assistance** with plant care expertise and live environmental data
 - **Environment optimization** recommendations based on plant types
 - **Plant photo analysis** for health assessment and species identification
+- **Smart trigger phrases** - automatically includes sensor data for questions about current conditions
 
 ## External Dependencies
 

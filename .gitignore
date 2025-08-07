@@ -4,3 +4,6 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# API Keys - Keep private!
+client/src/config/api-keys.ts

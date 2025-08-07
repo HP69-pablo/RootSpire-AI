@@ -124,16 +124,40 @@ export async function startChatSession(): Promise<ChatHistory> {
 // Send a message to Gemini API
 export async function sendMessage(chatHistory: ChatHistory, message: string): Promise<string> {
   try {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('Gemini API key is missing');
+    // Import API key from file-based config
+    const { getGeminiApiKey } = await import('../config/api-keys');
+    const apiKey = getGeminiApiKey();
+    
+    // Check if user is asking about current plant state
+    const isAskingAboutCurrentState = message.toLowerCase().includes('current plant state') || 
+                                    message.toLowerCase().includes('based on the current') ||
+                                    message.toLowerCase().includes('current condition') ||
+                                    message.toLowerCase().includes('current sensor') ||
+                                    message.toLowerCase().includes('how is my plant right now');
+    
+    // Get current sensor data if needed
+    let sensorDataContext = '';
+    if (isAskingAboutCurrentState) {
+      try {
+        const { getCurrentSensorData, formatSensorDataForAI } = await import('./sensorDataReader');
+        const sensorData = await getCurrentSensorData();
+        if (sensorData) {
+          sensorDataContext = '\n\n' + formatSensorDataForAI(sensorData) + '\n\n';
+          console.log('Added current sensor data to chat context');
+        } else {
+          sensorDataContext = '\n\nNote: Current sensor data is not available at the moment.\n\n';
+        }
+      } catch (error) {
+        console.error('Error fetching sensor data for chat:', error);
+        sensorDataContext = '\n\nNote: Unable to retrieve current sensor data.\n\n';
+      }
     }
     
     // Construct the API payload with context and the new message
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
     
     // Create a payload with the initial prompt and chat history
-    let prompt = INITIAL_PROMPT + "\n\nHere's the conversation history:\n";
+    let prompt = INITIAL_PROMPT + sensorDataContext + "\n\nHere's the conversation history:\n";
     
     // Add history but limit to last 10 messages to avoid token limits
     const recentMessages = chatHistory.messages.slice(-10);
@@ -197,10 +221,9 @@ export interface PlantAnalysisResult {
 
 export async function analyzePlantPhoto(imageUrl: string): Promise<PlantAnalysisResult> {
   try {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('Gemini API key is missing');
-    }
+    // Import API key from file-based config
+    const { getGeminiApiKey } = await import('../config/api-keys');
+    const apiKey = getGeminiApiKey();
     
     // Construct the API payload with the image
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
@@ -304,8 +327,12 @@ export async function fetchPlantImage(plantName: string): Promise<string | null>
   console.log(`Searching for image of plant: ${plantName}`);
   
   try {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
+    // Import API key from file-based config
+    const { getGeminiApiKey } = await import('../config/api-keys');
+    let apiKey;
+    try {
+      apiKey = getGeminiApiKey();
+    } catch (error) {
       console.warn('Gemini API key is missing, using fallback image sources');
       return getPlantImageFallback(plantName);
     }
