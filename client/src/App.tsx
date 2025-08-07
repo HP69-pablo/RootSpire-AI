@@ -33,7 +33,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <div className="fitness-app-bg min-h-screen pb-24"> 
+          <div className="fitness-app-bg min-h-screen pb-24">
             {/* The fitness-app-bg class now handles both light and dark modes properly */}
             <Router />
             <ChatBubble />
