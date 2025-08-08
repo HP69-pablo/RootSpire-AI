@@ -342,7 +342,7 @@ export function SensorCard({ type, value, previousValue, status }: SensorCardPro
               scale: animated ? [1, 1.08, 1] : 1,
               opacity: 1,
               rotate: status === "Low" || status === "Critical" ? [-2, 2, -2] : 0,
-              boxShadow: status === "Critical" 
+              boxShadow: status === "Critical" ? "0 0 20px rgba(239, 68, 68, 0.3)" : undefined" 
                 ? ["0 10px 25px rgba(245, 158, 11, 0.15), 0 5px 10px rgba(245, 158, 11, 0.1), 0 1px 3px rgba(255, 255, 255, 0.15) inset", 
                    "0 15px 35px rgba(245, 158, 11, 0.25), 0 5px 15px rgba(245, 158, 11, 0.2), 0 1px 3px rgba(255, 255, 255, 0.15) inset", 
                    "0 10px 25px rgba(245, 158, 11, 0.15), 0 5px 10px rgba(245, 158, 11, 0.1), 0 1px 3px rgba(255, 255, 255, 0.15) inset"]

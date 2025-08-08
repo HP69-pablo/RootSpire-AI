@@ -2,15 +2,15 @@ import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, DataSnapshot, set, get, push } from 'firebase/database';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-// Firebase configuration with hardcoded values as requested
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBwe24dNvuyeso79qoK-fuKpW4V14lYR9c",
-  authDomain: "smart-plant-12444.firebaseapp.com",
-  databaseURL: "https://smart-plant-12444-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "smart-plant-12444",
-  storageBucket: "smart-plant-12444.firebasestorage.app",
-  messagingSenderId: "940454794399",
-  appId: "1:940454794399:web:8fa46e73bc987479c6feaa"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBwe24dNvuyeso79qoK-fuKpW4V14lYR9c",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "smart-plant-12444.firebaseapp.com",
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || "https://smart-plant-12444-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "smart-plant-12444",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "smart-plant-12444.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "940454794399",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:940454794399:web:8fa46e73bc987479c6feaa"
 };
 
 // Initialize Firebase
@@ -25,17 +25,17 @@ export function initializeFirebase(): boolean {
       app = initializeApp(firebaseConfig);
       console.log('Firebase app initialized successfully');
     }
-    
+
     if (!database) {
       database = getDatabase(app);
       console.log('Firebase database initialized successfully');
     }
-    
+
     if (!storage) {
       storage = getStorage(app);
       console.log('Firebase Storage initialized successfully');
     }
-    
+
     return true;
   } catch (error) {
     console.error('Error initializing Firebase:', error);
@@ -52,15 +52,15 @@ function generateSampleData() {
     console.error('Firebase database not initialized');
     return;
   }
-  
+
   console.log('Checking if sensor data exists...');
-  
+
   // Check if current data exists
   const currentRef = ref(database, 'sensorData/current');
   get(currentRef).then((snapshot) => {
     if (!snapshot.exists()) {
       console.log('No current sensor data found - generating sample data');
-      
+
       // Create initial current data
       const currentData: SensorData = {
         temperature: 22.5,
@@ -69,7 +69,7 @@ function generateSampleData() {
         soilMoisture: 65,
         timestamp: Date.now()
       };
-      
+
       set(ref(database, 'sensorData/current'), currentData)
         .then(() => console.log('Successfully created sample current data'))
         .catch((err: Error) => console.error('Error creating current data:', err));
@@ -79,7 +79,7 @@ function generateSampleData() {
   }).catch((error: any) => {
     console.error('Error checking current data:', error);
   });
-  
+
   // Check if history data exists
   const historyRef = ref(database, 'sensorData/history');
   get(historyRef).then((snapshot) => {
@@ -94,18 +94,18 @@ function generateSampleData() {
   }).catch((error) => {
     console.error('Error checking history data:', error);
   });
-  
+
   // Check if plant controls exists
   const controlsRef = ref(database, 'plantControls');
   get(controlsRef).then((snapshot) => {
     if (!snapshot.exists()) {
       console.log('No plant controls found - creating initial controls');
-      
+
       const initialControls = {
         uvLight: false,
         wateringActive: false
       };
-      
+
       set(controlsRef, initialControls)
         .then(() => console.log('Successfully created initial plant controls'))
         .catch((err: Error) => console.error('Error initializing controls:', err));
@@ -160,12 +160,12 @@ export async function getMetricHistory(
     console.error('Firebase database not initialized');
     return [];
   }
-  
+
   return new Promise((resolve) => {
     // Get all metrics and extract the one we want
     getSensorHistory(days, (data) => {
       const result: MetricHistoryPoint[] = [];
-      
+
       for (const [timestamp, values] of Object.entries(data)) {
         if (values[metric] !== undefined) {
           result.push({
@@ -174,7 +174,7 @@ export async function getMetricHistory(
           });
         }
       }
-      
+
       resolve(result.sort((a, b) => a.timestamp - b.timestamp));
     });
   });
@@ -188,11 +188,11 @@ export async function getAllMetricsHistory(
     console.error('Firebase database not initialized');
     return [];
   }
-  
+
   return new Promise((resolve) => {
     getSensorHistory(days, (data) => {
       const result: PlantHistoryData[] = [];
-      
+
       for (const [timestamp, values] of Object.entries(data)) {
         result.push({
           timestamp: parseInt(timestamp),
@@ -202,7 +202,7 @@ export async function getAllMetricsHistory(
           soilMoisture: values.soilMoisture
         });
       }
-      
+
       resolve(result.sort((a, b) => a.timestamp - b.timestamp));
     });
   });
@@ -214,22 +214,22 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
     console.error('Firebase database not initialized when trying to subscribe to sensor data');
     return () => {};
   }
-  
+
   console.log('Setting up subscription to current sensor data');
-  
+
   // References to sensor data paths
   const temperatureRef = ref(database, 'sensorData/current/temperature');
   const humidityRef = ref(database, 'sensorData/current/humidity');
   const lightRef = ref(database, 'sensorData/current/Light'); // Capital L as in the API
   const soilMoistureRef = ref(database, 'sensorData/current/soilMoister'); // 'soilMoister' as in the API
-  
+
   // Create sensor data object
   let sensorData: SensorData = {
     temperature: 0,
     humidity: 0,
     timestamp: Date.now()
   };
-  
+
   // Subscribe to temperature updates
   const tempUnsubscribe = onValue(temperatureRef, (snapshot: DataSnapshot) => {
     if (snapshot.exists()) {
@@ -240,7 +240,7 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
   }, (error) => {
     console.error('Error subscribing to temperature:', error);
   });
-  
+
   // Subscribe to humidity updates
   const humidityUnsubscribe = onValue(humidityRef, (snapshot: DataSnapshot) => {
     if (snapshot.exists()) {
@@ -251,7 +251,7 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
   }, (error) => {
     console.error('Error subscribing to humidity:', error);
   });
-  
+
   // Subscribe to light updates
   const lightUnsubscribe = onValue(lightRef, (snapshot: DataSnapshot) => {
     if (snapshot.exists()) {
@@ -262,7 +262,7 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
   }, (error) => {
     console.error('Error subscribing to light:', error);
   });
-  
+
   // Subscribe to soil moisture updates
   const soilMoistureUnsubscribe = onValue(soilMoistureRef, (snapshot: DataSnapshot) => {
     if (snapshot.exists()) {
@@ -273,7 +273,7 @@ export function subscribeSensorData(callback: (data: SensorData) => void) {
   }, (error) => {
     console.error('Error subscribing to soil moisture:', error);
   });
-  
+
   // Return unsubscribe function
   return () => {
     tempUnsubscribe();
@@ -289,26 +289,26 @@ export async function generateSensorHistory(): Promise<void> {
     console.error('Firebase database not initialized');
     return;
   }
-  
+
   try {
     console.log('Generating sample sensor history data...');
-    
+
     const now = Date.now();
     const historyData: SensorHistory = {};
-    
+
     // Generate data for last 7 days, with a sample every hour
     for (let i = 0; i < 7 * 24; i++) {
       const timestamp = now - (i * 60 * 60 * 1000);
-      
+
       // Generate random values with realistic patterns
       const hourOfDay = new Date(timestamp).getHours();
       const isDay = hourOfDay >= 6 && hourOfDay <= 18;
-      
+
       const temperature = 18 + Math.random() * 10 + (isDay ? 3 : 0);
       const humidity = 35 + Math.random() * 40 - (isDay ? 10 : 0);
       const light = isDay ? 50 + Math.random() * 50 : Math.random() * 10;
       const soilMoisture = 45 + Math.random() * 30 - (i % 24 === 0 ? 20 : 0); // Drop after "watering"
-      
+
       historyData[timestamp] = {
         temperature: parseFloat(temperature.toFixed(1)),
         humidity: parseFloat(humidity.toFixed(1)),
@@ -316,7 +316,7 @@ export async function generateSensorHistory(): Promise<void> {
         soilMoisture: parseFloat(soilMoisture.toFixed(1))
       };
     }
-    
+
     // Save to database
     console.log(`Saving ${Object.keys(historyData).length} history data points`);
     await set(ref(database, 'sensorData/history'), historyData);
@@ -336,57 +336,57 @@ export function getSensorHistory(days: number, callback: (data: SensorHistory) =
   // Calculate time range
   const endTime = Date.now();
   const startTime = endTime - (days * 24 * 60 * 60 * 1000);
-  
+
   // Set up real-time listener for sensor data in the timestamps folder
   console.log(`Setting up subscription to timestamps data for the last ${days} days`);
   const timestampsRef = ref(database, 'timestamps');
-  
+
   const unsubscribe = onValue(timestampsRef, (snapshot: DataSnapshot) => {
     if (snapshot.exists()) {
       // Process timestamp data
       const timestampsData = snapshot.val();
       console.log('Found timestamp data, using for visualization');
-      
+
       // Process the data according to the database structure
       const processedData: SensorHistory = {};
-      
+
       // If timestampsData is an object with timestamp keys
       if (typeof timestampsData === 'object' && timestampsData !== null) {
         const entries = Object.entries(timestampsData);
         console.log(`Found ${entries.length} timestamp entries to process`);
-        
+
         // Process each timestamp entry
         for (const [key, value] of entries) {
           // Try to parse the key as a timestamp
           const timestamp = parseInt(key);
-          
+
           // Skip invalid timestamps and entries outside the time range
           if (isNaN(timestamp) || timestamp < startTime || timestamp > endTime) {
             continue;
           }
-          
+
           // Extract data from entry
           const entry = value as any;
-          
+
           // Only add valid entries with at least temperature or humidity
           if (typeof entry.temperature === 'number' || typeof entry.humidity === 'number') {
             processedData[timestamp] = {
               temperature: typeof entry.temperature === 'number' ? entry.temperature : 0,
               humidity: typeof entry.humidity === 'number' ? entry.humidity : 0,
             };
-            
+
             // Add light if available
             if (typeof entry.light === 'number') {
               processedData[timestamp].light = entry.light;
             }
-            
+
             // Add soil moisture if available
             if (typeof entry.soilMoisture === 'number') {
               processedData[timestamp].soilMoisture = entry.soilMoisture;
             }
           }
         }
-        
+
         console.log(`Processed timestamps data with ${Object.keys(processedData).length} valid entries`);
         callback(processedData);
       } else {
@@ -397,7 +397,7 @@ export function getSensorHistory(days: number, callback: (data: SensorHistory) =
       // Fallback to checking history data
       console.log('No timestamps data found, falling back to history data');
       const historyRef = ref(database, 'sensorData/history');
-      
+
       // Check if history data exists
       get(historyRef).then(historySnapshot => {
         if (!historySnapshot.exists() || Object.keys(historySnapshot.val()).length === 0) {
@@ -406,52 +406,52 @@ export function getSensorHistory(days: number, callback: (data: SensorHistory) =
             .then(() => console.log('History data generation completed'))
             .catch(err => console.error('Failed to generate history data:', err));
         }
-        
+
         // Get history data
         onValue(historyRef, (historySnap: DataSnapshot) => {
           if (historySnap.exists()) {
             const historyData = historySnap.val();
             console.log('Raw history data:', typeof historyData);
-            
+
             // Process the data according to the database structure
             const processedData: SensorHistory = {};
-            
+
             // If historyData is an object with timestamp keys
             if (typeof historyData === 'object' && historyData !== null) {
               const entries = Object.entries(historyData);
               console.log(`Found ${entries.length} history entries to process`);
-              
+
               for (const [key, value] of entries) {
                 // Try to parse the key as a timestamp
                 const timestamp = parseInt(key);
-                
+
                 // Skip invalid timestamps and entries outside the time range
                 if (isNaN(timestamp) || timestamp < startTime || timestamp > endTime) {
                   continue;
                 }
-                
+
                 // Extract data based on structure
                 const entry = value as any;
-                
+
                 // Only add valid entries with at least temperature or humidity
                 if (typeof entry.temperature === 'number' || typeof entry.humidity === 'number') {
                   processedData[timestamp] = {
                     temperature: typeof entry.temperature === 'number' ? entry.temperature : 0,
                     humidity: typeof entry.humidity === 'number' ? entry.humidity : 0,
                   };
-                  
+
                   // Add light if available
                   if (typeof entry.light === 'number') {
                     processedData[timestamp].light = entry.light;
                   }
-                  
+
                   // Add soil moisture if available
                   if (typeof entry.soilMoisture === 'number') {
                     processedData[timestamp].soilMoisture = entry.soilMoisture;
                   }
                 }
               }
-              
+
               console.log(`Processed history data with ${Object.keys(processedData).length} valid entries`);
               callback(processedData);
             } else {
@@ -472,7 +472,7 @@ export function getSensorHistory(days: number, callback: (data: SensorHistory) =
     console.error('Error getting sensor history:', error);
     callback({});
   });
-  
+
   return unsubscribe;
 }
 
@@ -491,23 +491,23 @@ export function subscribePlantControls(callback: (controls: PlantControls) => vo
 
   console.log('Setting up subscription to plant controls at path: plantControls');
   const controlsRef = ref(database, 'plantControls');
-  
+
   const unsubscribe = onValue(controlsRef, (snapshot: DataSnapshot) => {
     console.log('Got plant controls update, snapshot exists:', snapshot.exists());
-    
+
     const controls = snapshot.val() as PlantControls | null;
     if (controls) {
       console.log('Received plant controls:', controls);
       callback(controls);
     } else {
       console.log('No plant controls available in snapshot');
-      
+
       // Initialize controls if they don't exist
       const initialControls: PlantControls = {
         uvLight: false,
         wateringActive: false
       };
-      
+
       set(controlsRef, initialControls)
         .then(() => {
           console.log('Successfully initialized plant controls');
@@ -548,8 +548,8 @@ export function setWateringActive(state: boolean): Promise<void> {
 
 // Upload plant photo to Firebase Storage and get download URL
 export async function uploadPlantPhoto(
-  userId: string, 
-  plantId: string, 
+  userId: string,
+  plantId: string,
   file: File
 ): Promise<string> {
   if (!storage) {
@@ -562,17 +562,17 @@ export async function uploadPlantPhoto(
     const timestamp = Date.now();
     const path = `users/${userId}/plants/${plantId}/${timestamp}.${fileExtension}`;
     const fileRef = storageRef(storage, path);
-    
+
     console.log(`Uploading plant photo to path: ${path}`);
-    
+
     // Upload the file to Firebase Storage
     const snapshot = await uploadBytes(fileRef, file);
     console.log('Photo uploaded successfully:', snapshot.metadata.fullPath);
-    
+
     // Get the download URL
     const downloadURL = await getDownloadURL(fileRef);
     console.log('Photo download URL:', downloadURL);
-    
+
     return downloadURL;
   } catch (error) {
     console.error('Error uploading plant photo:', error);
@@ -591,27 +591,27 @@ export async function downloadAndUploadImage(
 
   try {
     console.log(`Downloading image from URL: ${imageUrl}`);
-    
+
     // Fetch the image
     const response = await fetch(imageUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
-    
+
     // Convert to blob
     const blob = await response.blob();
-    
+
     // Create a reference to store the file in Firebase
     const fileRef = storageRef(storage, storagePath);
-    
+
     // Upload to Firebase Storage
     const snapshot = await uploadBytes(fileRef, blob);
     console.log('Image uploaded successfully:', snapshot.metadata.fullPath);
-    
+
     // Get the download URL
     const downloadURL = await getDownloadURL(fileRef);
     console.log('Image download URL:', downloadURL);
-    
+
     return downloadURL;
   } catch (error) {
     console.error('Error downloading and uploading image:', error);
@@ -631,12 +631,12 @@ export async function updatePlantData(
 
   try {
     const plantRef = ref(database, `users/${userId}/plants/${plantId}`);
-    
+
     // Update only the specified fields
     for (const [key, value] of Object.entries(data)) {
       await set(ref(database, `users/${userId}/plants/${plantId}/${key}`), value);
     }
-    
+
     console.log(`Successfully updated plant data for plant ${plantId}`);
   } catch (error) {
     console.error('Error updating plant data:', error);
@@ -649,7 +649,7 @@ export async function downloadPlantTypesImages(): Promise<void> {
   try {
     // Import the plant database dynamically to avoid circular dependencies
     console.log('Starting plant types image caching process');
-    
+
     // This would normally iterate through plant types and cache their images
     // But since we're using a simpler implementation, we'll just log that it was called
     console.log('Completed plant types image caching');
